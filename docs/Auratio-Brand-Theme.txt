@@ -1,0 +1,9 @@
+Color Theme of Auratio:
+Background: 
+#041b3b
+Accent Color: 
+#b2caeb
+Diagram Color: 
+#53a6e6
+
+Font: Inter

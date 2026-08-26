@@ -1,0 +1,38 @@
+AURATIO MVP — PATH SELECTION ADDENDUM
+Effective: 25 August 2026
+Status: Authoritative project change declaration
+
+PURPOSE
+This addendum formally locks the MVP behavior for user-selected Auratio Paths without requiring immediate edits to every existing project specification.
+
+LOCKED RULE
+
+1. During onboarding, a user selects one or more Auratio Paths:
+   - Public Speaking
+   - Professional Presenting
+   - Content Creation
+
+2. After onboarding, the user may add or remove selected Paths at any time through the app's Profile/Settings area.
+
+3. Selected Paths are personalization preferences, not access restrictions.
+   All Auratio tracks remain browsable and available for evaluation regardless of which Paths the user currently selects.
+
+4. Changing selected Paths may affect:
+   - "Your Paths" personalization;
+   - path-based event relevance/filtering;
+   - other non-destructive personalization derived from selected Paths.
+
+5. Changing selected Paths must NOT:
+   - delete or modify previous evaluations;
+   - alter existing Approved scores;
+   - erase or recalculate historical Track Mastery solely because a Path was removed;
+   - delete generated evaluation reports;
+   - remove historical leaderboard/evaluation records.
+
+PRECEDENCE
+Where an older Auratio project file is silent on this issue or conflicts with this addendum, this addendum prevails for the user Path-selection behavior described above.
+
+All other existing Auratio MVP v1.8 / Scoring v3.7 rules remain unchanged.
+
+MAINTENANCE NOTE
+This addendum may later be merged into the main requirements/specification during a future consolidated documentation revision. Until then, it should be treated as part of the authoritative project context.

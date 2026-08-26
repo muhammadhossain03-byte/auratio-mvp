@@ -1,0 +1,120 @@
+Auratio Project Status — 26 August 2026
+
+CURRENT MILESTONE
+Auratio has completed and locked Steps I–III of the planned development workflow. The project is now ready to begin Step IV — UI Coding.
+
+AUTHORITATIVE MVP BASELINE
+- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8
+- Auratio MVP Concepts & Requirements v1.8
+- Auratio Execution Specification / Master Brand Specification & Execution Plan v1.8
+- Auratio Scoring & Leaderboard System Specification v3.7
+- Auratio MVP — Path Selection Addendum v1.0 (effective 25 August 2026)
+
+The Path Selection Addendum is authoritative wherever older files are silent or conflicting about Path-selection behavior.
+
+DEVELOPMENT STATUS
+Step I — Concepts & Requirements: COMPLETE AND LOCKED.
+Step II — Wireframing: COMPLETE AND LOCKED.
+Step III — High-Fidelity UI/UX Design: COMPLETE AND LOCKED.
+Step III — Interactive Figma Prototype: COMPLETE AND LOCKED after final full QA.
+Step IV — UI Coding: NEXT / NOT STARTED.
+Step V — Database: NOT STARTED.
+Step VI — Backend: NOT STARTED.
+Step VII — API Integration: NOT STARTED.
+Step VIII — QA / Testing: NOT STARTED.
+Step IX — Deployment / Cloud Hosting: NOT STARTED.
+Step X — App Store Launch: NOT STARTED.
+
+FINAL FIGMA PROTOTYPE STATUS
+Prototype page: 03 — Interactive Prototype — MVP v1.8
+
+Final flow structure:
+- A — User Mobile Journey
+- B — Volunteer Evaluator Journey
+- C — Admin Journey
+- D — Super Admin Journey
+- Portal — Shared Authentication
+
+Final prototype inventory:
+- 93 total prototype screens
+- 41 mobile-user screens
+- 16 Volunteer Evaluator screens
+- 23 Admin screens
+- 5 Super Admin screens
+- 8 shared portal-authentication screens
+- 436 interaction bindings
+
+Final structural QA:
+- 0 invalid prototype destinations
+- 0 links to deprecated/legacy destinations
+- 0 overlapping prototype screens
+- 0 mobile content escaping intended frame bounds
+- no stale contradiction restoring the superseded AI retry / AI Pending Moderation behavior
+
+FINAL PROTOTYPE FIXES CONFIRMED
+- Volunteer Available ↔ Unavailable works in both directions.
+- After a volunteer declines an assignment, the declined task is removed from Active Assignments and remaining Open actions work.
+- Protected root Super Admin account is genuinely read-only; ordinary Admin lifecycle controls are not exposed.
+- Shared portal authentication is represented for Volunteer Evaluators, Admins, and the Super Admin.
+- Shared portal sign-in supports password recovery, email-verification-required state, unauthorized-access state, and role-based routing.
+- Portal users do not select their own role; the prototype specifies backend-enforced RBAC and automatic routing to the correct workspace.
+- Mobile prototype screen-fit behavior was visually checked; testing should use Figma Present scaling that fits the full device frame to the browser viewport.
+
+IMPORTANT AUTHENTICATION IMPLEMENTATION NOTE
+The Figma prototype simulates authentication only. Real authentication, session handling, email verification, password reset, and RBAC enforcement still need to be implemented during the coding/backend stages using the Supabase-first architecture.
+
+LOCKED USER PATH BEHAVIOR
+- During onboarding, users select one or more of: Public Speaking, Professional Presenting, Content Creation.
+- Users may add or remove selected Paths later in Profile/Settings.
+- Paths personalize the experience; they are not access restrictions.
+- All 13 tracks remain browsable and available regardless of selected Paths.
+- Path changes must not alter historical evaluations, Approved scores, reports, Track Mastery, or historical leaderboard/evaluation records.
+
+LOCKED AI EVALUATION MVP PATH
+- One Gemini evaluation attempt per AI evaluation request.
+- Direct evaluation of the original submitted compliant video.
+- Strict structured JSON output and basic structure/scoring-integrity validation.
+- Usable valid result may auto-approve under publication rules.
+- Failed, malformed, incomplete, invalid, or otherwise unusable AI result becomes Rejected.
+- No automatic AI retry.
+- AI-output failure does not enter Pending Moderation.
+- Only Approved AI evaluations affect progress, leaderboards, and official .docx report generation.
+
+LOCKED HUMAN EVALUATION / GOVERNANCE MODEL
+- Super Admin → Admin → Volunteer Evaluator governance.
+- Exactly one active Human Evaluator assignment per Human Evaluation request.
+- Reassignment supersedes the previous assignment and transfers sole active ownership/access.
+- Evaluator submission locks the structured version and moves work to Completed/History.
+- Re-review is versioned and does not overwrite the prior version.
+- Admins may moderate Human outcomes but cannot rewrite evaluator-authored criterion scores or feedback.
+- Human Pending Moderation remains valid under the locked first-in-track/manual-review and later anomaly-trigger rules.
+
+OTHER CORE MVP RULES STILL LOCKED
+- 13-track scoring architecture under the 100-point rubric.
+- Criterion-specific Low / Competent / Excellent anchors.
+- Timestamped evidence, strength, weakness, actionable improvement advice, and Overall Summary in evaluations.
+- Approved-only official .docx generation.
+- AI and Human public leaderboards remain separate.
+- Private mastery remains separate from public leaderboard ranking.
+- Exact and near-duplicate/re-encoded submissions are allowed in MVP.
+- One active evaluation request per user at a time.
+- Bangladesh-only, Division-based event system.
+- Supabase-first backend direction.
+- Flutter + Riverpod + go_router for the mobile app.
+- React + TypeScript + Vite + React Router for the portal.
+
+NEXT DEVELOPMENT WORKSTREAM
+Begin Step IV — UI Coding.
+
+The implementation should now treat the completed Figma UI/UX and interactive prototype as the visual and interaction reference. Requirements, wireframes, UI/UX, and prototype should remain locked unless implementation exposes a concrete specification or usability defect.
+
+PARALLEL PROJECT-EVALUATOR DELIVERABLES STILL PENDING
+The evaluator currently expects:
+1. Complete UI diagram with feature explanation in a presentation.
+2. Whole-project use case, sequence, and class diagrams.
+3. A well-organized, comprehensive, self-explanatory GitHub repository.
+
+These are separate deliverables from the Step IV implementation and have not yet been completed in the current project workflow.
+
+BOTTOM LINE
+Auratio has finished the full pre-coding product-design phase. Steps I, II, and III are complete and locked. The next technical milestone is Step IV — UI Coding, while the evaluator-facing presentation/diagrams/repository preparation remain parallel pending deliverables.

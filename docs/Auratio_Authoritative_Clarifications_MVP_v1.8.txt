@@ -1,0 +1,864 @@
+AURATIO — AUTHORITATIVE CLARIFICATIONS & MVP SOURCE-OF-TRUTH
+Version: 1.8
+Date: 2026-08-25
+Purpose: Resolve ambiguities and conflicts across the existing Auratio project materials.
+Status: Authoritative clarification layer for the MVP.
+Revision note: Version 1.8 retains the complete Version 1.7 MVP baseline except for one deliberate student-MVP simplification: AI evaluation now uses a single Gemini attempt with basic structured-output validation. A usable AI result may auto-approve; a failed or unusable AI evaluation becomes Rejected. Automatic AI retry and AI-failure Pending Moderation are deferred beyond the MVP. All scoring mathematics, Human moderation rules, report architecture, duplicate policy, Monthly attribution, video lifecycle, role governance, and wireframed flows otherwise remain unchanged.
+
+======================================================================
+1. HOW TO USE THIS FILE
+======================================================================
+
+This file is the authoritative clarification layer for Auratio wherever an older brief, execution plan, overview, development note, or scoring specification is ambiguous or conflicts with a decision recorded here.
+
+It supplements the detailed scoring specification and overrides it only where this file explicitly records a newer decision.
+
+Interpretation hierarchy for the MVP:
+
+1) This Authoritative Clarifications file, Version 1.8
+2) Auratio Scoring & Leaderboard System Specification, Version 3.7, except where overridden here
+3) Auratio Execution Specification / Master Brand Specification & Execution Plan, Version 1.8
+4) Auratio MVP Concepts & Requirements, Version 1.8, for implementation-oriented consolidation
+5) Earlier overview, brief, and handwritten planning/development documents
+
+If two documents conflict, use the higher-priority source above. Newer explicitly locked Q&A decisions incorporated through Version 1.8 supersede stale wording from prior versions.
+
+======================================================================
+2. PRODUCT SCOPE: MVP VS LONG-TERM VISION
+======================================================================
+
+Auratio's long-term vision is to become a worldwide organization and platform for
+functional English communication mastery, supporting public speakers, professional
+presenters, and content creators.
+
+However, the CURRENT DEVELOPMENT TARGET IS AN MVP.
+
+The phrase "comprehensive curricula" belongs to the long-term Auratio vision. Structured
+curricula are NOT part of the present MVP unless explicitly added in a later specification.
+
+For the MVP, Auratio should be understood primarily as a specialized communication
+performance, evaluation, progress-tracking, leaderboard, and event-discovery platform.
+
+The MVP's core loop is:
+
+Choose path/track
+→ submit a compliant video
+→ choose AI or Human Evaluation
+→ route/process the evaluation
+→ receive track-specific scoring and timestamped feedback
+→ pass publication/moderation rules
+→ update private progress
+→ update the relevant public leaderboard
+→ retain access to the final report
+
+======================================================================
+3. CORE USER GROUPS AND TRACKS
+======================================================================
+
+Auratio retains the 13-track structure across three main user groups.
+
+A. Public Speaking
+1. Informative
+2. Extempore
+3. Persuasive
+4. Argumentative / Debate
+5. Explanatory
+
+B. Professional Presenting
+6. News Delivery
+7. Business Pitch / Sales Pitch
+8. General Presentation / Multimedia
+9. Academic — Poster / Project / Thesis
+10. Corporate Report
+
+C. Content Creation
+11. Infotainment-Oriented
+12. Academic — Lecture / Course
+13. Marketing / Promotional
+
+Users may onboard under one or multiple paths.
+
+======================================================================
+4. AUTHORITATIVE MVP TECHNICAL ARCHITECTURE
+======================================================================
+
+Supabase prevails.
+
+MongoDB is NOT part of the authoritative MVP architecture.
+
+The system should be understood as:
+
+- Cross-platform Flutter application for end users
+- React administrative/evaluator web portal for authorized admins and human evaluators
+- Supabase/PostgreSQL as the shared authoritative backend/database layer
+- Supabase Edge Functions as the PRIMARY server-side execution and orchestration layer
+- The Flutter app and React portal use the same Supabase-backed data and platform services
+- Supabase Auth, Storage, and Realtime should be used as the default Supabase capabilities
+  where they fit the MVP requirement; their exact configuration remains an implementation
+  decision
+- AI evaluation services integrate through secure server-side logic rather than exposing
+  privileged service credentials in the Flutter or React clients
+- Node/Express is NOT a mandatory MVP architectural component
+- A separate Node/Express service may be introduced only when a concrete workload cannot be
+  handled appropriately by Supabase Edge Functions, for example a long-running or unusually
+  heavy processing task that materially benefits from a dedicated service
+
+Step IV frontend implementation baseline:
+- Flutter state management: Riverpod.
+- Flutter navigation: go_router.
+- React admin/evaluator portal: React + TypeScript + Vite + React Router.
+- Both clients shall use reusable Auratio design tokens/components rather than screen-specific
+  one-off styling where a shared component is appropriate.
+- Step IV UI Coding shall use realistic mock data through repository/service abstractions, so
+  the UI and state coverage can be completed before the physical database/backend/API work.
+  Production Supabase integration follows in the later backend/database/API stages.
+- When Supabase Auth is integrated, the locked MVP auth behavior is email/password with
+  required email verification and password reset.
+
+Preferred architectural wording:
+"Flutter end-user application + React administrative/evaluator portal backed by
+Supabase/PostgreSQL, with Supabase Edge Functions as the primary server-side layer.
+Node/Express is optional for specialized workloads only."
+
+This decision supersedes both:
+- any older MongoDB/MERN description, and
+- any older description that makes React + Node/Express a mandatory web/backend pairing.
+
+=====================================================================
+5. APP PLATFORM DECISION
+======================================================================
+
+The MVP is a CROSS-PLATFORM Flutter application.
+
+It must not be described as Android-only or Google-Play-only as a product constraint.
+
+Store/deployment sequencing may still differ operationally, but the product architecture
+itself is cross-platform Flutter.
+
+Any wording that implies the MVP is inherently Android-only is superseded.
+
+======================================================================
+6. VIDEO SUBMISSION AND STORAGE POLICY
+======================================================================
+
+Video uploads are required for evaluation.
+
+Submission and access rules:
+- The MVP accepts selection/upload of an EXISTING .mp4 file only. In-app camera recording is not an MVP feature.
+- A user may have only ONE active evaluation request at a time. Approved, Rejected, and Cancelled release the active-request gate. A rejected-at-upload attempt that creates no evaluation record does not occupy the gate.
+- Speaker visibility remains mandatory.
+- End-user authentication remains email + password with required email verification and password reset.
+
+Duplicate-submission rule — LOCKED:
+- Exact duplicate recordings are allowed in the MVP.
+- Near-duplicate and re-encoded versions are also allowed.
+- Auratio shall not implement content hashing, duplicate-detection, or duplicate-prevention as an MVP gate.
+- This is an accepted MVP integrity limitation, not a hidden TBD.
+
+Permanent video storage is NOT part of the MVP. Videos may be stored temporarily because evaluation and moderation require access to the recording.
+
+Authoritative lifecycle:
+1. User uploads a video submission.
+2. Server-side eligibility checks are performed, including the track duration gate.
+3. The video is retained temporarily while evaluation is incomplete.
+4. If moderation is required, the video remains available through moderation.
+5. After the final publication decision becomes Approved or Rejected, Auratio performs best-effort deletion of the primary stored video.
+6. Deletion failures are retried automatically; persistent failures are logged for operational follow-up.
+7. Provider-managed caches/backups may expire according to the provider's infrastructure lifecycle. Verified immediate purge of every replica/cache is not an MVP requirement.
+8. Auratio does not retain the video as a permanent user media library.
+
+Therefore, older wording such as "we will not store videos" means no permanent retention after the evaluation/moderation lifecycle, not zero transient storage.
+
+======================================================================
+7. SPEAKER VISIBILITY REQUIREMENT
+======================================================================
+
+Speaker visibility is mandatory for the MVP.
+
+Every submitted recording must show the speaker sufficiently throughout the performance
+for the universal Physical Presence rubric to be meaningfully evaluated.
+
+This is necessary because the current universal rubric allocates points to:
+- eye contact / gaze stability,
+- posture / body positioning,
+- purposeful gestures,
+- framing / movement control.
+
+Consequences for the MVP:
+
+- Voice-only submissions are not supported.
+- Screen-only presentations are not supported.
+- A presentation may use slides, multimedia, screen content, or supporting visuals, but
+  the speaker must remain visually observable enough for Physical Presence evaluation.
+- The MVP will not re-normalize the 100-point rubric for invisible-speaker submissions.
+
+The "voice-only submission" problem listed as a deferred item in the scoring specification
+is therefore operationally resolved for the MVP by disallowing that submission type.
+
+A future release may introduce submission-type-specific scoring or re-normalization.
+
+======================================================================
+8. EXTEMPORE INTEGRITY ASSUMPTION
+======================================================================
+
+The MVP will NOT technically verify whether an Extempore speech was prepared in advance.
+
+Auratio is presently positioned as a self-development platform. The MVP assumes users
+participate in good faith and follow the Extempore guidelines honestly for their own
+development.
+
+Therefore:
+
+- Extempore submissions are evaluated as Extempore performances.
+- The platform does not claim to cryptographically or procedurally prove spontaneity.
+- No in-app forced preparation timer, random prompt lock, or recording-integrity system is
+  required for the MVP unless separately added later.
+
+The previously noted limitation regarding verifiable spontaneity remains known, but it is
+accepted for the MVP.
+
+======================================================================
+9. REPORT FORMAT
+======================================================================
+
+The official user-facing evaluation report format is .docx.
+
+Report generation — LOCKED:
+- Human evaluators do NOT create or upload Word reports manually.
+- AI does NOT directly author the final Word file.
+- Both evaluation modes first produce validated structured evaluation data.
+- Auratio's backend deterministically converts the Approved structured evaluation into the standardized .docx.
+- Only Publication Status = Approved generates the official .docx.
+- Processing, Pending Moderation, and Rejected evaluations do not generate an official report.
+
+Shared report architecture:
+Universal Delivery → Structural Flow → Track Specialisation → Overall Summary.
+
+For every scored criterion the report includes:
+- qualitative anchor,
+- exact numeric score,
+- timestamped evidence,
+- strength,
+- weakness,
+- actionable improvement advice.
+
+The report is detailed but does NOT contain a full transcript. Only relevant timestamped evidence/observations are included.
+
+Filename convention:
+Auratio_<TrackSlug>_<Mode>_Submission-<ID>_v<version>.docx
+
+TrackSlug rule — LOCKED IMPLEMENTATION CONVENTION:
+- TrackSlug is the canonical filesystem-safe form of the track display name.
+- Use only letters, numbers, and hyphens.
+- Replace spaces, slashes, long dashes, and other separators with a single hyphen; collapse repeated hyphens and trim leading/trailing hyphens.
+- Examples: Business Pitch / Sales Pitch → Business-Pitch-Sales-Pitch; Academic — Poster / Project / Thesis → Academic-Poster-Project-Thesis; Academic — Lecture / Course → Academic-Lecture-Course.
+- The user-facing track label remains unchanged; TrackSlug is used only where a safe technical identifier is required, including filenames.
+
+User-facing report metadata is limited to essential provenance such as track, evaluation mode, submission ID, relevant dates, final score, and report version. Technical provenance — evaluator identity/ID, AI model version, prompt version, moderation history, and internal scoring provenance — remains internal/auditable rather than being exposed as normal report content.
+
+Any older use of ".doc" is superseded by .docx.
+
+======================================================================
+10. EVALUATION MODES
+======================================================================
+
+Auratio supports two evaluation modes:
+
+1. AI Evaluation
+2. Human Evaluation
+
+Both modes use the same overall 100-point scoring architecture and the same track-specific
+rubric structure, while the evaluator differs.
+
+Public leaderboard scores for AI and Human Evaluation remain separated.
+
+======================================================================
+11. TWO DIFFERENT TYPES OF "APPROVAL"
+======================================================================
+
+Future implementation and documentation must distinguish routing from publication.
+
+A. Evaluation Routing / Assignment Status
+This controls HOW the submission will be evaluated.
+
+Example concepts:
+- Requested
+- Assigned to AI
+- Assigned to Human
+- Redirected to AI
+- Redirected to Human
+
+B. Evaluation Publication / Moderation Status
+This controls WHETHER the completed score is allowed to take effect.
+
+Canonical publication concepts:
+- Processing
+- Pending Moderation
+- Approved
+- Rejected
+
+Do not use the generic word "approved" for both routing and publication in data models or
+implementation discussions.
+
+"Approved score" should refer to publication/moderation approval.
+
+======================================================================
+12. AUTHORITATIVE HUMAN-EVALUATION APPROVAL MODEL
+======================================================================
+
+OPTION B remains locked: every Human Evaluation must reach Approved publication status before its score has any product effect, but not every Human Evaluation requires manual Admin approval.
+
+Human evaluator workflow:
+1. The assigned authorized Human Evaluator reviews the temporary video and the standardized rubric in the React portal.
+2. For EVERY criterion, the evaluator first selects the criterion-specific qualitative anchor: Low, Competent, or Excellent.
+3. Only after selecting the anchor does the evaluator choose the exact valid numeric score for that criterion. Intermediate numeric values remain valid; the three anchors are reference points, not the only possible scores.
+4. For every scored criterion, the evaluator records timestamped evidence, a strength, a weakness, and actionable improvement advice.
+5. The evaluator also provides an Overall Summary.
+6. Submission locks that structured evaluator version and moves the task from Active Assignments to Completed/History. The evaluator does not upload a .docx.
+7. The user's FIRST Human Evaluation in a given track requires manual Admin review because no Human-mode baseline exists.
+8. Once a Human baseline exists, later Human Evaluations may auto-approve if they pass the defined checks.
+9. If a later Human score differs by more than ±15 points from the running average of PRIOR APPROVED HUMAN SCORES in that same track, it enters Pending Moderation.
+10. Pending Moderation and Rejected scores do not affect private progress or public leaderboards.
+11. Only Approved results take effect; approval then triggers deterministic official .docx generation.
+12. AI scores are never used in the Human moderation baseline.
+
+Human-written feedback remains Human-authored. AI rewriting of Human feedback is not required for the MVP.
+
+The ±15 rule remains an anomaly/moderation trigger rather than proof that an evaluation is wrong.
+
+======================================================================
+13. AI EVALUATION APPROVAL
+======================================================================
+
+AI Evaluation uses Gemini 3.7 Flash under the current model decision, with lightweight versioned prompt/skill artifacts.
+
+Authoritative student-MVP AI path:
+1. Gemini evaluates the ORIGINAL submitted video directly. A transcript-first or mandatory preprocessing pipeline is not required.
+2. Gemini must return strict predefined JSON, not an uncontrolled free-form report.
+3. The JSON must represent complete criterion coverage and the same standardized evaluation data required for reporting, including criterion score, qualitative anchor, timestamped evidence, strength, weakness, actionable improvement advice, and Overall Summary.
+4. Auratio performs basic structure and scoring-integrity validation before publication. Validation covers required fields, complete criterion coverage, valid score ranges, arithmetic consistency, timestamp/evidence presence, and other required structured fields.
+5. If the single Gemini attempt returns a usable structured result, it may auto-approve under the existing publication rules.
+6. If the Gemini API call fails or the returned evaluation is malformed, incomplete, structurally invalid, outside valid score ranges, arithmetically inconsistent, missing required fields/evidence, or otherwise unusable, the AI evaluation becomes Rejected.
+7. The MVP performs NO automatic AI evaluation retry and does NOT send AI-output failures to Pending Moderation. Advanced retry/recovery logic is deferred beyond the student MVP.
+8. Rejected AI evaluations have no private-progress, leaderboard, qualification, or official-report effect. Rejected is terminal for the active request, so the user may submit a new evaluation request afterward.
+9. Only Approved AI scores affect private progress or the AI leaderboard.
+10. Approved status triggers deterministic official .docx generation by Auratio; report generation itself is not performed by Gemini.
+
+Random AI sampling/double-scoring is NOT required for the MVP. It remains an optional future quality-monitoring enhancement.
+
+======================================================================
+14. PUBLIC LEADERBOARDS: AI AND HUMAN REMAIN SEPARATE
+======================================================================
+
+Public leaderboards maintain strict mode isolation.
+
+For every track:
+
+- AI Evaluation scores affect only the AI leaderboard.
+- Human Evaluation scores affect only the Human leaderboard.
+- AI and Human scores must not be mixed, averaged, normalized, transferred, or combined
+  into one public ranking.
+- A redirection from one evaluation mode to another may occur only after the end user gives
+  explicit consent to the proposed alternate evaluation method.
+- If the user accepts the redirect, the request proceeds under the alternate method and only
+  the FINAL evaluation method used receives the leaderboard effect.
+- If the user declines the redirect, the evaluation request/session is cancelled. No alternate
+  evaluation is performed, no score is produced, and the cancelled request has no progress,
+  qualification, rating-window, or leaderboard effect.
+
+The 13 tracks remain isolated from one another.
+
+======================================================================
+15. PRIVATE USER PROGRESS: UNIFIED
+======================================================================
+
+Private progress tracking is unified.
+
+This is intentionally DIFFERENT from public leaderboard behavior.
+
+Authoritative rule:
+
+- Approved AI Evaluation results may contribute to the user's private progress.
+- Approved Human Evaluation results may contribute to the same private progress system.
+- Pending or Rejected evaluations contribute nothing.
+- Public ranking remains mode-separated even though private progress is unified.
+
+Authoritative mastery formulas:
+
+- Track Mastery = the simple arithmetic mean of ALL Approved AI and Human Submission Scores
+  in that track. Every Approved evaluation in the track carries equal weight regardless of
+  evaluation mode.
+- Overall Auratio Mastery = the simple arithmetic mean of the user's Track Mastery values
+  across only those tracks in which the user has at least one Approved evaluation. Each
+  represented track carries equal weight in the overall value.
+- Pending Moderation, Rejected, Rejected-at-Upload, Processing, and Cancelled requests
+  contribute nothing to Track Mastery or Overall Auratio Mastery.
+- Evaluation-mode metadata remains visible in private history even though the mastery values
+  combine Approved AI and Human results.
+- These private mastery formulas do NOT alter the strict AI/Human separation of public
+  leaderboards.
+
+======================================================================
+16. EVENTS SYSTEM
+======================================================================
+
+Events are completely admin-controlled in the MVP.
+
+Users have NO event-management permissions.
+
+Users may only view event information exposed through the application.
+
+Authoritative event model:
+
+- Admins manage event information through the web administrative portal.
+- The Flutter app reads/pulls the relevant event data.
+- The application displays events in the user's event section.
+- The MVP rollout geography is Bangladesh only; all events listed in the MVP are located in
+  Bangladesh.
+- Division is the authoritative geographic granularity for MVP event discovery.
+- Event relevance shall use BOTH a Bangladesh Division location context and the user's
+  selected Auratio path(s).
+- End-user event discovery shall provide three manual filters: Location (Division), Auratio
+  Path, and Date.
+- End users remain viewers only; these discovery filters do not grant event-management rights.
+- Ordinary users cannot create events.
+- Ordinary users cannot edit events.
+- Ordinary users cannot delete events.
+- Ordinary users cannot host/manage an event through Auratio in the MVP.
+
+Any older wording that implies user-facing "event hosting and management capabilities" is
+superseded for the MVP.
+
+For the MVP, Auratio provides an ADMIN-CURATED EVENT DIRECTORY / EVENT INFORMATION SYSTEM
+from the end user's perspective.
+
+======================================================================
+17. SCORING ARCHITECTURE
+======================================================================
+
+The 100-point scoring architecture remains unchanged:
+- Universal Delivery: 40
+- Structural Flow: 20
+- Track Specialisation: 40
+
+Track-specific rubrics remain four criteria worth 10 points each. Universal criteria retain their established weights.
+
+Criterion-specific qualitative anchors — LOCKED:
+- Every scoring criterion shall have three criterion-specific qualitative reference anchors: Low, Competent, and Excellent.
+- These anchors describe criterion-specific quality states; they do not replace the numeric scale or restrict scoring to three values.
+- Intermediate valid numeric values remain available on both 5-point and 10-point criteria.
+- Human evaluators must select the qualitative anchor before choosing the exact score.
+- AI structured output must carry the corresponding anchor together with the exact score.
+
+Structured criterion feedback — LOCKED:
+For every criterion, Human and AI evaluation data shall support qualitative anchor, exact score, timestamped evidence, strength, weakness, and actionable improvement advice, plus one Overall Summary per evaluation.
+
+Criterion-overlap corrections — LOCKED:
+- Persuasive: replace CTA effectiveness with Objection anticipation and resistance handling.
+- Business Pitch / Sales Pitch: replace Ask and return clarity with Competitive differentiation.
+- Infotainment-Oriented: replace First 3–5 second retention hook with Information-entertainment balance.
+- Marketing / Promotional: replace CTA clarity and relevance with Brand-message alignment.
+
+These replacements remove the identified overlap with universal Hook strength / track-appropriate conclusion concepts while keeping the four-criteria-per-track structure unchanged.
+
+======================================================================
+18. DURATION ELIGIBILITY
+======================================================================
+
+The track-specific duration system in Scoring & Leaderboard Specification v3.6 remains
+authoritative.
+
+Key principles:
+
+- Every track has a defined target duration and accepted grace window.
+- Duration is measured server-side.
+- The server-side measurement is authoritative.
+- Out-of-range recordings are rejected before evaluation.
+- Duration is an eligibility gate, not a scoring criterion.
+- Invalid-duration submissions should not consume AI evaluation quota or human evaluator
+  effort.
+
+======================================================================
+19. PUBLIC LEADERBOARD RATING (ALR)
+======================================================================
+
+The existing ALR mathematics remain authoritative:
+- Qualification requires 3 Approved evaluations within the relevant leaderboard scope.
+- With 3 approved scores: average all 3.
+- With 4 approved scores: average all 4.
+- With 5 or more: use the 5 most recent Approved scores, discard the single lowest, and average the remaining 4.
+- The window slides as new Approved results enter.
+- Participation count is displayed separately and does not directly add to ALR.
+- All-Time rankings use the defined activity-decay multiplier.
+- Monthly rankings use D = 1.00.
+- AI and Human leaderboard ratings remain mode-separated.
+
+Monthly attribution — LOCKED CHANGE:
+- An evaluation belongs to the calendar month of its SUBMISSION DATE, not its later approval date.
+- It still cannot enter the Monthly leaderboard, qualification count, or rating window until Publication Status becomes Approved.
+- This changes the Monthly period-attribution key only; it does not weaken Approved-only publication gating.
+
+Duplicate recordings are allowed. Therefore the MVP does not claim that the leaderboard system prevents duplicate-resubmission score farming; the rating formula simply does not award a separate participation-volume bonus.
+
+======================================================================
+20. ALR TIE-BREAK CORRECTION
+======================================================================
+
+KEEP THE CURRENT TIE-BREAK ALGORITHM.
+
+The tie-break order remains:
+
+1. Higher unrounded ALR
+2. Higher average across the complete score window, including the otherwise discarded
+   fifth score where applicable
+3. Higher single best approved Submission Score in the same scope
+4. Earlier date on which the user satisfied the 3-evaluation qualification threshold
+
+CORRECTION:
+
+Do not restore the older scoring-specification statement claiming that the
+full-window-average tie-break criterion is "neutral" for users with only 3 or 4 approved
+evaluations.
+
+That explanatory claim is not universally true, particularly because two users may reach
+the same All-Time ALR with different form averages when their activity-decay multipliers
+differ.
+
+This correction changes ONLY the explanatory wording.
+
+It does NOT change the tie-break algorithm.
+
+======================================================================
+21. MODERATION EFFECT ON PRODUCT STATE
+======================================================================
+
+Only Approved evaluations may:
+
+- update the user's private progress,
+- enter the applicable leaderboard rating window,
+- affect public rank,
+- count toward public leaderboard qualification,
+- become an effective published evaluation result.
+
+Pending Moderation evaluations must not produce those effects.
+
+Rejected evaluations must not produce those effects.
+
+The product may still visibly tell the user that an evaluation exists and is awaiting
+moderation, but its score must not behave as an approved result until approval occurs.
+
+======================================================================
+22. VIDEO DELETION AND MODERATION INTERACTION
+======================================================================
+
+Temporary video deletion occurs only after the final publication decision so moderation retains access to the underlying performance when necessary.
+
+Evaluation performed
+→ possible Pending Moderation
+→ Admin decision if required
+→ Approved or Rejected
+→ best-effort delete primary stored video
+→ automatically retry deletion failures
+→ log persistent failures
+
+Provider-managed caches/backups may expire on their normal infrastructure lifecycle. The MVP does not require verified immediate destruction of every replica/cache. Do not delete the video merely because a Human Evaluator has submitted structured evaluation data while moderation is still possible or pending. On the simplified AI path, an unusable AI result becomes final Rejected and therefore proceeds to the normal post-final-decision deletion lifecycle.
+
+======================================================================
+23. MVP ADMIN PORTAL RESPONSIBILITIES
+======================================================================
+
+The administrative/evaluator portal supports the relevant backend operations, including:
+- evaluation request visibility and routing,
+- AI/Human redirection subject to explicit end-user consent,
+- Super Admin governance of Admin accounts,
+- Admin CRUD/soft-deactivation of volunteer evaluator accounts, track eligibility, availability overrides, and workload visibility,
+- Admin-controlled Human Evaluation assignment/reassignment,
+- Human evaluator anchor-first rubric scoring and structured criterion feedback entry,
+- moderation/approval/rejection/re-review workflows,
+- event creation/editing/management by Admins,
+- report-state visibility and access after backend generation,
+- shared synchronization with the Flutter application through Supabase-backed data.
+
+Human evaluators do not upload Word reports. Their portal submission is structured evaluation data. Only after publication becomes Approved does Auratio's backend generate the official standardized .docx.
+
+Where a score is Pending Moderation, synchronization may expose the status to the app, but it must not update effective progress, leaderboard state, or an official report.
+
+Implementation direction remains Supabase/PostgreSQL as the system of record, Supabase Edge Functions as the primary privileged workflow/orchestration layer, Supabase platform services where appropriate, and a separate Node/Express service only when a concrete specialized workload genuinely requires it.
+
+======================================================================
+24. ITEMS FROM OLDER MATERIALS THAT ARE EXPLICITLY SUPERSEDED
+======================================================================
+
+The following older interpretations should no longer be used for the MVP:
+
+A. "MERN = MongoDB backend/database"
+SUPERSEDED.
+Supabase prevails; MongoDB is removed.
+
+B. "No video storage of any kind"
+SUPERSEDED.
+No permanent retention; temporary storage is permitted until final approval/rejection.
+
+C. "Every human evaluator submission instantly affects progress/leaderboards"
+SUPERSEDED.
+Only Approved results take effect.
+
+D. "Every Human Evaluation needs manual admin approval"
+NOT AUTHORITATIVE.
+Conditional approval is used: first-in-track manual review, later evaluations may
+auto-approve unless flagged.
+
+E. "Comprehensive curriculum is part of the MVP"
+SUPERSEDED.
+Curriculum is long-term vision, not current MVP scope.
+
+F. "Users can host/manage events"
+SUPERSEDED for MVP.
+Events are admin-controlled; users are viewers only.
+
+G. "AI and Human scores must always remain separate everywhere"
+PARTIALLY SUPERSEDED.
+They remain separate on public leaderboards, but approved results feed a unified private
+progress system.
+
+H. "Voice-only or speaker-invisible submissions can be scored normally"
+NOT SUPPORTED in MVP.
+Speaker visibility is mandatory.
+
+I. "Final reports are .doc"
+SUPERSEDED.
+Use .docx.
+
+J. "The product is Android-only / Google-Play-only"
+SUPERSEDED.
+The app is cross-platform Flutter.
+
+K. "The full-window-average tie-break is neutral for users with 3–4 approved scores"
+CORRECTED.
+Keep the tie-break itself; remove that inaccurate explanatory claim.
+
+L. "React + Node/Express is a mandatory MVP backend architecture"
+SUPERSEDED.
+The React admin/evaluator portal remains, but Supabase Edge Functions are the primary
+server-side execution/orchestration layer. Node/Express is optional and should be added
+only for a concrete workload that genuinely requires a separate service.
+
+M. "Evaluation-mode redirection may happen without explicit end-user consent"
+SUPERSEDED.
+A proposed AI/Human mode redirect requires explicit end-user consent. If the user declines,
+the evaluation request/session is cancelled with no score or product-state effect.
+
+N. "The MVP event relevance basis is unspecified"
+SUPERSEDED.
+The MVP event-discovery basis is fully locked: the rollout is Bangladesh-only; Bangladesh
+Division is the authoritative geographic granularity; relevance uses BOTH Division and the
+user's selected Auratio path(s); and the end-user event experience provides manual Location
+(Division), Auratio Path, and Date filters. End users remain viewers only. This superseding
+statement aligns with Sections 16 and 28 of this clarification.
+
+======================================================================
+25. KNOWN MVP ASSUMPTIONS / ACCEPTED LIMITATIONS
+======================================================================
+
+These are accepted unless a later specification changes them:
+
+1. Extempore honesty is trust-based.
+2. Human moderation uses the user-anchored ±15 rule; evaluator-bias calibration is future work.
+3. Videos are temporary and deleted on a best-effort basis after final Approved/Rejected outcome; infrastructure caches/backups may expire later.
+4. Speaker visibility is mandatory; audio-only/screen-only scoring is deferred.
+5. Curricula are not an MVP feature.
+6. User-managed events are not an MVP feature.
+7. AI and Human public rankings remain separate despite unified private progress.
+8. Exact and near-duplicate recordings are allowed; the MVP has no duplicate-detection/prevention gate.
+9. Random AI double-scoring/sampling is not required for MVP and may be added later as quality monitoring.
+10. Official report generation occurs only after Approved publication; no official report exists for Processing, Pending Moderation, or Rejected states.
+
+======================================================================
+26. STILL-UNRESOLVED OR DEFERRED ITEMS
+======================================================================
+
+The major evaluation/report/scoring TBDs previously listed here are now resolved in Version 1.6.
+
+A. Unified private progress formula — RESOLVED IN VERSION 1.3.
+B. Submission integrity / duplicate prevention — RESOLVED IN VERSION 1.6: duplicates and near-duplicates are allowed; no prevention mechanism is required.
+C. Submission concurrency — RESOLVED IN VERSION 1.3.
+D. AI evaluator sampling / double-scoring — RESOLVED AS NOT REQUIRED FOR MVP in Version 1.6; optional future monitoring only.
+E. Criterion-level scoring anchors — RESOLVED IN VERSION 1.6: criterion-specific Low / Competent / Excellent anchors are mandatory reference points; intermediate numeric values remain valid.
+F. Criterion overlap — RESOLVED IN VERSION 1.6 through the four locked criterion replacements in Section 17.
+G. Monthly leaderboard period key — RESOLVED IN VERSION 1.6: submission-date attribution with Approved-only counting.
+H. Post-approval revocation — RESOLVED AS OUT OF MVP IN VERSION 1.3.
+I. Temporary-storage deletion mechanics — RESOLVED FOR MVP IN VERSION 1.6: best-effort primary deletion, automatic retries, persistent-failure logging, provider cache/backup lifecycle accepted.
+J. Admin governance and Human Evaluator operations — RESOLVED IN VERSION 1.4 and refined in Version 1.6 to remove evaluator .docx upload and require anchor-first structured scoring.
+
+Remaining implementation work is not an unresolved product rule: lightweight Gemini prompt/track modules, exact JSON schema realization, criterion-specific anchor prose, and final Word-template visual styling are to be authored/versioned during their later implementation workstreams. These AI artifacts are deferred to Backend/API integration and do not block Step III UI/UX.
+
+======================================================================
+27. CANONICAL MVP SUMMARY
+======================================================================
+
+Auratio's MVP is a cross-platform Flutter application for public speakers, professional presenters, and content creators, organized around 13 specialized communication tracks.
+
+Users submit speaker-visible .mp4 performances that satisfy track-specific duration requirements and choose AI or Human Evaluation. Exact and near-duplicate recordings are permitted in the MVP; no duplicate-detection/prevention mechanism is required.
+
+Videos are stored only temporarily through evaluation and any required moderation. After a final Approved or Rejected publication outcome, the primary stored video is deleted on a best-effort basis, failures are retried automatically, and persistent failures are logged. Immediate verified purge of all provider replicas/caches is not required.
+
+AI and Human evaluators use the same 100-point architecture: 60 universal points + 40 track-specific points. Every criterion uses criterion-specific Low / Competent / Excellent qualitative anchors as reference points while intermediate numeric values remain valid. Human evaluators select the anchor before the exact score.
+
+Every scored criterion carries structured feedback: anchor, exact score, timestamped evidence, strength, weakness, and actionable improvement advice. Each evaluation also includes an Overall Summary.
+
+Gemini 3.7 Flash evaluates the original submitted video directly and returns strict predefined JSON. Auratio performs basic structure and scoring-integrity validation. A usable result may auto-approve; a failed or unusable single-attempt AI evaluation becomes Rejected. Automatic AI retry and AI-failure Pending Moderation are deferred beyond the MVP. Random AI sampling/double-scoring is not an MVP requirement.
+
+Human evaluators submit structured portal data rather than Word files. Human feedback remains Human-authored. The first Human Evaluation in a track requires manual review; later Human results may auto-approve unless the >15-point anomaly rule or another validity check triggers Pending Moderation.
+
+Only Approved evaluations update private progress, public leaderboard state, or generate the official .docx. The official report is generated deterministically by Auratio from validated structured data and uses the shared structure Universal Delivery → Structural Flow → Track Specialisation → Overall Summary. It contains detailed criterion feedback but no full transcript. Filename: Auratio_<TrackSlug>_<Mode>_Submission-<ID>_v<version>.docx, using the canonical filesystem-safe TrackSlug defined in Section 9. Essential metadata is user-facing; technical provenance remains internal.
+
+Public leaderboards remain separated by track, evaluation mode, and period. Monthly attribution uses the submission date, while the evaluation still cannot count until Approved. Private progress remains unified across Approved AI and Human results under the previously locked mastery formulas.
+
+Portal governance remains Super Admin → Admin → Volunteer Evaluator. Assignment, reassignment, locking, re-review, minimum-necessary evaluator visibility, and backend-enforced RBAC remain in force. Events remain Admin-controlled, Bangladesh-only, Division-based, and read-only for end users.
+
+Supabase/PostgreSQL remains the shared authoritative backend/database with Supabase Edge Functions as the primary server-side execution/orchestration layer. Node/Express remains optional for specialized workloads only.
+
+The ALR formula and tie-break algorithm remain unchanged except for the already-corrected explanatory wording and the new Monthly submission-date attribution rule.
+
+======================================================================
+28. VERSION 1.3 REVISION SUMMARY (RETAINED)
+======================================================================
+
+Version 1.3 retains all Version 1.2 decisions and resolves the product/frontend questions
+needed to refine Step III and execute Step IV without further product-rule invention:
+
+- Unified private mastery is now deterministic: Track Mastery is the simple average of all
+  Approved AI + Human scores in the track; Overall Auratio Mastery is the simple average of
+  represented Track Mastery values.
+- The MVP rollout geography is Bangladesh only. Event geography uses Division granularity,
+  and end-user discovery provides Location (Division), Path, and Date filters.
+- One active evaluation request per user is allowed at a time; Approved, Rejected, and
+  Cancelled are terminal outcomes for that active-request gate.
+- End-user authentication is email/password only, with required email verification and
+  password reset. Social sign-in is outside the current MVP baseline.
+- Users upload an existing .mp4 file; in-app recording is not part of the MVP.
+- Approved is terminal at the MVP product level; there is no post-approval revoke/withdraw
+  workflow.
+- Flutter uses Riverpod for state management and go_router for navigation.
+- The React portal uses React + TypeScript + Vite + React Router.
+- Step IV UI Coding uses realistic mock data behind repository/service interfaces and defers
+  production Supabase integration to the later database/backend/API stages.
+
+Historical note: at Version 1.3, duplicate prevention, AI sampling, scoring anchors, criterion overlap, Monthly period attribution, deletion mechanics, and report filename details were still open. Those items were later resolved. Version 1.8 further simplifies only AI failure handling for the student MVP. Exact implementation artifacts such as lightweight prompt/track modules, JSON schema realization, anchor prose, and final document styling remain to be authored at their implementation stages.
+
+======================================================================
+29. ADMIN GOVERNANCE & HUMAN EVALUATOR OPERATIONS
+======================================================================
+
+This section remains authoritative for MVP portal governance and volunteer Human Evaluator operations.
+
+29.1 Portal role hierarchy and Admin governance
+- Portal authority follows Super Admin → Admin → Volunteer Evaluator.
+- The first/root Super Admin is provisioned manually/system-side and cannot be deleted/demoted through normal portal controls.
+- Super Admins govern Admin accounts; ordinary Admins do not govern the Admin/Super Admin tier.
+- Admin and Volunteer portal accounts are invite/provisioning based and use shared Supabase Auth with backend-enforced RBAC.
+
+29.2 Volunteer evaluator CRUD and lifecycle
+- Admins create/invite, view, update, and soft-deactivate volunteer evaluator accounts.
+- Historical evaluator identity, evaluation provenance, and audit records remain preserved.
+- Each volunteer is authorized for one or more tracks.
+
+29.3 Availability and workload visibility
+- Active volunteers maintain Available / Unavailable status; Admins may override with audit provenance.
+- Assignment views show track eligibility, availability, and active assignment count.
+- No automatic workload cap is imposed in the MVP.
+
+29.4 Human Evaluation assignment lifecycle
+- Requests begin Unassigned and are assigned by an Admin to one eligible Available evaluator.
+- Exactly one active evaluator assignment exists per request.
+- Lifecycle: Unassigned → Assigned → Accepted → In Evaluation → Submitted.
+- Decline requires a reason and returns the request to Unassigned.
+- Pre-submission reassignment supersedes the prior assignment, revokes former active ownership/access, transfers sole ownership to the new evaluator, and preserves audit history.
+- Submission moves work to Completed/History but does not imply publication approval.
+- Request Re-review formally reopens the relevant task and versions/audits the resubmission.
+
+29.5 Evaluator workspace and minimum-necessary visibility
+Evaluators receive only the context needed to judge the submission: submission ID, track, temporary video, measured duration, rubric, evaluation instructions, and relevant submission metadata. Unnecessary prior scores, leaderboard position, mastery, prior feedback, and profile context remain hidden.
+
+29.6 Human evaluation submission and score integrity — UPDATED IN VERSION 1.6
+- For each criterion, the evaluator selects Low / Competent / Excellent first, then chooses the exact valid numeric score.
+- For every criterion, the evaluator enters timestamped evidence, strength, weakness, and actionable improvement advice.
+- The evaluator enters an Overall Summary.
+- The evaluator does NOT create or upload a .docx report.
+- Portal submission locks the structured evaluator version against silent editing.
+- Corrections require formal re-review/reopen and versioned resubmission.
+- Admins may inspect, approve, reject, or request re-review, but must not rewrite evaluator-authored criterion scores or feedback.
+- Approved publication triggers Auratio backend generation of the official standardized .docx from the structured data.
+- Human-authored feedback remains Human-authored; AI rewriting is not required.
+
+29.7 Operational audit requirements
+Audit records cover account changes, track eligibility, availability overrides, assignment/decline/reassignment, evaluator submission, re-review/resubmission, moderation decisions, and evaluator/admin identity plus criterion-level scoring provenance.
+
+======================================================================
+30. VERSION 1.4 REVISION SUMMARY — HISTORICAL
+======================================================================
+
+Version 1.4 historically closed the portal-governance and Human Evaluator assignment/provenance layer. Its Super Admin/Admin/Volunteer hierarchy, invite-only provisioning, soft-deactivation, track eligibility, availability, assignment/reassignment, minimum-necessary visibility, submission locking, re-review, Admin score non-editability, Supabase Auth/RBAC, and operational audit decisions remain retained.
+
+Version 1.4 wording that required evaluator-uploaded .docx reports or described later evaluation/report/scoring topics as unresolved is superseded by Version 1.6.
+
+
+======================================================================
+31. VERSION 1.6 REVISION SUMMARY
+======================================================================
+
+Version 1.6 is the authoritative evaluation-quality/report-generation closure. It retains all compatible prior MVP decisions and supersedes stale statements that conflict with the following locked rules:
+
+- exact and near-duplicate recordings are allowed; no hashing/dedup prevention;
+- random AI double-scoring/sampling is not required for MVP;
+- criterion overlap is removed by four rubric replacements;
+- every criterion uses criterion-specific Low / Competent / Excellent qualitative anchors, with intermediate numeric scores still valid;
+- Human scoring is anchor-first, then exact numeric score;
+- each criterion contains timestamped evidence, strength, weakness, and actionable improvement advice, plus an Overall Summary;
+- Human evaluators submit structured portal data and do not upload Word reports;
+- official .docx generation is deterministic, backend-owned, shared across AI/Human, and Approved-only;
+- reports are detailed, rubric-organized, contain no full transcript, use the locked filename convention, and expose only essential user-facing provenance;
+- Gemini evaluates the original video and returns strict JSON; Version 1.6 used one automatic retry then Pending Moderation, but that AI failure-recovery rule is superseded by Version 1.8;
+- Monthly leaderboard attribution uses submission date while Approved remains the counting gate;
+- video deletion is best-effort with retries and persistent-failure logging; immediate purge of all provider replicas is not required;
+- Claude was designated as the intended primary author for later AI prompt/skill artifacts, with ChatGPT as specification-compliance reviewer; Version 1.8 defers that implementation work until Backend/API integration rather than making it the immediate workstream.
+
+======================================================================
+32. VERSION 1.7 CORRECTION SUMMARY — HISTORICAL
+======================================================================
+
+Version 1.7 does not change Auratio's locked MVP product behavior, scoring mathematics, moderation thresholds, duplicate-submission policy, or wireframed flows. It corrects specification consistency as follows:
+
+- ALR participation wording now states that submission count has no direct rating bonus, while each new Approved score can still change the active sliding window and may raise or lower ALR through its score.
+- Voice-only and screen-only scoring are explicitly described as unsupported in the MVP because speaker visibility is mandatory; submission-type-specific re-normalisation remains future-facing only.
+- Human Evaluators submit structured scoring and feedback, not reports; official .docx generation remains backend-owned and Approved-only.
+- The deleted Additional Context file is removed from the authority hierarchy.
+- At the Version 1.7 revision, the source set was Clarifications v1.7, Scoring v3.6, Execution v1.7, and Concepts & Requirements v1.7. Version 1.8 / Scoring v3.7 now supersede that current-version statement.
+- Report filenames use a canonical filesystem-safe TrackSlug: Auratio_<TrackSlug>_<Mode>_Submission-<ID>_v<version>.docx.
+
+======================================================================
+33. VERSION 1.8 STUDENT-MVP AI SIMPLIFICATION SUMMARY
+======================================================================
+
+Version 1.8 retains the complete Version 1.7 MVP baseline except for the AI failure-recovery path.
+
+Locked Version 1.8 changes:
+- Gemini remains the configured direct-video evaluator and must return strict predefined structured JSON.
+- Auratio performs basic structure and scoring-integrity validation.
+- A usable AI result may auto-approve under the existing publication rules.
+- A failed API call or unusable AI result becomes Rejected.
+- The MVP performs no automatic AI evaluation retry.
+- AI-output failures do not enter Pending Moderation. Pending Moderation remains part of the Human evaluation/moderation workflow where already defined.
+- Rejected AI evaluations produce no official report, private-progress effect, qualification effect, or leaderboard effect. The user may submit a new request after the terminal Rejected outcome.
+- Advanced AI reliability engineering (automatic retry/recovery, AI-failure moderation, random double-scoring, multi-pass checking) is deferred beyond the student MVP.
+- Lightweight Gemini prompt/track modules, exact JSON realization, and criterion-specific anchor prose are implementation-stage artifacts deferred to Backend/API integration. They do not block Step III.
+- The immediate development stage is Step III — High-Fidelity UI/UX Design. Step II wireframes remain locked because this simplification removes backend complexity without introducing a new user-facing state.
+
+Current authoritative source set:
+- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8
+- Auratio Scoring & Leaderboard System Specification v3.7
+- Auratio Execution Specification / Master Brand Specification & Execution Plan v1.8
+- Auratio MVP Concepts & Requirements v1.8
+
+END OF AUTHORITATIVE CLARIFICATIONS
+======================================================================
