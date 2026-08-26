@@ -22,7 +22,7 @@ class AuratioChipTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = switch (size) {
+    final visualHeight = switch (size) {
       AuratioChipTabSize.small => 34.0,
       AuratioChipTabSize.medium => AuratioSizing.minimumTouchTarget,
     };
@@ -33,31 +33,52 @@ class AuratioChipTab extends StatelessWidget {
 
     return Semantics(
       button: true,
+      enabled: onPressed != null,
+      excludeSemantics: true,
+      label: label,
       selected: selected,
-      child: Material(
-        color: selected
-            ? AuratioColors.actionPrimaryBackground
-            : AuratioColors.surfaceDefault,
-        shape: StadiumBorder(
-          side: selected
-              ? BorderSide.none
-              : const BorderSide(color: AuratioColors.borderStrong),
-        ),
-        child: InkWell(
-          onTap: onPressed,
-          customBorder: const StadiumBorder(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: height),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Opacity(
+        opacity: onPressed == null ? AuratioOpacity.disabled : 1,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            customBorder: const StadiumBorder(),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: AuratioSizing.minimumTouchTarget,
+                minHeight: AuratioSizing.minimumTouchTarget,
+              ),
               child: Center(
-                widthFactor: 1,
-                child: Text(
-                  label,
-                  style: AuratioTypography.labelMedium.copyWith(
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
                     color: selected
-                        ? AuratioColors.textOnBrand
-                        : AuratioColors.textSecondary,
+                        ? AuratioColors.actionPrimaryBackground
+                        : AuratioColors.surfaceDefault,
+                    shape: StadiumBorder(
+                      side: selected
+                          ? BorderSide.none
+                          : const BorderSide(color: AuratioColors.borderStrong),
+                    ),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: visualHeight),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      child: Center(
+                        widthFactor: 1,
+                        child: Text(
+                          label,
+                          style: AuratioTypography.labelMedium.copyWith(
+                            color: selected
+                                ? AuratioColors.textOnBrand
+                                : AuratioColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

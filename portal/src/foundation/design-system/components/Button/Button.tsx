@@ -37,9 +37,11 @@ export function AuratioButton({
 
   return (
     <button className={classes} type={type} {...props}>
-      {leading && <span className="auratio-button__icon">{leading}</span>}
-      <span className="auratio-button__label">{children}</span>
-      {trailing && <span className="auratio-button__icon">{trailing}</span>}
+      <span className="auratio-button__surface">
+        {leading && <span className="auratio-button__icon">{leading}</span>}
+        <span className="auratio-button__label">{children}</span>
+        {trailing && <span className="auratio-button__icon">{trailing}</span>}
+      </span>
     </button>
   )
 }

@@ -47,6 +47,7 @@ class AuratioButton extends StatelessWidget {
           EdgeInsets.symmetric(horizontal: horizontalPadding),
         ),
         elevation: const WidgetStatePropertyAll(0),
+        tapTargetSize: MaterialTapTargetSize.padded,
         backgroundColor: WidgetStateProperty.resolveWith(_backgroundColor),
         foregroundColor: WidgetStateProperty.resolveWith(_foregroundColor),
         overlayColor: WidgetStatePropertyAll(
@@ -112,6 +113,10 @@ class AuratioButton extends StatelessWidget {
         color: AuratioColors.borderFocus,
         width: AuratioBorders.emphasized,
       );
+    }
+    if (states.contains(WidgetState.disabled) &&
+        variant == AuratioButtonVariant.secondary) {
+      return const BorderSide(color: AuratioColors.borderDefault);
     }
     if (variant == AuratioButtonVariant.secondary) {
       return const BorderSide(color: AuratioColors.borderStrong);

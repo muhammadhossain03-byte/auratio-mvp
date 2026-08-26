@@ -40,10 +40,11 @@ class AuratioInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final supportingStyle = AuratioTypography.caption.copyWith(
-      color: errorText == null
-          ? AuratioColors.textTertiary
-          : AuratioColors.red700,
+    final helperStyle = AuratioTypography.caption.copyWith(
+      color: AuratioColors.textTertiary,
+    );
+    final errorStyle = AuratioTypography.caption.copyWith(
+      color: AuratioColors.statusRejectedForeground,
     );
 
     return Semantics(
@@ -78,9 +79,9 @@ class AuratioInput extends StatelessWidget {
             decoration: InputDecoration(
               hintText: placeholder,
               helperText: errorText == null ? helperText : null,
-              helperStyle: supportingStyle,
+              helperStyle: helperStyle,
               errorText: errorText,
-              errorStyle: supportingStyle,
+              errorStyle: errorStyle,
               prefixIcon: prefix,
               suffixIcon: suffix,
               fillColor: enabled

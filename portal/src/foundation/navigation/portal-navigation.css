@@ -18,8 +18,9 @@
 }
 
 .auratio-portal-shell__brand {
+  /* 72px is derived from the v1.8 portal shell, not a formal Figma variable. */
   display: flex;
-  min-height: var(--auratio-header-height);
+  min-height: 72px;
   align-items: center;
   justify-content: space-between;
   gap: var(--auratio-space-8);
@@ -76,11 +77,12 @@
 }
 
 .auratio-portal-shell__header {
+  /* 72px is derived from the v1.8 portal shell, not a formal Figma variable. */
   position: sticky;
   top: 0;
   z-index: 1;
   display: flex;
-  min-height: var(--auratio-header-height);
+  min-height: 72px;
   align-items: center;
   border-bottom: var(--auratio-border-1) solid var(--auratio-border-default);
   background: var(--auratio-surface-default);

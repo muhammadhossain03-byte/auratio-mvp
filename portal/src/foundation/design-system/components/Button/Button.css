@@ -2,6 +2,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: var(--auratio-touch-min);
+  min-height: var(--auratio-touch-min);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.auratio-button__surface {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: var(--auratio-space-8);
   border: var(--auratio-border-1) solid transparent;
   border-radius: var(--auratio-radius-12);
@@ -10,57 +22,72 @@
   letter-spacing: var(--auratio-tracking-label);
   line-height: var(--auratio-line-20);
   white-space: nowrap;
-  cursor: pointer;
 }
 
-.auratio-button--small {
+.auratio-button--small .auratio-button__surface {
   min-height: var(--auratio-control-sm);
   padding: 9px var(--auratio-space-16);
 }
 
-.auratio-button--medium {
+.auratio-button--medium .auratio-button__surface {
   min-height: var(--auratio-control-md);
   padding: 13px var(--auratio-space-20);
 }
 
-.auratio-button--primary {
+.auratio-button--primary .auratio-button__surface {
   background: var(--auratio-action-primary-bg);
   color: var(--auratio-action-primary-fg);
 }
 
-.auratio-button--secondary {
+.auratio-button--secondary .auratio-button__surface {
   border-color: var(--auratio-border-strong);
   background: var(--auratio-action-secondary-bg);
   color: var(--auratio-action-secondary-fg);
 }
 
-.auratio-button--accent {
+.auratio-button--accent .auratio-button__surface {
   background: var(--auratio-action-accent-bg);
   color: var(--auratio-action-accent-fg);
 }
 
-.auratio-button--ghost {
+.auratio-button--ghost .auratio-button__surface {
   background: transparent;
   color: var(--auratio-action-secondary-fg);
 }
 
 .auratio-button:focus-visible {
-  outline: var(--auratio-border-2) solid var(--auratio-border-focus);
-  outline-offset: 0;
+  outline: 0;
 }
 
-.auratio-button:disabled {
+.auratio-button:focus-visible .auratio-button__surface {
+  border-color: var(--auratio-border-focus);
+  box-shadow: inset 0 0 0 var(--auratio-border-1)
+    var(--auratio-border-focus);
+}
+
+.auratio-button:disabled .auratio-button__surface {
   border-color: transparent;
   background: var(--auratio-action-disabled-bg);
   color: var(--auratio-action-disabled-fg);
+}
+
+.auratio-button:disabled {
   cursor: not-allowed;
 }
 
-.auratio-button--ghost:disabled {
+.auratio-button--secondary:disabled .auratio-button__surface {
+  border-color: var(--auratio-border-default);
+}
+
+.auratio-button--ghost:disabled .auratio-button__surface {
   background: transparent;
 }
 
 .auratio-button--expand {
+  width: 100%;
+}
+
+.auratio-button--expand .auratio-button__surface {
   width: 100%;
 }
 

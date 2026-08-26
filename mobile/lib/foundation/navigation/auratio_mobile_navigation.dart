@@ -4,6 +4,17 @@ import '../design_system/tokens/auratio_colors.dart';
 import '../design_system/tokens/auratio_metrics.dart';
 import '../design_system/tokens/auratio_typography.dart';
 
+/// Component measurements read from the canonical v1.8 mobile-navigation
+/// component. These are layout measurements, not formal Figma variables.
+abstract final class AuratioMobileNavigationLayout {
+  static const barHeight = 74.0;
+  static const itemWidth = 78.0;
+  static const itemHeight = 60.0;
+  static const iconShellWidth = 36.0;
+  static const iconShellHeight = 30.0;
+  static const iconSize = 20.0;
+}
+
 @immutable
 class AuratioMobileDestination {
   const AuratioMobileDestination({required this.label, required this.icon});
@@ -32,21 +43,23 @@ class AuratioMobileNavigationItem extends StatelessWidget {
 
     return Semantics(
       button: true,
+      enabled: true,
+      excludeSemantics: true,
       selected: active,
       label: destination.label,
       child: InkResponse(
         onTap: onTap,
         radius: AuratioSizing.minimumTouchTarget / 2,
         child: SizedBox(
-          width: 78,
-          height: 60,
+          width: AuratioMobileNavigationLayout.itemWidth,
+          height: AuratioMobileNavigationLayout.itemHeight,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 160),
-                width: 36,
-                height: 30,
+                width: AuratioMobileNavigationLayout.iconShellWidth,
+                height: AuratioMobileNavigationLayout.iconShellHeight,
                 decoration: BoxDecoration(
                   color: active
                       ? AuratioColors.surfaceBrandSoft
@@ -54,7 +67,10 @@ class AuratioMobileNavigationItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AuratioRadii.pill),
                 ),
                 child: IconTheme(
-                  data: IconThemeData(color: foreground, size: 20),
+                  data: IconThemeData(
+                    color: foreground,
+                    size: AuratioMobileNavigationLayout.iconSize,
+                  ),
                   child: Center(child: destination.icon),
                 ),
               ),
@@ -88,25 +104,30 @@ class AuratioMobileNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomSystemInset = MediaQuery.viewPaddingOf(context).bottom;
+
     return DecoratedBox(
       decoration: const BoxDecoration(
         color: AuratioColors.surfaceDefault,
         border: Border(top: BorderSide(color: AuratioColors.borderDefault)),
       ),
-      child: SizedBox(
-        height: AuratioSizing.mobileNavigationHeight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AuratioSpacing.md),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              for (var index = 0; index < destinations.length; index++)
-                AuratioMobileNavigationItem(
-                  destination: destinations[index],
-                  active: index == currentIndex,
-                  onTap: () => onDestinationSelected(index),
-                ),
-            ],
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomSystemInset),
+        child: SizedBox(
+          height: AuratioMobileNavigationLayout.barHeight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AuratioSpacing.md),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                for (var index = 0; index < destinations.length; index++)
+                  AuratioMobileNavigationItem(
+                    destination: destinations[index],
+                    active: index == currentIndex,
+                    onTap: () => onDestinationSelected(index),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

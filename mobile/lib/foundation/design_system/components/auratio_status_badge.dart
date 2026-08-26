@@ -37,6 +37,7 @@ class AuratioStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      excludeSemantics: true,
       label: 'Status: ${status.label}',
       child: DecoratedBox(
         decoration: BoxDecoration(

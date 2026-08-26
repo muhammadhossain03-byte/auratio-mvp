@@ -1,3 +1,4 @@
+// Formal variables from the Figma `Auratio / Metrics` collection only.
 abstract final class AuratioSpacing {
   static const none = 0.0;
   static const xxs = 2.0;
@@ -36,9 +37,7 @@ abstract final class AuratioSizing {
   static const controlLarge = 56.0;
   static const mobileCanvasWidth = 390.0;
   static const mobileCanvasHeight = 844.0;
-  static const mobileNavigationHeight = 74.0;
   static const portalSidebarWidth = 232.0;
-  static const portalHeaderHeight = 72.0;
 }
 
 abstract final class AuratioOpacity {

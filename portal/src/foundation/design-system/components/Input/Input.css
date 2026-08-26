@@ -22,8 +22,9 @@
 }
 
 .auratio-input__control:focus-within {
-  border-width: var(--auratio-border-2);
   border-color: var(--auratio-border-focus);
+  box-shadow: inset 0 0 0 var(--auratio-border-1)
+    var(--auratio-border-focus);
 }
 
 .auratio-input__field {
@@ -64,6 +65,11 @@
 
 .auratio-input--error .auratio-input__control {
   border-color: var(--auratio-border-error);
+}
+
+.auratio-input--error .auratio-input__control:focus-within {
+  box-shadow: inset 0 0 0 var(--auratio-border-1)
+    var(--auratio-border-error);
 }
 
 .auratio-input--error .auratio-input__support {

@@ -32,7 +32,7 @@ export function AuratioChipTab({
       type={type}
       {...props}
     >
-      {children}
+      <span className="auratio-chip-tab__surface">{children}</span>
     </button>
   )
 }
