@@ -1,0 +1,158 @@
+Auratio — Step IV Implementation Handoff
+Version 1.1
+Date: 26 August 2026
+
+PURPOSE
+Use this file to resume Auratio Step IV in a fresh ChatGPT conversation or coding-agent session without reconstructing the implementation history.
+
+CURRENT STATE
+Steps I–III are complete and locked.
+Step IV — UI Coding is IN PROGRESS.
+No production backend/database/API work has started.
+
+AUTHORITATIVE PRODUCT SOURCES
+- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8
+- Auratio MVP — Path Selection Addendum v1.0 for Path-selection behavior
+- Auratio Scoring & Leaderboard System Specification v3.7 for scoring/moderation/leaderboards
+- Auratio Execution Specification v1.8
+- Auratio MVP Concepts & Requirements v1.8
+- Older briefs/overviews/planning files are contextual only
+
+Figma `03 — Interactive Prototype — MVP v1.8` is authoritative for visual and prototype-interaction implementation.
+Written sources prevail for product rules, security, persistence, scoring, moderation, governance, and backend semantics.
+
+FIGMA
+File key:
+naweFj39KPJSa18ARtl0ll
+
+Inventory:
+- 41 User Mobile screens
+- 8 Shared Portal Authentication screens
+- 16 Volunteer Evaluator screens
+- 23 Admin screens
+- 5 Super Admin screens
+- 93 total screens
+- 436 interaction bindings
+- 0 invalid destinations after final prototype QA
+
+GITHUB
+Repository:
+muhammadhossain03-byte/auratio-mvp
+
+Current Step IV branch:
+step-iv/ui-foundation
+
+Approved HEAD:
+2bfa094d5ad4d83e47c8242b39428b02121db4ac
+
+Commit:
+fix: resolve final UI foundation QA issues
+
+IMPORTANT CHECKPOINTS
+1d9db3d7828de01dcea3257f2890d7058b2aa125
+- authoritative project-source baseline
+
+8f1115111182967151c23fa9418df73094325f5d
+- Flutter + portal scaffold
+
+a06c2d8bc64bf65252f245125a46e3b87685212f
+- Figma-derived shared UI foundation
+
+80d3624b042005b4071e58790dea202a0caf19c4
+- UI foundation hardening
+
+2bfa094d5ad4d83e47c8242b39428b02121db4ac
+- final pre-batch foundation QA fixes
+
+IMPLEMENTED FOUNDATION
+/mobile:
+- Flutter
+- Riverpod
+- go_router
+- Figma-derived design system
+- Button, Input, Card, Status Badge, Chip/Tab
+- reusable mobile navigation/shell
+- route-group foundation
+- locally bundled Inter 4.1
+- safe-area/touch-target/semantics hardening
+- 8 passing foundation tests
+
+/portal:
+- React
+- TypeScript
+- Vite
+- React Router
+- matching design tokens and typography
+- Button, Input, Card, Status Badge, Chip/Tab
+- portal sidebar/shell/navigation foundation
+- route-group foundation
+- locally bundled Inter 4.1
+- stable focus geometry and 44px hit-target handling
+- lint and production build passing
+
+Root:
+- /docs authoritative sources
+- AGENTS.md implementation guardrails
+- Inter third-party license
+
+FINAL PRE-BATCH QA
+- Figma fidelity passed after final corrections.
+- Flutter runtime passed at 390 × 844 with bottom inset and no overflow.
+- Flutter format/analyze passed.
+- 8 Flutter tests passed.
+- Portal install/lint/production build passed.
+- Portal served HTTP 200.
+- Full portal browser-render inspection was blocked by a Tabby tab-creation tooling failure; revisit real browser visual QA once portal screens are being implemented.
+- Final fixes: locked `Pending Moderation` label in Flutter/React and corrected the portal input focus-outline cascade.
+
+STEP IV BOUNDARY
+Use local/mock frontend state only.
+Do not add production Supabase, database, storage, Gemini, API/Edge Functions, real auth/RBAC, scoring engines, leaderboard engines, report generation, or other Steps V–VII responsibilities yet.
+
+TOOL UTILIZATION
+ChatGPT = headquarters:
+- inspect specs
+- inspect Figma
+- inspect GitHub
+- plan batches
+- review commits
+- detect product/visual inconsistencies
+- prepare exact executor prompts
+
+Codex = preferred Figma-aware local UI executor while quota permits.
+
+Antigravity 2 = bulk/overflow local executor once established patterns exist; GitHub-aware but not relied upon to independently reinterpret Figma-sensitive UI.
+
+Claude Code = specialist for difficult architecture, state/navigation, debugging, refactoring, or independent deep review.
+
+Kimi Code = backup/overflow executor.
+
+Execution cycle:
+ChatGPT plans -> one executor implements/tests -> clean commit/push -> ChatGPT reviews -> next batch.
+
+Never let two coding agents work on different uncommitted states of the same batch.
+
+NEXT SCREEN BATCH
+Mobile Authentication + Onboarding Core:
+282:61 — Sign In
+295:56 — Create Account
+297:153 — Verify Email
+297:171 — Email Verified
+295:82 — Onboarding Intro
+295:153 — Choose Paths
+297:250 — Sign In New Account
+
+Acceptance:
+- inspect all seven Figma nodes
+- reuse existing approved foundation
+- Figma-faithful 390 × 844 implementation
+- local/mock authentication and onboarding state only
+- Path selection supports one or more Paths and remains personalization rather than access control
+- no production backend work
+- format/analyze/test
+- visual QA
+- clean commit + push
+- stop after the batch
+
+STARTING INSTRUCTION FOR A FRESH CHAT
+Continue Auratio Step IV from the attached updated Project Status and Step IV Implementation Handoff. Inspect the current GitHub branch and Figma before directing or reviewing the next implementation batch.

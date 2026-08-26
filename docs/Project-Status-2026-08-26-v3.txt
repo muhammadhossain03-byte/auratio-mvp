@@ -1,0 +1,174 @@
+Auratio Project Status — 26 August 2026
+Version 3 — Step IV Pre-Batch QA Update
+
+CURRENT MILESTONE
+Auratio has completed and locked Steps I–III. Step IV — UI Coding is now IN PROGRESS.
+
+AUTHORITATIVE MVP BASELINE
+- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8
+- Auratio MVP Concepts & Requirements v1.8
+- Auratio Execution Specification / Master Brand Specification & Execution Plan v1.8
+- Auratio Scoring & Leaderboard System Specification v3.7
+- Auratio MVP — Path Selection Addendum v1.0
+
+Figma page `03 — Interactive Prototype — MVP v1.8` is authoritative for visual and prototype-interaction implementation.
+Written specifications prevail for product rules, security, persistence, scoring, moderation, governance, and backend semantics.
+
+DEVELOPMENT STATUS
+Step I — Concepts & Requirements: COMPLETE AND LOCKED.
+Step II — Wireframing: COMPLETE AND LOCKED.
+Step III — High-Fidelity UI/UX Design: COMPLETE AND LOCKED.
+Step III — Interactive Figma Prototype: COMPLETE AND LOCKED.
+Step IV — UI Coding: IN PROGRESS.
+Step V — Database: NOT STARTED.
+Step VI — Backend: NOT STARTED.
+Step VII — API Integration: NOT STARTED.
+Step VIII — QA / Testing: NOT STARTED as a dedicated phase; Step IV changes are nevertheless validated continuously.
+Step IX — Deployment / Cloud Hosting: NOT STARTED.
+Step X — App Store Launch: NOT STARTED.
+
+FINAL FIGMA PROTOTYPE
+File key: naweFj39KPJSa18ARtl0ll
+Prototype page: 03 — Interactive Prototype — MVP v1.8
+
+Locked inventory:
+- 93 total screens
+- 41 mobile-user screens
+- 16 Volunteer Evaluator screens
+- 23 Admin screens
+- 5 Super Admin screens
+- 8 shared portal-authentication screens
+- 436 interaction bindings
+- 0 invalid prototype destinations after final QA
+
+STEP IV REPOSITORY STATUS
+GitHub repository:
+muhammadhossain03-byte/auratio-mvp
+
+Primary Step IV branch:
+step-iv/ui-foundation
+
+Current approved HEAD:
+2bfa094d5ad4d83e47c8242b39428b02121db4ac
+Commit:
+fix: resolve final UI foundation QA issues
+
+Important checkpoints:
+- 1d9db3d7828de01dcea3257f2890d7058b2aa125 — authoritative project-source baseline
+- 8f1115111182967151c23fa9418df73094325f5d — Flutter + portal scaffold
+- a06c2d8bc64bf65252f245125a46e3b87685212f — shared Figma-derived UI foundation
+- 80d3624b042005b4071e58790dea202a0caf19c4 — foundation hardening
+- 2bfa094d5ad4d83e47c8242b39428b02121db4ac — final pre-batch foundation QA fixes
+
+STEP IV IMPLEMENTATION COMPLETED SO FAR
+Repository foundation:
+- /docs contains authoritative project sources.
+- /mobile uses Flutter + Riverpod + go_router.
+- /portal uses React + TypeScript + Vite + React Router.
+- Root AGENTS.md defines implementation guardrails and validation commands.
+
+Shared UI foundation:
+- Figma-derived color and semantic tokens
+- locally bundled Inter 4.1
+- typography, spacing, radii, sizing, elevation
+- reusable Button, Input, Card, Status Badge, Chip/Tab
+- mobile shell/navigation primitives
+- portal shell/sidebar/navigation primitives
+- route-group foundations
+
+Foundation hardening:
+- 44px minimum interactive targets
+- corrected Flutter validator error styling
+- portal focus styling without geometry shift
+- mobile safe-area handling
+- normalized disabled-state/semantics behavior
+- formal Figma variables separated from derived layout measurements
+
+FINAL PRE-BATCH QA
+A final Figma/runtime/validation audit was completed before starting real product screens.
+
+Results:
+- Figma fidelity: PASSED after final small corrections.
+- Canonical tokens, dimensions, states, navigation measurements, and bundled Inter alignment were checked.
+- Flutter runtime smoke test passed at the locked 390 × 844 viewport with bottom inset and no overflow.
+- Flutter format/analyze passed.
+- 8 Flutter tests passed.
+- Portal install/lint/production build passed.
+- Portal served successfully with HTTP 200.
+- Full browser-render visual inspection of the portal was not completed in this pass because the local Tabby browser tab-creation mechanism failed; this was an environment/tooling limitation, not an application build failure.
+
+Final QA fixes:
+- Status label changed from `Pending` to the locked `Pending Moderation` wording in both Flutter and React.
+- Flutter status-label test updated accordingly.
+- Portal input focus-visible cascade corrected so the component-owned focus treatment is not visually conflicted by the global outline.
+
+No real product-screen batch has been implemented yet.
+The approved foundation is ready for Figma screen implementation.
+
+STEP IV SCOPE BOUNDARY
+Step IV implements the locked Figma UI, routing, visible interactions, and realistic local/mock frontend state.
+
+Step IV does NOT implement production:
+- Supabase persistence/database
+- live authentication/session/email verification/password reset
+- backend-enforced RBAC
+- storage/video processing
+- Gemini evaluation calls
+- production APIs / Edge Functions
+- production scoring, ALR, mastery, leaderboard services
+- deterministic .docx report generation
+- other Steps V–VII responsibilities
+
+LOCKED USER PATH BEHAVIOR
+- During onboarding, users select one or more of: Public Speaking, Professional Presenting, Content Creation.
+- Users may add or remove selected Paths later.
+- Paths personalize the experience; they do not restrict access.
+- All 13 tracks remain browsable and available regardless of selected Paths.
+- Path changes must not alter historical evaluations, Approved scores, reports, Track Mastery, or historical leaderboard/evaluation records.
+
+LOCKED TOOL WORKFLOW
+ChatGPT:
+- project headquarters
+- specification/Figma checking
+- GitHub inspection
+- batching, QA, code/diff review, executor prompts
+
+Codex:
+- preferred Figma-aware local UI executor while quota is available
+
+Antigravity 2:
+- bulk/overflow local executor once reusable patterns are established; GitHub-aware but not used to independently reinterpret Figma-sensitive UI
+
+Claude Code:
+- specialist for difficult architecture, state/navigation, debugging, refactoring, and independent deep review
+
+Kimi Code:
+- backup/overflow implementation and debugging
+
+Execution rule:
+ChatGPT plans -> one executor implements/tests -> commit/push -> ChatGPT reviews -> next batch.
+Never switch coding agents in the middle of an uncommitted batch.
+
+NEXT IMPLEMENTATION BATCH
+Mobile Authentication + Onboarding Core:
+- 282:61 — Sign In
+- 295:56 — Create Account
+- 297:153 — Verify Email
+- 297:171 — Email Verified
+- 295:82 — Onboarding Intro
+- 295:153 — Choose Paths
+- 297:250 — Sign In New Account
+
+Acceptance expectations:
+- inspect each Figma node directly
+- reuse the approved foundation
+- Figma-faithful 390 × 844 implementation
+- mock/local frontend state only
+- Path selection allows one or more Paths and remains personalization, not access restriction
+- Flutter format/analyze/test
+- visual QA against Figma
+- clean commit + push
+- stop after the batch
+
+BOTTOM LINE
+Auratio has moved from the completed design phase into Step IV implementation. The Flutter and React foundations are scaffolded, hardened, Figma-audited, validated, pushed, and approved. The next technical action is the first real Figma screen batch: Mobile Authentication + Onboarding Core.
