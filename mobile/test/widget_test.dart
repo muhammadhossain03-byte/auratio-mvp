@@ -45,7 +45,12 @@ void main() {
       ),
     );
 
-    for (final label in ['Processing', 'Pending', 'Approved', 'Rejected']) {
+    for (final label in [
+      'Processing',
+      'Pending Moderation',
+      'Approved',
+      'Rejected',
+    ]) {
       expect(find.text(label), findsOneWidget);
     }
   });

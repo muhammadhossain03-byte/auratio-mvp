@@ -39,6 +39,10 @@
   line-height: var(--auratio-line-20);
 }
 
+.auratio-input__field:focus-visible {
+  outline: 0;
+}
+
 .auratio-input__field::placeholder {
   color: var(--auratio-text-tertiary);
   opacity: 1;

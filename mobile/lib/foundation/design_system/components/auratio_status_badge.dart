@@ -9,7 +9,7 @@ enum AuratioStatus { processing, pending, approved, rejected }
 extension on AuratioStatus {
   String get label => switch (this) {
     AuratioStatus.processing => 'Processing',
-    AuratioStatus.pending => 'Pending',
+    AuratioStatus.pending => 'Pending Moderation',
     AuratioStatus.approved => 'Approved',
     AuratioStatus.rejected => 'Rejected',
   };
