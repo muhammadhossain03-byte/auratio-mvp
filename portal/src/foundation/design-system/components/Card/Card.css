@@ -1,0 +1,32 @@
+.auratio-card {
+  display: grid;
+  gap: var(--auratio-space-8);
+  border: var(--auratio-border-1) solid var(--auratio-border-default);
+  border-radius: var(--auratio-radius-16);
+  padding: var(--auratio-space-20);
+}
+
+.auratio-card--default {
+  background: var(--auratio-surface-default);
+}
+
+.auratio-card--brand-soft {
+  background: var(--auratio-surface-brand-soft);
+}
+
+.auratio-card--raised {
+  box-shadow: var(--auratio-elevation-200);
+}
+
+.auratio-card__title {
+  color: var(--auratio-text-primary);
+  font-size: var(--auratio-font-size-18);
+  font-weight: 600;
+  line-height: var(--auratio-line-26);
+}
+
+.auratio-card__body {
+  color: var(--auratio-text-secondary);
+  font-size: var(--auratio-font-size-14);
+  line-height: var(--auratio-line-20);
+}

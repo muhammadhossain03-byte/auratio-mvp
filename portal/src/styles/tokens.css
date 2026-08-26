@@ -1,0 +1,138 @@
+:root {
+  /* Auratio / Color Primitives */
+  --auratio-brand-navy-950: #021226;
+  --auratio-brand-navy-900: #041b3b;
+  --auratio-brand-navy-800: #08274d;
+  --auratio-brand-navy-700: #0a315e;
+  --auratio-brand-blue-50: #f3f8fe;
+  --auratio-brand-blue-100: #e6f0fa;
+  --auratio-brand-blue-200: #b2caeb;
+  --auratio-brand-blue-300: #8fbfe8;
+  --auratio-brand-blue-500: #53a6e6;
+  --auratio-brand-blue-600: #348bcb;
+  --auratio-brand-blue-700: #256ea5;
+  --auratio-neutral-white: #fff;
+  --auratio-neutral-25: #fcfdfe;
+  --auratio-neutral-50: #f7f9fc;
+  --auratio-neutral-100: #eef2f7;
+  --auratio-neutral-200: #dce3ed;
+  --auratio-neutral-300: #c8d2e0;
+  --auratio-neutral-400: #98a6b9;
+  --auratio-neutral-500: #6b788a;
+  --auratio-neutral-600: #4e5968;
+  --auratio-neutral-700: #374151;
+  --auratio-neutral-800: #1f2937;
+  --auratio-neutral-900: #111827;
+  --auratio-neutral-950: #0a0f1a;
+  --auratio-green-50: #eaf7f0;
+  --auratio-green-500: #2f9e68;
+  --auratio-green-700: #1f6b48;
+  --auratio-amber-50: #fff7e8;
+  --auratio-amber-500: #d98b1f;
+  --auratio-amber-700: #925f12;
+  --auratio-red-50: #fff0f0;
+  --auratio-red-500: #d94b4b;
+  --auratio-red-700: #9e3232;
+
+  /* Auratio / Color Semantics */
+  --auratio-bg-app: var(--auratio-neutral-25);
+  --auratio-bg-brand: var(--auratio-brand-navy-900);
+  --auratio-bg-inverse: var(--auratio-neutral-950);
+  --auratio-surface-default: var(--auratio-neutral-white);
+  --auratio-surface-subtle: var(--auratio-neutral-50);
+  --auratio-surface-raised: var(--auratio-neutral-white);
+  --auratio-surface-brand-soft: var(--auratio-brand-blue-50);
+  --auratio-surface-disabled: var(--auratio-neutral-100);
+  --auratio-text-primary: var(--auratio-neutral-900);
+  --auratio-text-secondary: var(--auratio-neutral-600);
+  --auratio-text-tertiary: var(--auratio-neutral-500);
+  --auratio-text-on-brand: var(--auratio-neutral-white);
+  --auratio-text-link: var(--auratio-brand-blue-700);
+  --auratio-border-default: var(--auratio-neutral-200);
+  --auratio-border-strong: var(--auratio-neutral-300);
+  --auratio-border-focus: var(--auratio-brand-blue-500);
+  --auratio-border-error: var(--auratio-red-500);
+  --auratio-action-primary-bg: var(--auratio-brand-navy-900);
+  --auratio-action-primary-fg: var(--auratio-neutral-white);
+  --auratio-action-secondary-bg: var(--auratio-neutral-white);
+  --auratio-action-secondary-fg: var(--auratio-brand-navy-900);
+  --auratio-action-accent-bg: var(--auratio-brand-blue-500);
+  --auratio-action-accent-fg: var(--auratio-brand-navy-900);
+  --auratio-action-disabled-bg: var(--auratio-neutral-100);
+  --auratio-action-disabled-fg: var(--auratio-neutral-400);
+  --auratio-status-processing-bg: var(--auratio-brand-blue-50);
+  --auratio-status-processing-fg: var(--auratio-brand-navy-800);
+  --auratio-status-pending-bg: var(--auratio-amber-50);
+  --auratio-status-pending-fg: var(--auratio-amber-700);
+  --auratio-status-approved-bg: var(--auratio-green-50);
+  --auratio-status-approved-fg: var(--auratio-green-700);
+  --auratio-status-rejected-bg: var(--auratio-red-50);
+  --auratio-status-rejected-fg: var(--auratio-red-700);
+  --auratio-icon-default: var(--auratio-neutral-700);
+  --auratio-icon-muted: var(--auratio-neutral-400);
+  --auratio-icon-brand: var(--auratio-brand-blue-500);
+
+  /* Auratio / Metrics */
+  --auratio-space-0: 0;
+  --auratio-space-2: 2px;
+  --auratio-space-4: 4px;
+  --auratio-space-8: 8px;
+  --auratio-space-12: 12px;
+  --auratio-space-16: 16px;
+  --auratio-space-20: 20px;
+  --auratio-space-24: 24px;
+  --auratio-space-32: 32px;
+  --auratio-space-40: 40px;
+  --auratio-space-48: 48px;
+  --auratio-space-64: 64px;
+  --auratio-space-80: 80px;
+  --auratio-radius-0: 0;
+  --auratio-radius-4: 4px;
+  --auratio-radius-8: 8px;
+  --auratio-radius-12: 12px;
+  --auratio-radius-16: 16px;
+  --auratio-radius-20: 20px;
+  --auratio-radius-pill: 999px;
+  --auratio-border-1: 1px;
+  --auratio-border-2: 2px;
+  --auratio-touch-min: 44px;
+  --auratio-control-sm: 40px;
+  --auratio-control-md: 48px;
+  --auratio-control-lg: 56px;
+  --auratio-mobile-width: 390px;
+  --auratio-mobile-height: 844px;
+  --auratio-sidebar-width: 232px;
+  --auratio-header-height: 72px;
+  --auratio-opacity-disabled: 0.48;
+  --auratio-opacity-subtle: 0.72;
+
+  /* Auratio / Typography */
+  --auratio-font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --auratio-font-size-11: 11px;
+  --auratio-font-size-12: 12px;
+  --auratio-font-size-14: 14px;
+  --auratio-font-size-16: 16px;
+  --auratio-font-size-18: 18px;
+  --auratio-font-size-20: 20px;
+  --auratio-font-size-24: 24px;
+  --auratio-font-size-32: 32px;
+  --auratio-font-size-40: 40px;
+  --auratio-line-16: 16px;
+  --auratio-line-18: 18px;
+  --auratio-line-20: 20px;
+  --auratio-line-24: 24px;
+  --auratio-line-26: 26px;
+  --auratio-line-28: 28px;
+  --auratio-line-32: 32px;
+  --auratio-line-40: 40px;
+  --auratio-line-48: 48px;
+  --auratio-tracking-tight: -0.3px;
+  --auratio-tracking-normal: 0;
+  --auratio-tracking-label: 0.2px;
+
+  /* Auratio elevation styles */
+  --auratio-elevation-100: 0 1px 3px rgb(4 27 59 / 6%);
+  --auratio-elevation-200: 0 4px 12px -2px rgb(4 27 59 / 8%);
+  --auratio-elevation-300: 0 12px 32px -6px rgb(4 27 59 / 12%);
+}

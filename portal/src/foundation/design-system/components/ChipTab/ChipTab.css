@@ -1,0 +1,35 @@
+.auratio-chip-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--auratio-border-1) solid var(--auratio-border-strong);
+  border-radius: var(--auratio-radius-pill);
+  background: var(--auratio-surface-default);
+  color: var(--auratio-text-secondary);
+  font-size: var(--auratio-font-size-12);
+  font-weight: 600;
+  letter-spacing: var(--auratio-tracking-label);
+  line-height: var(--auratio-line-16);
+  cursor: pointer;
+}
+
+.auratio-chip-tab--small {
+  min-height: 34px;
+  padding: 8px var(--auratio-space-12);
+}
+
+.auratio-chip-tab--medium {
+  min-height: var(--auratio-touch-min);
+  padding: 13px var(--auratio-space-16);
+}
+
+.auratio-chip-tab--selected {
+  border-color: var(--auratio-action-primary-bg);
+  background: var(--auratio-action-primary-bg);
+  color: var(--auratio-action-primary-fg);
+}
+
+.auratio-chip-tab:disabled {
+  opacity: var(--auratio-opacity-disabled);
+  cursor: not-allowed;
+}

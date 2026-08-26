@@ -1,0 +1,93 @@
+.auratio-portal-shell {
+  display: grid;
+  grid-template-columns: var(--auratio-sidebar-width) minmax(0, 1fr);
+  min-width: 1024px;
+  min-height: 100vh;
+  background: var(--auratio-bg-app);
+}
+
+.auratio-portal-shell__sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--auratio-bg-brand);
+  color: var(--auratio-text-on-brand);
+  padding: 0 11px var(--auratio-space-20);
+}
+
+.auratio-portal-shell__brand {
+  display: flex;
+  min-height: var(--auratio-header-height);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--auratio-space-8);
+  padding-inline: 14px;
+}
+
+.auratio-portal-shell__role {
+  color: var(--auratio-brand-blue-200);
+  font-size: var(--auratio-font-size-11);
+  font-weight: 500;
+  letter-spacing: var(--auratio-tracking-label);
+  line-height: var(--auratio-line-16);
+}
+
+.auratio-portal-shell__nav {
+  display: grid;
+  gap: var(--auratio-space-4);
+}
+
+.auratio-sidebar-item {
+  display: flex;
+  width: 210px;
+  min-height: var(--auratio-touch-min);
+  align-items: center;
+  gap: var(--auratio-space-12);
+  border-radius: var(--auratio-radius-12);
+  padding: var(--auratio-space-12) 14px;
+  color: var(--auratio-brand-blue-100);
+  font-size: var(--auratio-font-size-14);
+  font-weight: 600;
+  line-height: var(--auratio-line-20);
+}
+
+.auratio-sidebar-item--active {
+  background: var(--auratio-surface-brand-soft);
+  color: var(--auratio-text-primary);
+}
+
+.auratio-sidebar-item__icon {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  flex: 0 0 20px;
+}
+
+.auratio-portal-shell__sidebar-footer {
+  margin-top: auto;
+  padding-inline: 14px;
+}
+
+.auratio-portal-shell__workspace {
+  min-width: 0;
+}
+
+.auratio-portal-shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  min-height: var(--auratio-header-height);
+  align-items: center;
+  border-bottom: var(--auratio-border-1) solid var(--auratio-border-default);
+  background: var(--auratio-surface-default);
+  padding-inline: 28px;
+}
+
+.auratio-portal-shell__content {
+  min-width: 0;
+  padding: 28px;
+}

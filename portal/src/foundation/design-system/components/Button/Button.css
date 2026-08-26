@@ -1,0 +1,76 @@
+.auratio-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--auratio-space-8);
+  border: var(--auratio-border-1) solid transparent;
+  border-radius: var(--auratio-radius-12);
+  font-size: var(--auratio-font-size-14);
+  font-weight: 600;
+  letter-spacing: var(--auratio-tracking-label);
+  line-height: var(--auratio-line-20);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.auratio-button--small {
+  min-height: var(--auratio-control-sm);
+  padding: 9px var(--auratio-space-16);
+}
+
+.auratio-button--medium {
+  min-height: var(--auratio-control-md);
+  padding: 13px var(--auratio-space-20);
+}
+
+.auratio-button--primary {
+  background: var(--auratio-action-primary-bg);
+  color: var(--auratio-action-primary-fg);
+}
+
+.auratio-button--secondary {
+  border-color: var(--auratio-border-strong);
+  background: var(--auratio-action-secondary-bg);
+  color: var(--auratio-action-secondary-fg);
+}
+
+.auratio-button--accent {
+  background: var(--auratio-action-accent-bg);
+  color: var(--auratio-action-accent-fg);
+}
+
+.auratio-button--ghost {
+  background: transparent;
+  color: var(--auratio-action-secondary-fg);
+}
+
+.auratio-button:focus-visible {
+  outline: var(--auratio-border-2) solid var(--auratio-border-focus);
+  outline-offset: 0;
+}
+
+.auratio-button:disabled {
+  border-color: transparent;
+  background: var(--auratio-action-disabled-bg);
+  color: var(--auratio-action-disabled-fg);
+  cursor: not-allowed;
+}
+
+.auratio-button--ghost:disabled {
+  background: transparent;
+}
+
+.auratio-button--expand {
+  width: 100%;
+}
+
+.auratio-button__icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.auratio-button__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

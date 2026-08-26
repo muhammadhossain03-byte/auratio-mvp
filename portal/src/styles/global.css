@@ -1,0 +1,94 @@
+body {
+  min-width: 320px;
+  background: var(--auratio-bg-app);
+  color: var(--auratio-text-primary);
+  font-family: var(--auratio-font-family);
+  font-size: var(--auratio-font-size-14);
+  line-height: var(--auratio-line-20);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: var(--auratio-border-2) solid var(--auratio-border-focus);
+  outline-offset: var(--auratio-space-2);
+}
+
+::selection {
+  background: var(--auratio-brand-blue-200);
+  color: var(--auratio-text-primary);
+}
+
+.auratio-type-display-xl {
+  font-size: var(--auratio-font-size-40);
+  font-weight: 800;
+  letter-spacing: var(--auratio-tracking-tight);
+  line-height: var(--auratio-line-48);
+}
+
+.auratio-type-heading-l {
+  font-size: var(--auratio-font-size-32);
+  font-weight: 700;
+  letter-spacing: var(--auratio-tracking-tight);
+  line-height: var(--auratio-line-40);
+}
+
+.auratio-type-heading-m {
+  font-size: var(--auratio-font-size-24);
+  font-weight: 700;
+  letter-spacing: var(--auratio-tracking-tight);
+  line-height: var(--auratio-line-32);
+}
+
+.auratio-type-heading-s {
+  font-size: var(--auratio-font-size-20);
+  font-weight: 600;
+  line-height: var(--auratio-line-28);
+}
+
+.auratio-type-title-m {
+  font-size: var(--auratio-font-size-18);
+  font-weight: 600;
+  line-height: var(--auratio-line-26);
+}
+
+.auratio-type-body-l {
+  font-size: var(--auratio-font-size-16);
+  font-weight: 400;
+  line-height: var(--auratio-line-24);
+}
+
+.auratio-type-body-m {
+  font-size: var(--auratio-font-size-14);
+  font-weight: 400;
+  line-height: var(--auratio-line-20);
+}
+
+.auratio-type-body-s {
+  font-size: var(--auratio-font-size-12);
+  font-weight: 400;
+  line-height: var(--auratio-line-18);
+}
+
+.auratio-type-label-l,
+.auratio-type-label-m,
+.auratio-type-caption {
+  font-weight: 600;
+  letter-spacing: var(--auratio-tracking-label);
+}
+
+.auratio-type-label-l {
+  font-size: var(--auratio-font-size-14);
+  line-height: var(--auratio-line-20);
+}
+
+.auratio-type-label-m {
+  font-size: var(--auratio-font-size-12);
+  line-height: var(--auratio-line-16);
+}
+
+.auratio-type-caption {
+  font-size: var(--auratio-font-size-11);
+  font-weight: 500;
+  line-height: var(--auratio-line-16);
+}

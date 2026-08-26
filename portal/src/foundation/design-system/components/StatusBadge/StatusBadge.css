@@ -1,0 +1,31 @@
+.auratio-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: var(--auratio-radius-pill);
+  padding: 7px var(--auratio-space-12);
+  font-size: var(--auratio-font-size-12);
+  font-weight: 600;
+  letter-spacing: var(--auratio-tracking-label);
+  line-height: var(--auratio-line-16);
+}
+
+.auratio-status--processing {
+  background: var(--auratio-status-processing-bg);
+  color: var(--auratio-status-processing-fg);
+}
+
+.auratio-status--pending {
+  background: var(--auratio-status-pending-bg);
+  color: var(--auratio-status-pending-fg);
+}
+
+.auratio-status--approved {
+  background: var(--auratio-status-approved-bg);
+  color: var(--auratio-status-approved-fg);
+}
+
+.auratio-status--rejected {
+  background: var(--auratio-status-rejected-bg);
+  color: var(--auratio-status-rejected-fg);
+}
