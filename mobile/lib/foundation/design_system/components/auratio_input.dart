@@ -20,6 +20,10 @@ class AuratioInput extends StatelessWidget {
     this.validator,
     this.prefix,
     this.suffix,
+    this.controlHeight = AuratioSizing.controlMedium,
+    this.labelGap = 6,
+    this.labelStyle,
+    this.scrollPadding = const EdgeInsets.all(AuratioSpacing.xl),
     super.key,
   });
 
@@ -37,6 +41,10 @@ class AuratioInput extends StatelessWidget {
   final FormFieldValidator<String>? validator;
   final Widget? prefix;
   final Widget? suffix;
+  final double controlHeight;
+  final double labelGap;
+  final TextStyle? labelStyle;
+  final EdgeInsets scrollPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -55,13 +63,15 @@ class AuratioInput extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AuratioTypography.labelMedium.copyWith(
-              color: enabled
-                  ? AuratioColors.textPrimary
-                  : AuratioColors.textTertiary,
-            ),
+            style:
+                labelStyle ??
+                AuratioTypography.labelMedium.copyWith(
+                  color: enabled
+                      ? AuratioColors.textPrimary
+                      : AuratioColors.textTertiary,
+                ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: labelGap),
           TextFormField(
             controller: controller,
             focusNode: focusNode,
@@ -69,6 +79,7 @@ class AuratioInput extends StatelessWidget {
             keyboardType: keyboardType,
             textInputAction: textInputAction,
             obscureText: obscureText,
+            scrollPadding: scrollPadding,
             onChanged: onChanged,
             validator: validator,
             style: AuratioTypography.bodyMedium.copyWith(
@@ -87,9 +98,7 @@ class AuratioInput extends StatelessWidget {
               fillColor: enabled
                   ? AuratioColors.surfaceDefault
                   : AuratioColors.surfaceDisabled,
-              constraints: const BoxConstraints(
-                minHeight: AuratioSizing.controlMedium,
-              ),
+              constraints: BoxConstraints(minHeight: controlHeight),
             ),
           ),
         ],

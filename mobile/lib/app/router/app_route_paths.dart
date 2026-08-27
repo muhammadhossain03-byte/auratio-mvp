@@ -4,7 +4,16 @@ abstract final class AppRoutePaths {
   // Reserved route groups for the locked mobile journey. Feature routes are
   // registered only when their corresponding Step IV screens are implemented.
   static const authentication = '/auth';
+  static const signIn = '$authentication/sign-in';
+  static const createAccount = '$authentication/create-account';
+  static const verifyEmail = '$authentication/verify-email';
+  static const emailVerified = '$authentication/email-verified';
+  static const signInNewAccount = '$authentication/sign-in-new-account';
+
   static const onboarding = '/onboarding';
+  static const onboardingIntro = '$onboarding/intro';
+  static const choosePaths = '$onboarding/choose-paths';
+
   static const home = '/home';
   static const tracks = '/tracks';
   static const submissions = '/submissions';

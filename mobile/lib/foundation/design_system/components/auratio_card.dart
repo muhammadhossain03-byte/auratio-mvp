@@ -5,7 +5,7 @@ import '../tokens/auratio_elevation.dart';
 import '../tokens/auratio_metrics.dart';
 import '../tokens/auratio_typography.dart';
 
-enum AuratioCardTone { defaultTone, brandSoft }
+enum AuratioCardTone { defaultTone, brandSoft, subtle }
 
 enum AuratioCardElevation { flat, raised }
 
@@ -17,6 +17,7 @@ class AuratioCard extends StatelessWidget {
     this.tone = AuratioCardTone.defaultTone,
     this.elevation = AuratioCardElevation.flat,
     this.padding = const EdgeInsets.all(AuratioSpacing.xl),
+    this.borderColor,
     super.key,
   }) : assert(
          child != null || title != null || body != null,
@@ -29,18 +30,20 @@ class AuratioCard extends StatelessWidget {
   final AuratioCardTone tone;
   final AuratioCardElevation elevation;
   final EdgeInsetsGeometry padding;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
     final backgroundColor = switch (tone) {
       AuratioCardTone.defaultTone => AuratioColors.surfaceDefault,
       AuratioCardTone.brandSoft => AuratioColors.surfaceBrandSoft,
+      AuratioCardTone.subtle => AuratioColors.surfaceSubtle,
     };
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor,
-        border: Border.all(color: AuratioColors.borderDefault),
+        border: Border.all(color: borderColor ?? AuratioColors.borderDefault),
         borderRadius: BorderRadius.circular(AuratioRadii.lg),
         boxShadow: elevation == AuratioCardElevation.raised
             ? AuratioElevation.level200
