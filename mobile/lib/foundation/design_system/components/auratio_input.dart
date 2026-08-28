@@ -23,6 +23,9 @@ class AuratioInput extends StatelessWidget {
     this.controlHeight = AuratioSizing.controlMedium,
     this.labelGap = 6,
     this.labelStyle,
+    this.inputStyle,
+    this.placeholderStyle,
+    this.contentPadding,
     this.scrollPadding = const EdgeInsets.all(AuratioSpacing.xl),
     super.key,
   });
@@ -44,6 +47,9 @@ class AuratioInput extends StatelessWidget {
   final double controlHeight;
   final double labelGap;
   final TextStyle? labelStyle;
+  final TextStyle? inputStyle;
+  final TextStyle? placeholderStyle;
+  final EdgeInsetsGeometry? contentPadding;
   final EdgeInsets scrollPadding;
 
   @override
@@ -82,13 +88,15 @@ class AuratioInput extends StatelessWidget {
             scrollPadding: scrollPadding,
             onChanged: onChanged,
             validator: validator,
-            style: AuratioTypography.bodyMedium.copyWith(
+            style: (inputStyle ?? AuratioTypography.bodyMedium).copyWith(
               color: enabled
                   ? AuratioColors.textPrimary
                   : AuratioColors.textTertiary,
             ),
             decoration: InputDecoration(
               hintText: placeholder,
+              hintStyle: placeholderStyle,
+              contentPadding: contentPadding,
               helperText: errorText == null ? helperText : null,
               helperStyle: helperStyle,
               errorText: errorText,

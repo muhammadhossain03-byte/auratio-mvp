@@ -29,7 +29,11 @@ class EmailVerifiedScreen extends StatelessWidget {
               top: 0,
               child: AuratioScreenHeader(title: 'Email Verified'),
             ),
-            const Positioned(left: 155, top: 176, child: _VerifiedIcon()),
+            const Positioned(
+              left: 155,
+              top: 176,
+              child: AuthenticationStatusIcon.success(),
+            ),
             Positioned(
               left: 20,
               top: 286,
@@ -75,34 +79,6 @@ class EmailVerifiedScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _VerifiedIcon extends StatelessWidget {
-  const _VerifiedIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AuratioColors.green50,
-        shape: BoxShape.circle,
-      ),
-      child: SizedBox.square(
-        dimension: 80,
-        child: Center(
-          child: Text(
-            '✓',
-            style: AuratioTypography.headingMedium.copyWith(
-              color: AuratioColors.green700,
-              fontSize: 28,
-              height: 36 / 28,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
         ),
       ),
     );

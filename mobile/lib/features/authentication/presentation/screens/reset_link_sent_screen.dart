@@ -8,53 +8,54 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
-import '../../application/mock_registration_state.dart';
+import '../../application/mock_password_recovery_state.dart';
 import '../widgets/authentication_widgets.dart';
 
-class VerifyEmailScreen extends ConsumerStatefulWidget {
-  const VerifyEmailScreen({super.key});
+class ResetLinkSentScreen extends ConsumerStatefulWidget {
+  const ResetLinkSentScreen({super.key});
 
   static const transitionDelay = Duration(milliseconds: 1800);
 
-  static const screenKey = Key('authentication-verify-email');
-  static const emailCopyKey = Key('verify-email-address-copy');
-  static const requirementCardKey = Key('verify-email-requirement-card');
-  static const resendActionKey = Key('verify-email-resend');
-  static const backToSignInActionKey = Key('verify-email-back-to-sign-in');
+  static const screenKey = Key('authentication-reset-link-sent');
+  static const emailCopyKey = Key('reset-link-sent-email-copy');
+  static const guidanceCardKey = Key('reset-link-sent-guidance-card');
+  static const resendActionKey = Key('reset-link-sent-resend');
+  static const backToSignInActionKey = Key('reset-link-sent-back-to-sign-in');
 
   @override
-  ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+  ConsumerState<ResetLinkSentScreen> createState() =>
+      _ResetLinkSentScreenState();
 }
 
-class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
-  Timer? _verificationTimer;
+class _ResetLinkSentScreenState extends ConsumerState<ResetLinkSentScreen> {
+  Timer? _resetLinkTimer;
 
   @override
   void initState() {
     super.initState();
-    _verificationTimer = Timer(VerifyEmailScreen.transitionDelay, () {
+    _resetLinkTimer = Timer(ResetLinkSentScreen.transitionDelay, () {
       if (mounted) {
-        context.go(AppRoutePaths.emailVerified);
+        context.push(AppRoutePaths.resetPassword);
       }
     });
   }
 
   @override
   void dispose() {
-    _verificationTimer?.cancel();
+    _resetLinkTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final email = ref.watch(
-      mockRegistrationProvider.select((registration) => registration.email),
+      mockPasswordRecoveryProvider.select((recovery) => recovery.email),
     );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: authenticationLightOverlayStyle,
       child: Scaffold(
-        key: VerifyEmailScreen.screenKey,
+        key: ResetLinkSentScreen.screenKey,
         backgroundColor: AuratioColors.backgroundApp,
         body: Stack(
           children: [
@@ -62,31 +63,36 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               left: 0,
               right: 0,
               top: 0,
-              child: AuratioScreenHeader(title: 'Verify Email', showBack: true),
+              child: AuratioScreenHeader(
+                title: 'Check Your Email',
+                showBack: true,
+              ),
             ),
             const Positioned(
               left: 155,
-              top: 140,
+              top: 150,
               child: AuthenticationStatusIcon.email(),
             ),
             Positioned(
               left: 20,
-              top: 246,
+              top: 254,
               width: 350,
               child: Text(
-                'Check your inbox',
+                'Reset link sent',
+                textAlign: TextAlign.center,
                 style: AuratioTypography.headingMedium.copyWith(
                   color: AuratioColors.textPrimary,
                 ),
               ),
             ),
             Positioned(
-              key: VerifyEmailScreen.emailCopyKey,
-              left: 20,
-              top: 292,
-              width: 350,
+              key: ResetLinkSentScreen.emailCopyKey,
+              left: 30,
+              top: 304,
+              width: 330,
               child: Text(
-                'We sent a verification link to $email.',
+                'If an Auratio account exists for $email, a password-reset email has been sent.',
+                textAlign: TextAlign.center,
                 style: AuratioTypography.bodyMedium.copyWith(
                   color: AuratioColors.textSecondary,
                   fontSize: 13,
@@ -96,11 +102,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
             ),
             const Positioned(
               left: 20,
-              top: 358,
+              top: 406,
               width: 350,
-              height: 126,
-              child: _VerificationRequirementCard(
-                key: VerifyEmailScreen.requirementCardKey,
+              height: 112,
+              child: _ResetGuidanceCard(
+                key: ResetLinkSentScreen.guidanceCardKey,
               ),
             ),
             Positioned(
@@ -108,13 +114,13 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               top: 650,
               width: 350,
               child: AuratioButton(
-                key: VerifyEmailScreen.resendActionKey,
-                label: 'Resend Verification Email',
+                key: ResetLinkSentScreen.resendActionKey,
+                label: 'Resend Reset Email',
                 variant: AuratioButtonVariant.secondary,
                 expand: true,
                 onPressed: () => ref
-                    .read(mockRegistrationProvider.notifier)
-                    .resendVerificationEmail(),
+                    .read(mockPasswordRecoveryProvider.notifier)
+                    .resendResetEmail(),
               ),
             ),
             Positioned(
@@ -122,22 +128,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               top: 712,
               width: 350,
               child: AuratioButton(
-                key: VerifyEmailScreen.backToSignInActionKey,
+                key: ResetLinkSentScreen.backToSignInActionKey,
                 label: 'Back to Sign In',
                 expand: true,
                 onPressed: () => context.go(AppRoutePaths.signIn),
-              ),
-            ),
-            Positioned(
-              left: 20,
-              top: 776,
-              width: 350,
-              child: Text(
-                'Use the newest verification email if you request another link.',
-                textAlign: TextAlign.center,
-                style: AuratioTypography.caption.copyWith(
-                  color: AuratioColors.textTertiary,
-                ),
               ),
             ),
           ],
@@ -147,8 +141,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   }
 }
 
-class _VerificationRequirementCard extends StatelessWidget {
-  const _VerificationRequirementCard({super.key});
+class _ResetGuidanceCard extends StatelessWidget {
+  const _ResetGuidanceCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -160,24 +154,22 @@ class _VerificationRequirementCard extends StatelessWidget {
           Positioned(
             left: 14,
             top: 16,
-            right: 14,
+            width: 300,
             child: Text(
-              'Verification is required',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              'Use the link from your email',
               style: AuratioTypography.labelLarge.copyWith(
                 color: AuratioColors.backgroundBrand,
-                fontSize: 14,
-                height: 20 / 14,
+                fontSize: 13,
+                height: 18 / 13,
               ),
             ),
           ),
           Positioned(
             left: 14,
-            top: 46,
-            right: 14,
+            top: 44,
+            width: 300,
             child: Text(
-              'Your Auratio account cannot be used until the email address is verified.',
+              'The reset link opens the password-update step. If you request another link, use the newest email.',
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AuratioTypography.bodySmall.copyWith(

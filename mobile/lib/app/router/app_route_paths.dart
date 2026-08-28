@@ -9,6 +9,11 @@ abstract final class AppRoutePaths {
   static const verifyEmail = '$authentication/verify-email';
   static const emailVerified = '$authentication/email-verified';
   static const signInNewAccount = '$authentication/sign-in-new-account';
+  static const forgotPassword = '$authentication/forgot-password';
+  static const resetLinkSent = '$authentication/reset-link-sent';
+  static const resetPassword = '$authentication/reset-password';
+  static const passwordResetComplete =
+      '$authentication/password-reset-complete';
 
   static const onboarding = '/onboarding';
   static const onboardingIntro = '$onboarding/intro';

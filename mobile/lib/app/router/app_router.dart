@@ -3,6 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/authentication/presentation/screens/create_account_screen.dart';
 import '../../features/authentication/presentation/screens/email_verified_screen.dart';
+import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
+import '../../features/authentication/presentation/screens/password_reset_complete_screen.dart';
+import '../../features/authentication/presentation/screens/reset_link_sent_screen.dart';
+import '../../features/authentication/presentation/screens/reset_password_screen.dart';
 import '../../features/authentication/presentation/screens/sign_in_screen.dart';
 import '../../features/authentication/presentation/screens/verify_email_screen.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
@@ -44,6 +48,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutePaths.signInNewAccount,
         builder: (context, state) => const SignInScreen.newAccount(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.resetLinkSent,
+        builder: (context, state) => const ResetLinkSentScreen(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.resetPassword,
+        builder: (context, state) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.passwordResetComplete,
+        builder: (context, state) => const PasswordResetCompleteScreen(),
       ),
     ],
   );

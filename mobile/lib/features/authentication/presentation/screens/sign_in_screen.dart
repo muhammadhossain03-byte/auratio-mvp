@@ -49,7 +49,7 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   void _handleForgotPassword() {
-    // Password reset belongs to a later mobile screen batch.
+    context.go(AppRoutePaths.forgotPassword);
   }
 
   @override

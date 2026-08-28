@@ -23,6 +23,52 @@ const authenticationSignInOverlayStyle = SystemUiOverlayStyle(
   systemNavigationBarDividerColor: AuratioColors.surfaceDefault,
 );
 
+enum AuthenticationStatusIconType { email, success }
+
+class AuthenticationStatusIcon extends StatelessWidget {
+  const AuthenticationStatusIcon.email({super.key})
+    : type = AuthenticationStatusIconType.email;
+
+  const AuthenticationStatusIcon.success({super.key})
+    : type = AuthenticationStatusIconType.success;
+
+  final AuthenticationStatusIconType type;
+
+  @override
+  Widget build(BuildContext context) {
+    final (symbol, backgroundColor, foregroundColor) = switch (type) {
+      AuthenticationStatusIconType.email => (
+        '@',
+        AuratioColors.surfaceBrandSoft,
+        AuratioColors.backgroundBrand,
+      ),
+      AuthenticationStatusIconType.success => (
+        '✓',
+        AuratioColors.green50,
+        AuratioColors.green700,
+      ),
+    };
+
+    return DecoratedBox(
+      decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
+      child: SizedBox.square(
+        dimension: 80,
+        child: Center(
+          child: Text(
+            symbol,
+            style: AuratioTypography.headingMedium.copyWith(
+              color: foregroundColor,
+              fontSize: 28,
+              height: 36 / 28,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Keeps the locked 390 x 844 idle composition while letting focused fields
 /// scroll above the software keyboard. The first 24 px of the Figma canvas are
 /// reserved for the real system status bar rather than reproduced in Flutter.
