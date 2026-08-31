@@ -42,11 +42,12 @@ class SubmissionRequirementsScreen extends StatelessWidget {
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AuratioSpacing.xl,
-                    vertical: AuratioSpacing.lg,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 28),
+
                       // Heading
                       Text(
                         'Before you upload',
@@ -54,7 +55,7 @@ class SubmissionRequirementsScreen extends StatelessWidget {
                           color: AuratioColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         'Use a recording that lets Auratio evaluate the speaker — not only audio or slides.',
                         style: AuratioTypography.bodySmall.copyWith(
@@ -172,7 +173,7 @@ class SubmissionRequirementsScreen extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 26),
 
                       // Explanatory video lifecycle copy
                       Text(
@@ -182,7 +183,7 @@ class SubmissionRequirementsScreen extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 26),
 
                       // Choose Video Button
                       AuratioButton(

@@ -38,11 +38,12 @@ class TracksScreen extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AuratioSpacing.xl,
-                  vertical: AuratioSpacing.lg,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 18),
+
                     // Filter Chips Row
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -84,7 +85,7 @@ class TracksScreen extends StatelessWidget {
                       tracks: AuratioTrackCatalog.publicSpeakingTracks,
                     ),
 
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 16),
 
                     // Category 2: Professional Presenting
                     _buildCategorySection(
@@ -93,7 +94,7 @@ class TracksScreen extends StatelessWidget {
                       tracks: AuratioTrackCatalog.professionalPresentingTracks,
                     ),
 
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 16),
 
                     // Category 3: Content Creation
                     _buildCategorySection(
@@ -102,7 +103,7 @@ class TracksScreen extends StatelessWidget {
                       tracks: AuratioTrackCatalog.contentCreationTracks,
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -139,14 +140,16 @@ class TracksScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        for (final track in tracks)
+        for (var i = 0; i < tracks.length; i++) ...[
+          if (i > 0) const SizedBox(height: 6),
           _TrackRow(
-            key: track.hasDetailsRoute ? businessPitchTrackKey : null,
-            track: track,
-            onTap: track.hasDetailsRoute
+            key: tracks[i].hasDetailsRoute ? businessPitchTrackKey : null,
+            track: tracks[i],
+            onTap: tracks[i].hasDetailsRoute
                 ? () => context.go(AppRoutePaths.trackDetails)
                 : null,
           ),
+        ],
       ],
     );
   }
@@ -171,6 +174,7 @@ class _TrackRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
+      alignment: Alignment.center,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -198,27 +202,34 @@ class _TrackRow extends StatelessWidget {
       ),
     );
 
-    // Wrap in a SizedBox that guarantees the 44px minimum touch target
-    // while keeping the visible row at its Figma-approved 34px height.
-    final touchTarget = SizedBox(
-      height: AuratioSizing.minimumTouchTarget,
-      child: Center(child: rowVisual),
-    );
-
     if (onTap == null) {
-      return Semantics(label: track.name, child: touchTarget);
+      return Semantics(label: track.name, child: rowVisual);
     }
 
+    // Preserve the accessible 44px hit target for the interactive row
+    // without inflating the visible 34px / 40px-pitch Figma layout rhythm.
     return Semantics(
       button: true,
       label: '${track.name}. View track details.',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: touchTarget,
-        ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          rowVisual,
+          Positioned(
+            top: -5,
+            bottom: -5,
+            left: 0,
+            right: 0,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

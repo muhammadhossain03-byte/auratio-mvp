@@ -40,11 +40,12 @@ class TrackDetailsScreen extends StatelessWidget {
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AuratioSpacing.xl,
-                    vertical: AuratioSpacing.lg,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 20),
+
                       // Path Badge
                       AuratioChipTab(
                         label: 'Professional Presenting',
@@ -104,10 +105,12 @@ class TrackDetailsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       _buildStructureRow('Universal Delivery', '40 pts'),
+                      const SizedBox(height: 6),
                       _buildStructureRow('Structural Flow', '20 pts'),
+                      const SizedBox(height: 6),
                       _buildStructureRow('Track Specialisation', '40 pts'),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 6),
 
                       // Notice Banner
                       Container(
@@ -128,7 +131,7 @@ class TrackDetailsScreen extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
 
                       // Start Evaluation CTA
                       AuratioButton(

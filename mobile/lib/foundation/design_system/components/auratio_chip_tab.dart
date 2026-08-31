@@ -50,6 +50,7 @@ class AuratioChipTab extends StatelessWidget {
                 minHeight: AuratioSizing.minimumTouchTarget,
               ),
               child: Center(
+                widthFactor: 1.0,
                 child: DecoratedBox(
                   decoration: ShapeDecoration(
                     color: selected

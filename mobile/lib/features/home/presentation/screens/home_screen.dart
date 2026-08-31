@@ -56,9 +56,9 @@ class HomeScreen extends ConsumerWidget {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
                     AuratioSpacing.xl,
-                    heroTopPadding + 14,
+                    math.max(40.0, topInset + 14),
                     AuratioSpacing.xl,
-                    AuratioSpacing.xl,
+                    12,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,14 +97,14 @@ class HomeScreen extends ConsumerWidget {
                           color: AuratioColors.textOnBrand,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         'You have an active evaluation awaiting a final decision.',
                         style: AuratioTypography.bodySmall.copyWith(
                           color: AuratioColors.brandBlue200,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 18),
                       AuratioButton(
                         key: viewActiveEvaluationKey,
                         label: 'View Active Evaluation',
@@ -122,7 +122,7 @@ class HomeScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AuratioSpacing.xl,
-                  vertical: AuratioSpacing.xl,
+                  vertical: 20,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +136,7 @@ class HomeScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: AuratioSpacing.sm),
+                    const SizedBox(height: 10),
                     AuratioCard(
                       key: recentEvaluationCardKey,
                       tone: AuratioCardTone.defaultTone,
@@ -158,7 +158,7 @@ class HomeScreen extends ConsumerWidget {
                               color: AuratioColors.textSecondary,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           const AuratioStatusBadge(
                             status: AuratioStatus.pending,
                           ),
@@ -166,7 +166,7 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
                     // Section 2: Private Progress
                     Text(
@@ -177,7 +177,7 @@ class HomeScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: AuratioSpacing.sm),
+                    const SizedBox(height: 10),
                     AuratioCard(
                       key: privateProgressCardKey,
                       tone: AuratioCardTone.brandSoft,
@@ -238,7 +238,7 @@ class HomeScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: AuratioSpacing.sm),
+                    const SizedBox(height: 8),
                     _buildYourPathsChips(selectedPaths),
                   ],
                 ),
@@ -273,17 +273,20 @@ class HomeScreen extends ConsumerWidget {
         AuratioPath.contentCreation,
     ];
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (var i = 0; i < pathList.length; i++)
-          AuratioChipTab(
-            label: pathList[i].label,
-            selected: i == 0,
-            onPressed: _noOp,
-          ),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < pathList.length; i++) ...[
+            if (i > 0) const SizedBox(width: 10),
+            AuratioChipTab(
+              label: pathList[i].label,
+              selected: i == 0,
+              onPressed: _noOp,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
