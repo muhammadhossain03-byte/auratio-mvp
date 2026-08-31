@@ -139,7 +139,7 @@ class TracksScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        for (final track in tracks) ...[
+        for (final track in tracks)
           _TrackRow(
             key: track.hasDetailsRoute ? businessPitchTrackKey : null,
             track: track,
@@ -147,8 +147,6 @@ class TracksScreen extends StatelessWidget {
                 ? () => context.go(AppRoutePaths.trackDetails)
                 : null,
           ),
-          const SizedBox(height: 6),
-        ],
       ],
     );
   }
@@ -160,18 +158,19 @@ class _TrackRow extends StatelessWidget {
   final TrackItem track;
   final VoidCallback? onTap;
 
+  /// Figma-approved visible row height (width: 350, height: 34).
+  static const _figmaRowHeight = 34.0;
+
   @override
   Widget build(BuildContext context) {
-    final rowContent = Container(
-      constraints: const BoxConstraints(
-        minHeight: AuratioSizing.minimumTouchTarget,
-      ),
+    final rowVisual = Container(
+      height: _figmaRowHeight,
       decoration: BoxDecoration(
         color: AuratioColors.surfaceDefault,
         border: Border.all(color: AuratioColors.borderDefault),
         borderRadius: BorderRadius.circular(10),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -199,8 +198,15 @@ class _TrackRow extends StatelessWidget {
       ),
     );
 
+    // Wrap in a SizedBox that guarantees the 44px minimum touch target
+    // while keeping the visible row at its Figma-approved 34px height.
+    final touchTarget = SizedBox(
+      height: AuratioSizing.minimumTouchTarget,
+      child: Center(child: rowVisual),
+    );
+
     if (onTap == null) {
-      return Semantics(label: track.name, child: rowContent);
+      return Semantics(label: track.name, child: touchTarget);
     }
 
     return Semantics(
@@ -211,7 +217,7 @@ class _TrackRow extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
-          child: rowContent,
+          child: touchTarget,
         ),
       ),
     );

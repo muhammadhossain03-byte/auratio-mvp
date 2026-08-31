@@ -1,6 +1,5 @@
 import 'package:auratio_mobile/app/router/app_route_paths.dart';
 import 'package:auratio_mobile/features/authentication/presentation/screens/sign_in_screen.dart';
-import 'package:auratio_mobile/features/home/presentation/screens/home_screen.dart';
 import 'package:auratio_mobile/features/onboarding/application/path_selection_controller.dart';
 import 'package:auratio_mobile/features/onboarding/domain/auratio_path.dart';
 import 'package:auratio_mobile/features/onboarding/presentation/onboarding_keys.dart';

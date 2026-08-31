@@ -22,6 +22,11 @@ class HomeScreen extends ConsumerWidget {
   static const leaderboardsButtonKey = Key('home-leaderboards-button');
   static const eventsButtonKey = Key('home-events-button');
 
+  /// No-op callback for controls whose destinations belong to later batches.
+  /// Keeps the control visually enabled (matching Figma) without implementing
+  /// any out-of-batch navigation or functionality.
+  static void _noOp() {}
+
   static const _overlayStyle = SystemUiOverlayStyle(
     statusBarColor: AuratioColors.backgroundBrand,
     statusBarIconBrightness: Brightness.light,
@@ -106,7 +111,7 @@ class HomeScreen extends ConsumerWidget {
                         variant: AuratioButtonVariant.accent,
                         size: AuratioButtonSize.medium,
                         expand: true,
-                        onPressed: null,
+                        onPressed: _noOp,
                       ),
                     ],
                   ),
@@ -206,7 +211,7 @@ class HomeScreen extends ConsumerWidget {
                             label: 'Leaderboards',
                             variant: AuratioButtonVariant.secondary,
                             size: AuratioButtonSize.small,
-                            onPressed: null,
+                            onPressed: _noOp,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -216,7 +221,7 @@ class HomeScreen extends ConsumerWidget {
                             label: 'Events',
                             variant: AuratioButtonVariant.secondary,
                             size: AuratioButtonSize.small,
-                            onPressed: null,
+                            onPressed: _noOp,
                           ),
                         ),
                       ],
@@ -276,7 +281,7 @@ class HomeScreen extends ConsumerWidget {
           AuratioChipTab(
             label: pathList[i].label,
             selected: i == 0,
-            onPressed: null,
+            onPressed: _noOp,
           ),
       ],
     );
