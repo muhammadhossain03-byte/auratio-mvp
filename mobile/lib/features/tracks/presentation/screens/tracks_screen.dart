@@ -44,40 +44,41 @@ class TracksScreen extends StatelessWidget {
                   children: [
                     const SizedBox(height: 18),
 
-                    // Filter Chips Row
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          AuratioChipTab(
-                            label: 'All',
-                            selected: true,
-                            size: AuratioChipTabSize.compact,
-                            onPressed: () {},
-                          ),
-                          const SizedBox(width: 6),
-                          AuratioChipTab(
-                            label: 'Public Speaking',
-                            selected: false,
-                            size: AuratioChipTabSize.compact,
-                            onPressed: () {},
-                          ),
-                          const SizedBox(width: 6),
-                          AuratioChipTab(
-                            label: 'Presenting',
-                            selected: false,
-                            size: AuratioChipTabSize.compact,
-                            onPressed: () {},
-                          ),
-                          const SizedBox(width: 6),
-                          AuratioChipTab(
-                            label: 'Content',
-                            selected: false,
-                            size: AuratioChipTabSize.compact,
-                            onPressed: () {},
-                          ),
-                        ],
-                      ),
+                    // Filter Chips Row (y=110, h=32)
+                    const Row(
+                      children: [
+                        AuratioChipTab(
+                          label: 'All',
+                          selected: true,
+                          size: AuratioChipTabSize.compact,
+                          presentationOnly: true,
+                          width: 49,
+                        ),
+                        SizedBox(width: 6),
+                        AuratioChipTab(
+                          label: 'Public Speaking',
+                          selected: false,
+                          size: AuratioChipTabSize.compact,
+                          presentationOnly: true,
+                          width: 125,
+                        ),
+                        SizedBox(width: 6),
+                        AuratioChipTab(
+                          label: 'Presenting',
+                          selected: false,
+                          size: AuratioChipTabSize.compact,
+                          presentationOnly: true,
+                          width: 92,
+                        ),
+                        SizedBox(width: 6),
+                        AuratioChipTab(
+                          label: 'Content',
+                          selected: false,
+                          size: AuratioChipTabSize.compact,
+                          presentationOnly: true,
+                          width: 66,
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 22),

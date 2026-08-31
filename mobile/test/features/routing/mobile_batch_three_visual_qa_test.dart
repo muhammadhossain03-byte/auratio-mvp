@@ -163,10 +163,7 @@ void main() {
     );
 
     // Duration card.
-    expect(
-      find.textContaining('Target 3:00–5:00'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Target 3:00–5:00'), findsOneWidget);
 
     // Recording requirement card.
     expect(find.text('Recording requirement'), findsOneWidget);
@@ -237,7 +234,9 @@ void main() {
 
       // Video lifecycle copy.
       expect(
-        find.textContaining('Video remains temporary through evaluation/moderation'),
+        find.textContaining(
+          'Video remains temporary through evaluation/moderation',
+        ),
         findsOneWidget,
       );
 

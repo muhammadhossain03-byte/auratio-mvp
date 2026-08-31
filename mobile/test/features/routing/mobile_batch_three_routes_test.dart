@@ -206,10 +206,7 @@ void main() {
 
       expect(router.state.uri.path, AppRoutePaths.trackDetails);
       expect(find.text('Track Details'), findsOneWidget);
-      expect(
-        find.textContaining('Target 3:00–5:00'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Target 3:00–5:00'), findsOneWidget);
 
       // Tap Start Evaluation -> Submission Requirements
       await tester.tap(find.byKey(TrackDetailsScreen.startEvaluationButtonKey));

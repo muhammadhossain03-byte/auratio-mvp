@@ -99,6 +99,12 @@ void main() {
                 size: AuratioChipTabSize.small,
                 onPressed: () {},
               ),
+              AuratioChipTab(
+                label: 'Compact',
+                selected: false,
+                size: AuratioChipTabSize.compact,
+                onPressed: () {},
+              ),
             ],
           ),
         ),
@@ -110,11 +116,19 @@ void main() {
       greaterThanOrEqualTo(AuratioSizing.minimumTouchTarget),
     );
     expect(
-      tester.getSize(find.byType(AuratioChipTab)).height,
+      tester.getSize(find.widgetWithText(AuratioChipTab, 'A')).height,
       greaterThanOrEqualTo(AuratioSizing.minimumTouchTarget),
     );
     expect(
-      tester.getSize(find.byType(AuratioChipTab)).width,
+      tester.getSize(find.widgetWithText(AuratioChipTab, 'A')).width,
+      greaterThanOrEqualTo(AuratioSizing.minimumTouchTarget),
+    );
+    expect(
+      tester.getSize(find.widgetWithText(AuratioChipTab, 'Compact')).height,
+      greaterThanOrEqualTo(AuratioSizing.minimumTouchTarget),
+    );
+    expect(
+      tester.getSize(find.widgetWithText(AuratioChipTab, 'Compact')).width,
       greaterThanOrEqualTo(AuratioSizing.minimumTouchTarget),
     );
   });

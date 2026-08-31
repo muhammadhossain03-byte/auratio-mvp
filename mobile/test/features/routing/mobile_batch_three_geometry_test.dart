@@ -120,12 +120,42 @@ void main() {
       expect(headerRect.top, 0.0);
       expect(headerRect.height, 92.0);
 
-      // Filter pills at y=110, h=32
+      // Filter pills at y=110, h=32 with exact Figma x coordinates and widths
       final allChipFinder = find.widgetWithText(AuratioChipTab, 'All');
       expect(allChipFinder, findsOneWidget);
       final allChipRect = tester.getRect(allChipFinder);
+      expect(allChipRect.left, 20.0);
       expect(allChipRect.top, 110.0);
+      expect(allChipRect.width, 49.0);
       expect(allChipRect.height, 32.0);
+
+      final psChipFinder = find.widgetWithText(
+        AuratioChipTab,
+        'Public Speaking',
+      );
+      expect(psChipFinder, findsOneWidget);
+      final psChipRect = tester.getRect(psChipFinder);
+      expect(psChipRect.left, 75.0);
+      expect(psChipRect.top, 110.0);
+      expect(psChipRect.width, 125.0);
+      expect(psChipRect.height, 32.0);
+
+      final presChipFinder = find.widgetWithText(AuratioChipTab, 'Presenting');
+      expect(presChipFinder, findsOneWidget);
+      final presChipRect = tester.getRect(presChipFinder);
+      expect(presChipRect.left, 206.0);
+      expect(presChipRect.top, 110.0);
+      expect(presChipRect.width, 92.0);
+      expect(presChipRect.height, 32.0);
+
+      final contentChipFinder = find.widgetWithText(AuratioChipTab, 'Content');
+      expect(contentChipFinder, findsOneWidget);
+      final contentChipRect = tester.getRect(contentChipFinder);
+      expect(contentChipRect.left, 304.0);
+      expect(contentChipRect.top, 110.0);
+      expect(contentChipRect.width, 66.0);
+      expect(contentChipRect.height, 32.0);
+      expect(contentChipRect.right, lessThanOrEqualTo(390.0));
 
       // PUBLIC SPEAKING label: y=164
       final psLabelFinder = find.text('PUBLIC SPEAKING');

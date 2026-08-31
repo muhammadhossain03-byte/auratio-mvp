@@ -17,6 +17,7 @@ class AuratioChipTab extends StatelessWidget {
     this.onPressed,
     this.size = AuratioChipTabSize.small,
     this.presentationOnly = false,
+    this.width,
     super.key,
   });
 
@@ -28,6 +29,9 @@ class AuratioChipTab extends StatelessWidget {
   /// When true, renders purely as a presentation pill/badge (matching Figma 32/34px
   /// visual dimensions) without interactive touch-target padding or disabled styling.
   final bool presentationOnly;
+
+  /// Optional fixed width to match exact Figma pill dimensions.
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
@@ -53,22 +57,27 @@ class AuratioChipTab extends StatelessWidget {
               : const BorderSide(color: AuratioColors.borderStrong),
         ),
       ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight: visualHeight,
-          minWidth: visualHeight,
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: Center(
-            widthFactor: 1,
-            child: Text(
-              label,
-              style: AuratioTypography.labelMedium.copyWith(
-                color: selected
-                    ? AuratioColors.textOnBrand
-                    : AuratioColors.textSecondary,
-                fontSize: size == AuratioChipTabSize.compact ? 13 : null,
+      child: SizedBox(
+        width: width,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: visualHeight,
+            minWidth: width ?? visualHeight,
+          ),
+          child: Padding(
+            padding: width != null
+                ? EdgeInsets.zero
+                : EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: Center(
+              widthFactor: width != null ? null : 1,
+              child: Text(
+                label,
+                style: AuratioTypography.labelMedium.copyWith(
+                  color: selected
+                      ? AuratioColors.textOnBrand
+                      : AuratioColors.textSecondary,
+                  fontSize: size == AuratioChipTabSize.compact ? 13 : null,
+                ),
               ),
             ),
           ),
@@ -79,11 +88,6 @@ class AuratioChipTab extends StatelessWidget {
     if (presentationOnly) {
       return Semantics(label: label, selected: selected, child: visualPill);
     }
-
-    final minTargetHeight = switch (size) {
-      AuratioChipTabSize.compact => 32.0,
-      _ => AuratioSizing.minimumTouchTarget,
-    };
 
     return Semantics(
       button: true,
@@ -100,8 +104,11 @@ class AuratioChipTab extends StatelessWidget {
             customBorder: const StadiumBorder(),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minWidth: AuratioSizing.minimumTouchTarget,
-                minHeight: minTargetHeight,
+                minWidth:
+                    width != null && width! > AuratioSizing.minimumTouchTarget
+                    ? width!
+                    : AuratioSizing.minimumTouchTarget,
+                minHeight: AuratioSizing.minimumTouchTarget,
               ),
               child: Center(widthFactor: 1.0, child: visualPill),
             ),
