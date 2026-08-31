@@ -65,117 +65,132 @@ class SubmissionRequirementsScreen extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
-                      // Card 1: File format
-                      Container(
+                      // Card 1: File format (y=216, h=76)
+                      SizedBox(
+                        height: 76,
                         width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AuratioColors.surfaceDefault,
-                          border: Border.all(
-                            color: AuratioColors.borderDefault,
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AuratioColors.surfaceDefault,
+                            border: Border.all(
+                              color: AuratioColors.borderDefault,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AuratioRadii.lg,
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(AuratioRadii.lg),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'FILE FORMAT',
-                              style: AuratioTypography.caption.copyWith(
-                                color: AuratioColors.textSecondary,
-                                fontWeight: FontWeight.w500,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'FILE FORMAT',
+                                style: AuratioTypography.caption.copyWith(
+                                  color: AuratioColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '.mp4 only',
-                              style: AuratioTypography.titleMedium.copyWith(
-                                color: AuratioColors.textPrimary,
-                                fontSize: 16,
+                              const SizedBox(height: 4),
+                              Text(
+                                '.mp4 only',
+                                style: AuratioTypography.titleMedium.copyWith(
+                                  color: AuratioColors.textPrimary,
+                                  fontSize: 16,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
 
                       const SizedBox(height: 18),
 
-                      // Card 2: Keep the speaker visible
-                      Container(
+                      // Card 2: Keep the speaker visible (y=310, h=168)
+                      SizedBox(
+                        height: 168,
                         width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AuratioColors.surfaceBrandSoft,
-                          border: Border.all(
-                            color: AuratioColors.borderDefault,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AuratioColors.surfaceBrandSoft,
+                            border: Border.all(
+                              color: AuratioColors.borderDefault,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AuratioRadii.lg,
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(AuratioRadii.lg),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Keep the speaker visible',
-                              style: AuratioTypography.titleMedium.copyWith(
-                                color: AuratioColors.backgroundBrand,
-                                fontSize: 15,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Keep the speaker visible',
+                                style: AuratioTypography.titleMedium.copyWith(
+                                  color: AuratioColors.backgroundBrand,
+                                  fontSize: 15,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildCheckRow(
-                              'Face and gaze should be observable.',
-                            ),
-                            const SizedBox(height: 8),
-                            _buildCheckRow(
-                              'Posture and gestures should be visible.',
-                            ),
-                            const SizedBox(height: 8),
-                            _buildCheckRow(
-                              'Framing and movement should remain assessable.',
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              _buildCheckRow(
+                                'Face and gaze should be observable.',
+                              ),
+                              const SizedBox(height: 14),
+                              _buildCheckRow(
+                                'Posture and gestures should be visible.',
+                              ),
+                              const SizedBox(height: 14),
+                              _buildCheckRow(
+                                'Framing and movement should remain assessable.',
+                              ),
+                            ],
+                          ),
                         ),
                       ),
 
                       const SizedBox(height: 18),
 
-                      // Card 3: Not supported in the MVP
-                      Container(
+                      // Card 3: Not supported in the MVP (y=496, h=82)
+                      SizedBox(
+                        height: 82,
                         width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AuratioColors.statusRejectedBackground,
-                          border: Border.all(
-                            color: AuratioColors.borderDefault,
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AuratioColors.statusRejectedBackground,
+                            border: Border.all(
+                              color: AuratioColors.borderDefault,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AuratioRadii.lg,
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(AuratioRadii.lg),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Not supported in the MVP',
-                              style: AuratioTypography.titleMedium.copyWith(
-                                color: AuratioColors.statusRejectedForeground,
-                                fontSize: 13,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Not supported in the MVP',
+                                style: AuratioTypography.titleMedium.copyWith(
+                                  color: AuratioColors.statusRejectedForeground,
+                                  fontSize: 13,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Voice-only or screen-only submissions.',
-                              style: AuratioTypography.bodySmall.copyWith(
-                                color: AuratioColors.textSecondary,
+                              const SizedBox(height: 4),
+                              Text(
+                                'Voice-only or screen-only submissions.',
+                                style: AuratioTypography.bodySmall.copyWith(
+                                  color: AuratioColors.textSecondary,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
 
                       const SizedBox(height: 26),
 
-                      // Explanatory video lifecycle copy
+                      // Explanatory video lifecycle copy (y=604)
                       Text(
                         'Video remains temporary through evaluation/moderation and is deleted after the final Approved or Rejected decision.',
                         style: AuratioTypography.bodySmall.copyWith(
@@ -183,15 +198,19 @@ class SubmissionRequirementsScreen extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 26),
+                      const SizedBox(height: 92),
 
-                      // Choose Video Button
-                      AuratioButton(
-                        key: chooseVideoButtonKey,
-                        label: 'Choose Video',
-                        variant: AuratioButtonVariant.primary,
-                        expand: true,
-                        onPressed: _chooseVideoAtLaterBatchBoundary,
+                      // Choose Video Button (y=750, h=48)
+                      SizedBox(
+                        height: 48,
+                        width: double.infinity,
+                        child: AuratioButton(
+                          key: chooseVideoButtonKey,
+                          label: 'Choose Video',
+                          variant: AuratioButtonVariant.primary,
+                          expand: true,
+                          onPressed: _chooseVideoAtLaterBatchBoundary,
+                        ),
                       ),
 
                       const SizedBox(height: 24),

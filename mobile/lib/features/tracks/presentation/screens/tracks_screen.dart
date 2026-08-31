@@ -76,7 +76,7 @@ class TracksScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 20),
 
                     // Category 1: Public Speaking
                     _buildCategorySection(

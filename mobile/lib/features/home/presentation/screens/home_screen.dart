@@ -51,69 +51,72 @@ class HomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Hero Section
-              ColoredBox(
-                color: AuratioColors.backgroundBrand,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    AuratioSpacing.xl,
-                    math.max(40.0, topInset + 14),
-                    AuratioSpacing.xl,
-                    12,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const AuratioBrandLockup(width: 108),
-                          Semantics(
-                            label: 'User profile avatar for Alex',
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: const BoxDecoration(
-                                color: AuratioColors.brandBlue200,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'AM',
-                                  style: AuratioTypography.caption.copyWith(
-                                    color: AuratioColors.backgroundBrand,
-                                    fontWeight: FontWeight.w500,
+              SizedBox(
+                height: 224,
+                child: ColoredBox(
+                  color: AuratioColors.backgroundBrand,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AuratioSpacing.xl,
+                      38,
+                      AuratioSpacing.xl,
+                      12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const AuratioBrandLockup(width: 108),
+                            Semantics(
+                              label: 'User profile avatar for Alex',
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: const BoxDecoration(
+                                  color: AuratioColors.brandBlue200,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'AM',
+                                    style: AuratioTypography.caption.copyWith(
+                                      color: AuratioColors.backgroundBrand,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          'Hello, Alex',
+                          style: AuratioTypography.headingMedium.copyWith(
+                            color: AuratioColors.textOnBrand,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Text(
-                        'Hello, Alex',
-                        style: AuratioTypography.headingMedium.copyWith(
-                          color: AuratioColors.textOnBrand,
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'You have an active evaluation awaiting a final decision.',
-                        style: AuratioTypography.bodySmall.copyWith(
-                          color: AuratioColors.brandBlue200,
+                        const SizedBox(height: 2),
+                        Text(
+                          'You have an active evaluation awaiting a final decision.',
+                          style: AuratioTypography.bodySmall.copyWith(
+                            color: AuratioColors.brandBlue200,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 18),
-                      AuratioButton(
-                        key: viewActiveEvaluationKey,
-                        label: 'View Active Evaluation',
-                        variant: AuratioButtonVariant.accent,
-                        size: AuratioButtonSize.medium,
-                        expand: true,
-                        onPressed: _noOp,
-                      ),
-                    ],
+                        const SizedBox(height: 18),
+                        AuratioButton(
+                          key: viewActiveEvaluationKey,
+                          label: 'View Active Evaluation',
+                          variant: AuratioButtonVariant.accent,
+                          size: AuratioButtonSize.medium,
+                          expand: true,
+                          onPressed: _noOp,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -122,12 +125,13 @@ class HomeScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AuratioSpacing.xl,
-                  vertical: 20,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Section 1: Recent Evaluation
+                    const SizedBox(height: 20),
+
+                    // Section 1: Recent Evaluation (y=244)
                     Text(
                       'RECENT EVALUATION',
                       style: AuratioTypography.caption.copyWith(
@@ -137,38 +141,42 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    AuratioCard(
-                      key: recentEvaluationCardKey,
-                      tone: AuratioCardTone.defaultTone,
-                      elevation: AuratioCardElevation.raised,
-                      padding: const EdgeInsets.all(AuratioSpacing.xl),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Business Pitch / Sales Pitch',
-                            style: AuratioTypography.titleMedium.copyWith(
-                              color: AuratioColors.textPrimary,
+                    SizedBox(
+                      height: 120,
+                      width: double.infinity,
+                      child: AuratioCard(
+                        key: recentEvaluationCardKey,
+                        tone: AuratioCardTone.defaultTone,
+                        elevation: AuratioCardElevation.raised,
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Business Pitch / Sales Pitch',
+                              style: AuratioTypography.titleMedium.copyWith(
+                                color: AuratioColors.textPrimary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Human Evaluation',
-                            style: AuratioTypography.bodyMedium.copyWith(
-                              color: AuratioColors.textSecondary,
+                            const SizedBox(height: 2),
+                            Text(
+                              'Human Evaluation',
+                              style: AuratioTypography.bodyMedium.copyWith(
+                                color: AuratioColors.textSecondary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          const AuratioStatusBadge(
-                            status: AuratioStatus.pending,
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+                            const AuratioStatusBadge(
+                              status: AuratioStatus.pending,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
                     const SizedBox(height: 18),
 
-                    // Section 2: Private Progress
+                    // Section 2: Private Progress (y=408)
                     Text(
                       'PRIVATE PROGRESS',
                       style: AuratioTypography.caption.copyWith(
@@ -178,58 +186,74 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    AuratioCard(
-                      key: privateProgressCardKey,
-                      tone: AuratioCardTone.brandSoft,
-                      elevation: AuratioCardElevation.flat,
-                      padding: const EdgeInsets.all(AuratioSpacing.xl),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    SizedBox(
+                      height: 114,
+                      width: double.infinity,
+                      child: AuratioCard(
+                        key: privateProgressCardKey,
+                        tone: AuratioCardTone.brandSoft,
+                        elevation: AuratioCardElevation.flat,
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Overall Auratio Mastery',
+                              style: AuratioTypography.titleMedium.copyWith(
+                                color: AuratioColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '84.2 / 100 • Approved track masteries averaged equally.',
+                              style: AuratioTypography.bodyMedium.copyWith(
+                                color: AuratioColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 2),
+
+                    // Quick Actions (y=550)
+                    SizedBox(
+                      height: 40,
+                      child: Row(
                         children: [
-                          Text(
-                            'Overall Auratio Mastery',
-                            style: AuratioTypography.titleMedium.copyWith(
-                              color: AuratioColors.textPrimary,
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              child: AuratioButton(
+                                key: leaderboardsButtonKey,
+                                label: 'Leaderboards',
+                                variant: AuratioButtonVariant.secondary,
+                                size: AuratioButtonSize.small,
+                                onPressed: _noOp,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '84.2 / 100 • Approved track masteries averaged equally.',
-                            style: AuratioTypography.bodyMedium.copyWith(
-                              color: AuratioColors.textSecondary,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              child: AuratioButton(
+                                key: eventsButtonKey,
+                                label: 'Events',
+                                variant: AuratioButtonVariant.secondary,
+                                size: AuratioButtonSize.small,
+                                onPressed: _noOp,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AuratioButton(
-                            key: leaderboardsButtonKey,
-                            label: 'Leaderboards',
-                            variant: AuratioButtonVariant.secondary,
-                            size: AuratioButtonSize.small,
-                            onPressed: _noOp,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: AuratioButton(
-                            key: eventsButtonKey,
-                            label: 'Events',
-                            variant: AuratioButtonVariant.secondary,
-                            size: AuratioButtonSize.small,
-                            onPressed: _noOp,
-                          ),
-                        ),
-                      ],
-                    ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 64),
 
-                    // Section 3: Your Paths
+                    // Section 3: Your Paths (y=654)
                     Text(
                       'YOUR PATHS',
                       style: AuratioTypography.caption.copyWith(
@@ -240,6 +264,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildYourPathsChips(selectedPaths),
+                    const SizedBox(height: 58),
                   ],
                 ),
               ),

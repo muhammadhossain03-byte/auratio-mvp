@@ -45,9 +45,9 @@ class AuratioChipTab extends StatelessWidget {
             onTap: onPressed,
             customBorder: const StadiumBorder(),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
+              constraints: BoxConstraints(
                 minWidth: AuratioSizing.minimumTouchTarget,
-                minHeight: AuratioSizing.minimumTouchTarget,
+                minHeight: visualHeight,
               ),
               child: Center(
                 widthFactor: 1.0,
@@ -63,7 +63,10 @@ class AuratioChipTab extends StatelessWidget {
                     ),
                   ),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: visualHeight),
+                    constraints: BoxConstraints(
+                      minHeight: visualHeight,
+                      minWidth: AuratioSizing.minimumTouchTarget,
+                    ),
                     child: Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: horizontalPadding,

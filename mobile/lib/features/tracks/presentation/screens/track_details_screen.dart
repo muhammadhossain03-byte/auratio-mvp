@@ -72,29 +72,77 @@ class TrackDetailsScreen extends StatelessWidget {
 
                       const SizedBox(height: 22),
 
-                      // Card 1: Duration
-                      const AuratioCard(
-                        tone: AuratioCardTone.defaultTone,
-                        elevation: AuratioCardElevation.flat,
-                        padding: EdgeInsets.all(AuratioSpacing.xl),
-                        title: 'Duration',
-                        body: 'Target 3:00–5:00  •  Accepted upload window 2:30–5:30',
+                      // Card 1: Duration (y=264, h=104)
+                      const SizedBox(
+                        height: 104,
+                        width: double.infinity,
+                        child: AuratioCard(
+                          tone: AuratioCardTone.defaultTone,
+                          elevation: AuratioCardElevation.flat,
+                          padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Duration',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  color: AuratioColors.textPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Target 3:00–5:00  •  Accepted upload window 2:30–5:30',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AuratioColors.textSecondary,
+                                  height: 18 / 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // Card 2: Recording Requirement
-                      const AuratioCard(
-                        tone: AuratioCardTone.brandSoft,
-                        elevation: AuratioCardElevation.flat,
-                        padding: EdgeInsets.all(AuratioSpacing.xl),
-                        title: 'Recording requirement',
-                        body: 'Speaker-visible .mp4 • face/gaze, posture, gestures, framing and movement should remain observable.',
+                      // Card 2: Recording Requirement (y=382, h=126)
+                      const SizedBox(
+                        height: 126,
+                        width: double.infinity,
+                        child: AuratioCard(
+                          tone: AuratioCardTone.brandSoft,
+                          elevation: AuratioCardElevation.flat,
+                          padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Recording requirement',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  color: AuratioColors.textPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Speaker-visible .mp4 • face/gaze, posture, gestures, framing and movement should remain observable.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AuratioColors.textSecondary,
+                                  height: 18 / 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 24),
 
-                      // Section: Evaluation Structure
+                      // Section: Evaluation Structure (y=532)
                       Text(
                         'EVALUATION STRUCTURE',
                         style: AuratioTypography.caption.copyWith(
@@ -112,35 +160,42 @@ class TrackDetailsScreen extends StatelessWidget {
 
                       const SizedBox(height: 6),
 
-                      // Notice Banner
-                      Container(
+                      // Notice Banner (y=688, h=58)
+                      SizedBox(
+                        height: 58,
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 13,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AuratioColors.surfaceBrandSoft,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Server-measured duration determines eligibility before evaluation begins.',
-                          style: AuratioTypography.caption.copyWith(
-                            color: AuratioColors.textSecondary,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 13,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AuratioColors.surfaceBrandSoft,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Server-measured duration determines eligibility before evaluation begins.',
+                            style: AuratioTypography.caption.copyWith(
+                              color: AuratioColors.textSecondary,
+                            ),
                           ),
                         ),
                       ),
 
                       const SizedBox(height: 8),
 
-                      // Start Evaluation CTA
-                      AuratioButton(
-                        key: startEvaluationButtonKey,
-                        label: 'Start Evaluation',
-                        variant: AuratioButtonVariant.primary,
-                        expand: true,
-                        onPressed: () =>
-                            context.go(AppRoutePaths.submissionRequirements),
+                      // Start Evaluation CTA (y=754, h=48)
+                      SizedBox(
+                        height: 48,
+                        width: double.infinity,
+                        child: AuratioButton(
+                          key: startEvaluationButtonKey,
+                          label: 'Start Evaluation',
+                          variant: AuratioButtonVariant.primary,
+                          expand: true,
+                          onPressed: () =>
+                              context.go(AppRoutePaths.submissionRequirements),
+                        ),
                       ),
 
                       const SizedBox(height: 24),

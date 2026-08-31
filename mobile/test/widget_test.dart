@@ -93,7 +93,12 @@ void main() {
                 size: AuratioButtonSize.small,
                 onPressed: () {},
               ),
-              AuratioChipTab(label: 'A', selected: false, onPressed: () {}),
+              AuratioChipTab(
+                label: 'A',
+                selected: false,
+                size: AuratioChipTabSize.medium,
+                onPressed: () {},
+              ),
             ],
           ),
         ),
