@@ -307,7 +307,7 @@ class HomeScreen extends ConsumerWidget {
             AuratioChipTab(
               label: pathList[i].label,
               selected: i == 0,
-              onPressed: _noOp,
+              presentationOnly: true,
             ),
           ],
         ],

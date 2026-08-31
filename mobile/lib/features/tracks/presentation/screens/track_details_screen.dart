@@ -46,11 +46,11 @@ class TrackDetailsScreen extends StatelessWidget {
                     children: [
                       const SizedBox(height: 20),
 
-                      // Path Badge
-                      AuratioChipTab(
+                      // Path Badge (y=112, h=34)
+                      const AuratioChipTab(
                         label: 'Professional Presenting',
                         selected: true,
-                        onPressed: () {},
+                        presentationOnly: true,
                       ),
 
                       const SizedBox(height: 16),
@@ -93,7 +93,7 @@ class TrackDetailsScreen extends StatelessWidget {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                'Target 3:00–5:00  •  Accepted upload window 2:30–5:30',
+                                'Target 3:00–5:00  •  Accepted upload\nwindow 2:30–5:30',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: AuratioColors.textSecondary,
@@ -128,7 +128,7 @@ class TrackDetailsScreen extends StatelessWidget {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                'Speaker-visible .mp4 • face/gaze, posture, gestures, framing and movement should remain observable.',
+                                'Speaker-visible .mp4 • face/gaze, posture,\ngestures, framing and movement should\nremain observable.',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: AuratioColors.textSecondary,

@@ -207,7 +207,7 @@ void main() {
       expect(router.state.uri.path, AppRoutePaths.trackDetails);
       expect(find.text('Track Details'), findsOneWidget);
       expect(
-        find.text('Target 3:00–5:00  •  Accepted upload window 2:30–5:30'),
+        find.textContaining('Target 3:00–5:00'),
         findsOneWidget,
       );
 

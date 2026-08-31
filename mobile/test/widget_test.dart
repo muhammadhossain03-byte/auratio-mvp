@@ -96,7 +96,7 @@ void main() {
               AuratioChipTab(
                 label: 'A',
                 selected: false,
-                size: AuratioChipTabSize.medium,
+                size: AuratioChipTabSize.small,
                 onPressed: () {},
               ),
             ],
@@ -118,6 +118,43 @@ void main() {
       greaterThanOrEqualTo(AuratioSizing.minimumTouchTarget),
     );
   });
+
+  testWidgets(
+    'presentation-only chip tabs render at faithful visual size without disabled opacity',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                const AuratioChipTab(
+                  label: 'Path',
+                  selected: true,
+                  size: AuratioChipTabSize.small,
+                  presentationOnly: true,
+                ),
+                const AuratioChipTab(
+                  label: 'Filter',
+                  selected: false,
+                  size: AuratioChipTabSize.compact,
+                  presentationOnly: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSize(find.widgetWithText(AuratioChipTab, 'Path')).height,
+        34.0,
+      );
+      expect(
+        tester.getSize(find.widgetWithText(AuratioChipTab, 'Filter')).height,
+        32.0,
+      );
+    },
+  );
 
   testWidgets('validator errors and helper text use distinct semantic colors', (
     tester,

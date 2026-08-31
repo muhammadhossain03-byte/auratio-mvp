@@ -59,12 +59,16 @@ void main() {
     expect(evBtn.variant, AuratioButtonVariant.secondary);
     expect(evBtn.onPressed, isNotNull);
 
-    // YOUR PATHS chips are not disabled.
+    // YOUR PATHS chips are rendered as presentationOnly badges (not disabled).
     final chipFinder = find.byType(AuratioChipTab);
     expect(chipFinder, findsWidgets);
     for (var i = 0; i < chipFinder.evaluate().length; i++) {
       final chip = tester.widget<AuratioChipTab>(chipFinder.at(i));
-      expect(chip.onPressed, isNotNull, reason: 'chip $i must not be null');
+      expect(
+        chip.presentationOnly,
+        isTrue,
+        reason: 'chip $i should be presentationOnly',
+      );
     }
 
     // Bottom nav bar present with 4 destinations.
@@ -160,7 +164,7 @@ void main() {
 
     // Duration card.
     expect(
-      find.text('Target 3:00–5:00  •  Accepted upload window 2:30–5:30'),
+      find.textContaining('Target 3:00–5:00'),
       findsOneWidget,
     );
 
@@ -233,9 +237,7 @@ void main() {
 
       // Video lifecycle copy.
       expect(
-        find.text(
-          'Video remains temporary through evaluation/moderation and is deleted after the final Approved or Rejected decision.',
-        ),
+        find.textContaining('Video remains temporary through evaluation/moderation'),
         findsOneWidget,
       );
 

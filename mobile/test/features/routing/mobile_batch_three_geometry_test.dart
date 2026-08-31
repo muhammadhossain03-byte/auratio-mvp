@@ -120,12 +120,12 @@ void main() {
       expect(headerRect.top, 0.0);
       expect(headerRect.height, 92.0);
 
-      // Filter pills at y=110, h=34 (or 32-34)
+      // Filter pills at y=110, h=32
       final allChipFinder = find.widgetWithText(AuratioChipTab, 'All');
       expect(allChipFinder, findsOneWidget);
       final allChipRect = tester.getRect(allChipFinder);
       expect(allChipRect.top, 110.0);
-      expect(allChipRect.height, 34.0);
+      expect(allChipRect.height, 32.0);
 
       // PUBLIC SPEAKING label: y=164
       final psLabelFinder = find.text('PUBLIC SPEAKING');
@@ -180,24 +180,24 @@ void main() {
         expect(titleRect.top, 162.0);
 
         // Duration card at y=264, h=104, w=350
-        final durationCardFinder = find.widgetWithText(
-          AuratioCard,
-          'Target 3:00–5:00  •  Accepted upload window 2:30–5:30',
+        final durationCardFinder = find.ancestor(
+          of: find.text('Duration'),
+          matching: find.byType(SizedBox),
         );
-        expect(durationCardFinder, findsOneWidget);
-        final durationCardRect = tester.getRect(durationCardFinder);
+        expect(durationCardFinder, findsWidgets);
+        final durationCardRect = tester.getRect(durationCardFinder.first);
         expect(durationCardRect.left, 20.0);
         expect(durationCardRect.top, 264.0);
         expect(durationCardRect.width, 350.0);
         expect(durationCardRect.height, 104.0);
 
         // Recording card at y=382, h=126, w=350
-        final recordingCardFinder = find.widgetWithText(
-          AuratioCard,
-          'Speaker-visible .mp4 • face/gaze, posture, gestures, framing and movement should remain observable.',
+        final recordingCardFinder = find.ancestor(
+          of: find.text('Recording requirement'),
+          matching: find.byType(SizedBox),
         );
-        expect(recordingCardFinder, findsOneWidget);
-        final recordingCardRect = tester.getRect(recordingCardFinder);
+        expect(recordingCardFinder, findsWidgets);
+        final recordingCardRect = tester.getRect(recordingCardFinder.first);
         expect(recordingCardRect.left, 20.0);
         expect(recordingCardRect.top, 382.0);
         expect(recordingCardRect.width, 350.0);

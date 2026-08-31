@@ -57,15 +57,16 @@ class SubmissionRequirementsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Use a recording that lets Auratio evaluate the speaker — not only audio or slides.',
+                        'Use a recording that lets Auratio evaluate the speaker —\nnot only audio or slides.',
                         style: AuratioTypography.bodySmall.copyWith(
                           color: AuratioColors.textSecondary,
-                          fontSize: 13,
-                          height: 19 / 13,
+                          fontSize: 12.5,
+                          height: 18 / 12.5,
+                          letterSpacing: -0.15,
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 22),
 
                       // Card 1: File format (y=216, h=76)
                       SizedBox(
@@ -192,13 +193,15 @@ class SubmissionRequirementsScreen extends StatelessWidget {
 
                       // Explanatory video lifecycle copy (y=604)
                       Text(
-                        'Video remains temporary through evaluation/moderation and is deleted after the final Approved or Rejected decision.',
+                        'Video remains temporary through evaluation/moderation and\nis deleted after the final Approved or Rejected decision.',
                         style: AuratioTypography.bodySmall.copyWith(
                           color: AuratioColors.textSecondary,
+                          fontSize: 11.5,
+                          height: 17 / 11.5,
                         ),
                       ),
 
-                      const SizedBox(height: 92),
+                      const SizedBox(height: 112),
 
                       // Choose Video Button (y=750, h=48)
                       SizedBox(
@@ -234,16 +237,19 @@ class SubmissionRequirementsScreen extends StatelessWidget {
           style: TextStyle(
             color: AuratioColors.actionAccentBackground,
             fontWeight: FontWeight.w700,
-            fontSize: 13,
-            height: 18 / 13,
+            fontSize: 12,
+            height: 17 / 12,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
             style: AuratioTypography.bodySmall.copyWith(
               color: AuratioColors.textSecondary,
+              fontSize: 12,
+              height: 17 / 12,
+              letterSpacing: -0.1,
             ),
           ),
         ),

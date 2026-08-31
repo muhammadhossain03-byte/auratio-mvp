@@ -52,31 +52,35 @@ class TracksScreen extends StatelessWidget {
                           AuratioChipTab(
                             label: 'All',
                             selected: true,
+                            size: AuratioChipTabSize.compact,
                             onPressed: () {},
                           ),
                           const SizedBox(width: 6),
                           AuratioChipTab(
                             label: 'Public Speaking',
                             selected: false,
+                            size: AuratioChipTabSize.compact,
                             onPressed: () {},
                           ),
                           const SizedBox(width: 6),
                           AuratioChipTab(
                             label: 'Presenting',
                             selected: false,
+                            size: AuratioChipTabSize.compact,
                             onPressed: () {},
                           ),
                           const SizedBox(width: 6),
                           AuratioChipTab(
                             label: 'Content',
                             selected: false,
+                            size: AuratioChipTabSize.compact,
                             onPressed: () {},
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 22),
 
                     // Category 1: Public Speaking
                     _buildCategorySection(

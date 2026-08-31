@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:auratio_mobile/app/app.dart';
 import 'package:auratio_mobile/app/router/app_route_paths.dart';
+import 'package:auratio_mobile/features/shared/presentation/widgets/auratio_brand_lockup.dart';
 import 'package:auratio_mobile/foundation/design_system/auratio_design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -11,20 +12,55 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-bool _interFontLoaded = false;
+bool _fontsLoaded = false;
 
-Future<void> _loadInterFont() async {
-  if (_interFontLoaded) {
+Future<void> _loadFonts() async {
+  if (_fontsLoaded) {
     return;
   }
-  final loader = FontLoader(AuratioTypography.fontFamily)
+
+  // Load Inter font
+  final interLoader = FontLoader(AuratioTypography.fontFamily)
     ..addFont(rootBundle.load('assets/fonts/InterVariable.ttf'));
-  await loader.load();
-  _interFontLoaded = true;
+  await interLoader.load();
+
+  // Load MaterialIcons font
+  try {
+    final whichFlutter = Process.runSync(
+      Platform.isWindows ? 'where' : 'which',
+      ['flutter'],
+    );
+    if (whichFlutter.exitCode == 0) {
+      final flutterPath = (whichFlutter.stdout as String)
+          .split(Platform.isWindows ? '\r\n' : '\n')
+          .first
+          .trim();
+      final flutterDir = Directory(flutterPath).parent.parent;
+      final candidates = [
+        File(
+          '${flutterDir.path}/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
+        ),
+        File(
+          '${flutterDir.path}/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+        ),
+      ];
+      for (final candidate in candidates) {
+        if (candidate.existsSync()) {
+          final bytes = candidate.readAsBytesSync();
+          final iconLoader = FontLoader('MaterialIcons')
+            ..addFont(Future.value(ByteData.view(bytes.buffer)));
+          await iconLoader.load();
+          break;
+        }
+      }
+    }
+  } catch (_) {}
+
+  _fontsLoaded = true;
 }
 
 void main() {
-  const outputDir = 'd:/auratio-mvp/mobile/capture_output';
+  final outputDir = Directory('${Directory.current.path}/capture_output').path;
 
   setUpAll(() {
     Directory(outputDir).createSync(recursive: true);
@@ -37,7 +73,7 @@ void main() {
     ('submission_requirements', AppRoutePaths.submissionRequirements),
   ]) {
     testWidgets('generate capture for ${item.$1}', (tester) async {
-      await _loadInterFont();
+      await _loadFonts();
 
       tester.view
         ..devicePixelRatio = 1.0
@@ -51,13 +87,25 @@ void main() {
           child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
         ),
       );
-      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pumpAndSettle();
 
       final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
       final router = app.routerConfig! as GoRouter;
 
       router.go(item.$2);
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
+
+      // Precache logo image if on home screen
+      if (item.$1 == 'home') {
+        await tester.runAsync(() async {
+          final element = tester.element(find.byType(AuratioApp));
+          await precacheImage(
+            const AssetImage(AuratioBrandLockup.assetPath),
+            element,
+          );
+        });
+        await tester.pumpAndSettle();
+      }
 
       await tester.runAsync(() async {
         final boundary = tester.renderObject<RenderRepaintBoundary>(
