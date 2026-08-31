@@ -10,8 +10,12 @@ import '../../features/authentication/presentation/screens/reset_password_screen
 import '../../features/authentication/presentation/screens/sign_in_screen.dart';
 import '../../features/authentication/presentation/screens/verify_email_screen.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/onboarding/presentation/screens/choose_paths_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_intro_screen.dart';
+import '../../features/submissions/presentation/screens/submission_requirements_screen.dart';
+import '../../features/tracks/presentation/screens/track_details_screen.dart';
+import '../../features/tracks/presentation/screens/tracks_screen.dart';
 import 'app_route_paths.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -64,6 +68,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutePaths.passwordResetComplete,
         builder: (context, state) => const PasswordResetCompleteScreen(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.home,
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.tracks,
+        builder: (context, state) => const TracksScreen(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.trackDetails,
+        builder: (context, state) => const TrackDetailsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.submissionRequirements,
+        builder: (context, state) => const SubmissionRequirementsScreen(),
       ),
     ],
   );

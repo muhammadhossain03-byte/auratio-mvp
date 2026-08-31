@@ -159,7 +159,7 @@ void main() {
   });
 
   testWidgets(
-    'new-account Sign In enters onboarding while returning Sign In stays',
+    'new-account Sign In enters onboarding while returning Sign In opens Home',
     (tester) async {
       final router = await pumpAuratioApp(tester);
 
@@ -171,8 +171,8 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 100));
       await tester.tap(find.byKey(SignInScreen.signInActionKey));
-      await tester.pump();
-      expect(router.state.uri.path, AppRoutePaths.signIn);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.home);
 
       await openAuratioRoute(
         tester,
@@ -182,7 +182,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 100));
       await tester.tap(find.byKey(SignInScreen.signInActionKey));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(router.state.uri.path, AppRoutePaths.onboardingIntro);
       expect(find.byKey(OnboardingKeys.introScreen), findsOneWidget);

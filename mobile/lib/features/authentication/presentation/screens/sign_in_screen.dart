@@ -45,7 +45,7 @@ class _SignInScreenState extends State<SignInScreen> {
       return;
     }
 
-    // The returning-user destination belongs to a later mobile screen batch.
+    context.go(AppRoutePaths.home);
   }
 
   void _handleForgotPassword() {

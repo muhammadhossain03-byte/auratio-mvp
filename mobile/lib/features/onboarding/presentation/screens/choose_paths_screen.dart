@@ -88,7 +88,7 @@ class ChoosePathsScreen extends ConsumerWidget {
                         label: 'Continue',
                         onPressed: selectedPaths.isEmpty
                             ? null
-                            : _continueAtLaterBatchBoundary,
+                            : () => context.go(AppRoutePaths.home),
                         expand: true,
                       ),
                     ),
@@ -119,10 +119,6 @@ class ChoosePathsScreen extends ConsumerWidget {
         onTap: () => onTap(path),
       ),
     );
-  }
-
-  static void _continueAtLaterBatchBoundary() {
-    // The inspected Figma destination is Home, which belongs to a later batch.
   }
 }
 

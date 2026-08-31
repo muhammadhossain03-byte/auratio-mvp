@@ -23,6 +23,16 @@ class AuratioMobileDestination {
   final Widget icon;
 }
 
+const canonicalMobileDestinations = [
+  AuratioMobileDestination(label: 'Home', icon: Icon(Icons.home_outlined)),
+  AuratioMobileDestination(label: 'Tracks', icon: Icon(Icons.explore_outlined)),
+  AuratioMobileDestination(
+    label: 'Progress',
+    icon: Icon(Icons.bar_chart_outlined),
+  ),
+  AuratioMobileDestination(label: 'Profile', icon: Icon(Icons.person_outline)),
+];
+
 class AuratioMobileNavigationItem extends StatelessWidget {
   const AuratioMobileNavigationItem({
     required this.destination,

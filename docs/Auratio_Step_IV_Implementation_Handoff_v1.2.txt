@@ -1,0 +1,236 @@
+Auratio — Step IV Implementation Handoff
+Version 1.2
+Date: 28 August 2026
+
+PURPOSE
+Use this file to resume Auratio Step IV in a fresh ChatGPT conversation or coding-agent workspace without reconstructing the implementation history.
+
+CURRENT STATE
+Steps I–III are complete and locked.
+Step IV — UI Coding is IN PROGRESS.
+Two real mobile product-screen batches are complete, reviewed, and approved.
+No production backend/database/API work has started.
+
+AUTHORITATIVE PRODUCT SOURCES
+- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8
+- Auratio MVP — Path Selection Addendum v1.0 for Path-selection behavior
+- Auratio Scoring & Leaderboard System Specification v3.7 for scoring/moderation/leaderboards
+- Auratio Execution Specification v1.8
+- Auratio MVP Concepts & Requirements v1.8
+- Older briefs/overviews/planning files are contextual only
+
+Figma `03 — Interactive Prototype — MVP v1.8` is authoritative for visual and prototype-interaction implementation.
+Written sources prevail for product rules, security, persistence, scoring, moderation, governance, and backend semantics.
+
+FIGMA
+File key:
+naweFj39KPJSa18ARtl0ll
+
+Inventory:
+- 41 User Mobile screens
+- 8 Shared Portal Authentication screens
+- 16 Volunteer Evaluator screens
+- 23 Admin screens
+- 5 Super Admin screens
+- 93 total screens
+- 436 interaction bindings
+- 0 invalid destinations after final prototype QA
+
+GITHUB
+Repository:
+muhammadhossain03-byte/auratio-mvp
+
+Current Step IV branch:
+step-iv/ui-foundation
+
+Approved HEAD:
+f8ec470113e2694ae41c58aba4cdc30b19f48988
+
+Commit:
+feat: implement mobile password recovery flow
+
+IMPORTANT CHECKPOINTS
+1d9db3d7828de01dcea3257f2890d7058b2aa125
+- authoritative project-source baseline
+
+8f1115111182967151c23fa9418df73094325f5d
+- Flutter + portal scaffold
+
+a06c2d8bc64bf65252f245125a46e3b87685212f
+- Figma-derived shared UI foundation
+
+80d3624b042005b4071e58790dea202a0caf19c4
+- UI foundation hardening
+
+2bfa094d5ad4d83e47c8242b39428b02121db4ac
+- final pre-batch foundation QA fixes
+
+aa4ed3492eadfc89375080faed87a2c6ce181ef0
+- Step IV status-documentation checkpoint
+
+c9895035fa02268145e376d90439607bc2b765f8
+- Batch 1: mobile authentication + onboarding core
+
+f8ec470113e2694ae41c58aba4cdc30b19f48988
+- Batch 2: mobile password recovery
+
+IMPLEMENTED FOUNDATION
+/mobile:
+- Flutter
+- Riverpod
+- go_router
+- Figma-derived design system
+- Button, Input, Card, Status Badge, Chip/Tab
+- reusable mobile navigation/shell
+- route-group foundation
+- locally bundled Inter 4.1
+- authoritative Auratio lockup asset
+- safe-area/touch-target/semantics hardening
+
+/portal:
+- React
+- TypeScript
+- Vite
+- React Router
+- matching design tokens and typography
+- Button, Input, Card, Status Badge, Chip/Tab
+- portal sidebar/shell/navigation foundation
+- route-group foundation
+- locally bundled Inter 4.1
+- stable focus geometry and 44px hit-target handling
+
+Root:
+- /docs authoritative sources
+- AGENTS.md implementation guardrails
+- Inter third-party license
+
+APPROVED BATCH 1 — MOBILE AUTHENTICATION + ONBOARDING CORE
+Commit:
+c9895035fa02268145e376d90439607bc2b765f8
+
+Frames:
+282:61 — Sign In
+295:56 — Create Account
+297:153 — Verify Email
+297:171 — Email Verified
+295:82 — Onboarding Intro
+295:153 — Choose Paths
+297:250 — Sign In New Account
+
+Approved behavior:
+- local/mock auth/onboarding state only
+- reusable Sign In implementation for both visually identical Sign In states, with distinct route semantics where required
+- Create Account -> Verify Email -> Email Verified -> Sign In New Account
+- Onboarding Intro -> Choose Paths
+- one or more Paths required
+- Paths remain personalization rather than access control
+- Public Speaking / Professional Presenting / Content Creation supported
+- authoritative Auratio lockup asset bundled in Flutter
+- later Home and Forgot Password transitions intentionally remained outside Batch 1
+
+Validation reported and reviewed:
+- flutter pub get passed
+- formatting passed
+- flutter analyze passed
+- flutter test passed: 26 tests
+- visual QA passed for all 7 frames at 390 x 844
+
+APPROVED BATCH 2 — MOBILE PASSWORD RECOVERY
+Commit:
+f8ec470113e2694ae41c58aba4cdc30b19f48988
+
+Frames:
+297:185 — Forgot Password
+297:203 — Reset Link Sent
+297:220 — Reset Password
+297:239 — Password Reset Complete
+
+Approved behavior:
+- existing Sign In -> Forgot Password wired
+- local/mock Riverpod recovery state only
+- privacy-safe account-existence wording
+- entered email carried into Reset Link Sent locally
+- resend action remains local/mock
+- Figma simulated emailed-link transition represented without real reset-token/deep-link infrastructure
+- Reset Password requires at least 8 characters and matching confirmation
+- completion returns to the existing returning-user Sign In
+- no production credential persistence or backend work
+- Batch 1 behavior remains intact
+
+Validation reported and reviewed:
+- flutter pub get passed
+- formatting passed: 46 files checked, 0 changed
+- flutter analyze passed, no issues
+- flutter test passed: 43/43 tests
+- Batch 1 tests still pass
+- visual QA passed for all 4 frames at 390 x 844
+- no meaningful visual discrepancies remained
+
+CURRENT IMPLEMENTATION TOTAL
+- 11 of 41 User Mobile Figma frames implemented and approved
+- Authentication + onboarding: complete for the current Step IV frontend scope
+- Password recovery: complete for the current Step IV frontend scope
+- Portal product screens: not started; only portal foundation exists
+
+STEP IV BOUNDARY
+Use local/mock frontend state only.
+Do not add production Supabase, database, storage, Gemini, API/Edge Functions, real auth/RBAC, scoring engines, leaderboard engines, report generation, or other Steps V–VII responsibilities yet.
+
+PATH RULE
+- Users select one or more Paths during onboarding.
+- Users may modify Paths later.
+- Paths personalize experience; they do not restrict access to tracks.
+- Path changes do not modify historical evaluations, approved scores, reports, mastery, or historical records.
+
+UPDATED TOOL UTILIZATION
+ChatGPT = project headquarters:
+- inspect specs
+- inspect Figma
+- inspect GitHub
+- define exact batches
+- review commits/diffs
+- detect product or visual inconsistencies
+- prepare executor prompts
+
+Antigravity 2 = planned primary Step IV executor from the next batch onward now that reusable Flutter/Figma patterns are established.
+- Must start from the latest approved branch state.
+- Must read AGENTS.md and /docs.
+- Must inspect the assigned Figma nodes and prototype bindings directly if Figma access is available.
+- Must not reinterpret locked product rules.
+- Must implement only one assigned batch, validate it, visually QA it, create one clean commit, push, and stop.
+
+Codex = proven fallback/specialist executor.
+- Established the approved implementation patterns through Batches 1 and 2.
+- May be reused if Antigravity is unavailable or a Figma-sensitive correction is better suited to Codex.
+
+Claude Code = specialist for difficult architecture, state/navigation, debugging, refactoring, or independent deep review.
+
+Kimi Code = backup/overflow executor.
+
+Execution cycle:
+ChatGPT plans -> one executor implements/tests -> clean commit/push -> ChatGPT reviews -> next batch.
+
+Never let two coding agents work on different uncommitted states of the same batch.
+Never switch agents in the middle of an uncommitted batch.
+
+NEXT BATCH STATUS
+Batch 3 has NOT yet been formally locked.
+
+Before assigning Batch 3:
+1. Verify GitHub branch step-iv/ui-foundation is still at approved commit f8ec470113e2694ae41c58aba4cdc30b19f48988 or an explicitly reviewed clean descendant.
+2. Re-inspect the relevant signed-in mobile Figma screens and prototype bindings.
+3. Define the safest exact Batch 3 boundary.
+4. Prepare an Antigravity-specific implementation prompt.
+5. Antigravity implements/tests/visually QA's that one batch, commits, pushes, and stops.
+6. ChatGPT reviews before Batch 4.
+
+Likely next product area based on the current prototype sequence:
+Home / Tracks / Track Details / submission entry.
+
+This is only a likely area, not the locked Batch 3 scope. The exact screen list must be determined from a fresh Figma review.
+
+STARTING INSTRUCTION FOR A FRESH CHATGPT CONVERSATION
+Continue Auratio Step IV from the attached updated Project Status v4 and Step IV Implementation Handoff v1.2. Batches 1 and 2 are approved. We are switching the primary executor to Antigravity 2. Before defining Batch 3, inspect the latest GitHub branch and the relevant signed-in mobile Figma journey, then determine the safest exact Batch 3 boundary and prepare the Antigravity implementation prompt. Do not implement Batch 3 yourself and do not assume its scope before reviewing Figma.
+
+STARTING INSTRUCTION FOR A FRESH ANTIGRAVITY WORKSPACE
+Open repository muhammadhossain03-byte/auratio-mvp and work only from branch step-iv/ui-foundation. Before making changes, fetch/pull and verify the branch is at approved commit f8ec470113e2694ae41c58aba4cdc30b19f48988 or the exact clean descendant explicitly supplied by ChatGPT. Read AGENTS.md and /docs. Treat Figma page `03 — Interactive Prototype — MVP v1.8` in file naweFj39KPJSa18ARtl0ll as authoritative for visual/prototype behavior, while written specs prevail for product/backend semantics. Do not implement anything until an exact Batch 3 screen list and acceptance prompt is supplied.
