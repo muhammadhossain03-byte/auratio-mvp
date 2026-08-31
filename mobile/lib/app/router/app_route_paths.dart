@@ -23,6 +23,9 @@ abstract final class AppRoutePaths {
   static const tracks = '/tracks';
   static const trackDetails = '$tracks/business-pitch-sales-pitch';
   static const submissionRequirements = '/submissions/requirements';
+  static const uploadRecording = '/submissions/upload-recording';
+  static const checkingRecording = '/submissions/checking-recording';
+  static const recordingAccepted = '/submissions/recording-accepted';
   static const submissions = '/submissions';
   static const evaluations = '/evaluations';
   static const progress = '/progress';

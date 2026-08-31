@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,10 +14,29 @@ import '../../features/foundation/presentation/foundation_page.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/onboarding/presentation/screens/choose_paths_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_intro_screen.dart';
+import '../../features/submissions/presentation/screens/checking_recording_screen.dart';
+import '../../features/submissions/presentation/screens/recording_accepted_screen.dart';
 import '../../features/submissions/presentation/screens/submission_requirements_screen.dart';
+import '../../features/submissions/presentation/screens/upload_recording_screen.dart';
 import '../../features/tracks/presentation/screens/track_details_screen.dart';
 import '../../features/tracks/presentation/screens/tracks_screen.dart';
 import 'app_route_paths.dart';
+
+Page<dynamic> _dissolvePage({required LocalKey key, required Widget child}) {
+  return CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 150),
+    reverseTransitionDuration: const Duration(milliseconds: 150),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOut,
+      );
+      return FadeTransition(opacity: curvedAnimation, child: child);
+    },
+  );
+}
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
@@ -83,7 +103,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.submissionRequirements,
-        builder: (context, state) => const SubmissionRequirementsScreen(),
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const SubmissionRequirementsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.uploadRecording,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const UploadRecordingScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.checkingRecording,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const CheckingRecordingScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.recordingAccepted,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const RecordingAcceptedScreen(),
+        ),
       ),
     ],
   );

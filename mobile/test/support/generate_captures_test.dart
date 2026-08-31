@@ -71,6 +71,9 @@ void main() {
     ('tracks', AppRoutePaths.tracks),
     ('track_details', AppRoutePaths.trackDetails),
     ('submission_requirements', AppRoutePaths.submissionRequirements),
+    ('upload_recording', AppRoutePaths.uploadRecording),
+    ('checking_recording', AppRoutePaths.checkingRecording),
+    ('recording_accepted', AppRoutePaths.recordingAccepted),
   ]) {
     testWidgets('generate capture for ${item.$1}', (tester) async {
       await _loadFonts();

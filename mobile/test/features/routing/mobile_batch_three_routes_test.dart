@@ -46,7 +46,7 @@ void main() {
     ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(tester, router, screen.path, settle: false);
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
 
       expect(router.state.uri.path, screen.path);
       expect(find.text(screen.identifyingCopy), findsWidgets);
@@ -232,31 +232,29 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Choose Video button at Submission Requirements boundary does not throw',
-    (tester) async {
-      final router = await pumpAuratioApp(tester);
-      await openAuratioRoute(
-        tester,
-        router,
-        AppRoutePaths.submissionRequirements,
-        settle: false,
-      );
-      await tester.pump(const Duration(milliseconds: 100));
+  testWidgets('Choose Video button navigates to Upload Recording', (
+    tester,
+  ) async {
+    final router = await pumpAuratioApp(tester);
+    await openAuratioRoute(
+      tester,
+      router,
+      AppRoutePaths.submissionRequirements,
+      settle: false,
+    );
+    await tester.pump(const Duration(milliseconds: 100));
 
-      final chooseVideoBtn = find.byKey(
-        SubmissionRequirementsScreen.chooseVideoButtonKey,
-      );
-      expect(chooseVideoBtn, findsOneWidget);
+    final chooseVideoBtn = find.byKey(
+      SubmissionRequirementsScreen.chooseVideoButtonKey,
+    );
+    expect(chooseVideoBtn, findsOneWidget);
 
-      await tester.tap(chooseVideoBtn);
-      await tester.pump();
+    await tester.tap(chooseVideoBtn);
+    await tester.pumpAndSettle();
 
-      // Confirm we stay on the same screen (no navigation to unapproved upload screen)
-      expect(router.state.uri.path, AppRoutePaths.submissionRequirements);
-      expect(tester.takeException(), isNull);
-    },
-  );
+    expect(router.state.uri.path, AppRoutePaths.uploadRecording);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _BatchScreenCase {

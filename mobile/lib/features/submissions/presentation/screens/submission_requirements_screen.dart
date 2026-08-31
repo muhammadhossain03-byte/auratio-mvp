@@ -212,7 +212,8 @@ class SubmissionRequirementsScreen extends StatelessWidget {
                           label: 'Choose Video',
                           variant: AuratioButtonVariant.primary,
                           expand: true,
-                          onPressed: _chooseVideoAtLaterBatchBoundary,
+                          onPressed: () =>
+                              context.go(AppRoutePaths.uploadRecording),
                         ),
                       ),
 
@@ -255,9 +256,5 @@ class SubmissionRequirementsScreen extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  static void _chooseVideoAtLaterBatchBoundary() {
-    // 282:270 — P — Upload Recording belongs to a later batch.
   }
 }

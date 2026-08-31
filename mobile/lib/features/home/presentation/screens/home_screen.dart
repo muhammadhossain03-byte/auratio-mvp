@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,8 +36,6 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPaths = ref.watch(selectedPathsProvider);
-    final topInset = MediaQuery.paddingOf(context).top;
-    final heroTopPadding = math.max(12.0, topInset);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: homeScreenKey,
