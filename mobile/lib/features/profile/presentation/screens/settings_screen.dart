@@ -191,7 +191,7 @@ class SettingsScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 154,
                         child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 12, 32, 6),
+                          padding: const EdgeInsets.fromLTRB(14, 12, 24, 6),
                           decoration: BoxDecoration(
                             color: AuratioColors.surfaceDefault,
                             border: Border.all(
