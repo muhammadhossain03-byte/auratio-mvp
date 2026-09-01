@@ -252,7 +252,7 @@ class EvaluationResultHumanScreen extends StatelessWidget {
 
                       const SizedBox(height: 16),
 
-                      // Primary CTA: View Evaluation Report (y=748, w=350, h=48) - Batch 7 boundary
+                      // Primary CTA: View Evaluation Report (y=748, w=350, h=48)
                       SizedBox(
                         height: 48,
                         width: double.infinity,
@@ -261,7 +261,8 @@ class EvaluationResultHumanScreen extends StatelessWidget {
                           label: 'View Evaluation Report',
                           variant: AuratioButtonVariant.primary,
                           expand: true,
-                          onPressed: _viewReportAtBatchSevenBoundary,
+                          onPressed: () =>
+                              context.push(AppRoutePaths.evaluationReport),
                         ),
                       ),
 
@@ -290,11 +291,6 @@ class EvaluationResultHumanScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static void _viewReportAtBatchSevenBoundary() {
-    // 282:446 — P — Evaluation Report belongs to Batch 8.
-    // Kept presentation-only/no-op at the Batch 7 boundary.
   }
 }
 

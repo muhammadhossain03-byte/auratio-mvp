@@ -45,7 +45,7 @@ void main() {
   }
 
   testWidgets(
-    'AI Approved Result -> Back to Home, Header Back, and Report boundary no-op',
+    'AI Approved Result -> Back to Home, Header Back, and Report navigation',
     (tester) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
@@ -59,12 +59,19 @@ void main() {
       expect(router.state.uri.path, AppRoutePaths.evaluationResultAi);
       expect(find.byKey(EvaluationResultAiScreen.screenKey), findsOneWidget);
 
-      // 1. Report CTA is a safe no-op at the Batch 7 boundary
+      // 1. Report CTA navigates to Evaluation Report
       final openReportBtn = find.byKey(
         EvaluationResultAiScreen.openReportButtonKey,
       );
       expect(openReportBtn, findsOneWidget);
       await tester.tap(openReportBtn);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.evaluationReport);
+
+      // Pop back to AI result
+      final backAffordanceReport = find.text('‹');
+      expect(backAffordanceReport, findsOneWidget);
+      await tester.tap(backAffordanceReport);
       await tester.pumpAndSettle();
       expect(router.state.uri.path, AppRoutePaths.evaluationResultAi);
 
@@ -95,7 +102,7 @@ void main() {
   );
 
   testWidgets(
-    'Human Approved Result -> View Report boundary no-op and Header Back to Home',
+    'Human Approved Result -> View Report navigation and Header Back to Home',
     (tester) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
@@ -109,12 +116,19 @@ void main() {
       expect(router.state.uri.path, AppRoutePaths.evaluationResultHuman);
       expect(find.byKey(EvaluationResultHumanScreen.screenKey), findsOneWidget);
 
-      // 1. Report CTA is a safe no-op at the Batch 7 boundary
+      // 1. Report CTA navigates to Evaluation Report
       final viewReportBtn = find.byKey(
         EvaluationResultHumanScreen.viewReportButtonKey,
       );
       expect(viewReportBtn, findsOneWidget);
       await tester.tap(viewReportBtn);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.evaluationReport);
+
+      // Pop back to Human result
+      final backAffordanceReport = find.text('‹');
+      expect(backAffordanceReport, findsOneWidget);
+      await tester.tap(backAffordanceReport);
       await tester.pumpAndSettle();
       expect(router.state.uri.path, AppRoutePaths.evaluationResultHuman);
 

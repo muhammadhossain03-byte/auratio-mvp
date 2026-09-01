@@ -35,6 +35,9 @@ abstract final class AppRoutePaths {
   static const evaluationProcessingHuman = '$evaluations/processing/human';
   static const evaluationResultAi = '$evaluations/result/ai';
   static const evaluationResultHuman = '$evaluations/result/human';
+  static const evaluationReport = '$evaluations/report';
+  static const evaluationReportDownloadSimulated =
+      '$evaluations/report/download-simulated';
   static const progress = '/progress';
   static const leaderboard = '/leaderboard';
   static const events = '/events';

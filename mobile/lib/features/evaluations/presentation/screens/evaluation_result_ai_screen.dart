@@ -226,7 +226,7 @@ class EvaluationResultAiScreen extends StatelessWidget {
 
                       const SizedBox(height: 136),
 
-                      // Primary CTA: Open Evaluation Report (y=688, w=350, h=48) - Batch 7 boundary
+                      // Primary CTA: Open Evaluation Report (y=688, w=350, h=48)
                       SizedBox(
                         height: 48,
                         width: double.infinity,
@@ -235,7 +235,8 @@ class EvaluationResultAiScreen extends StatelessWidget {
                           label: 'Open Evaluation Report',
                           variant: AuratioButtonVariant.primary,
                           expand: true,
-                          onPressed: _openReportAtBatchSevenBoundary,
+                          onPressed: () =>
+                              context.push(AppRoutePaths.evaluationReport),
                         ),
                       ),
 
@@ -264,10 +265,5 @@ class EvaluationResultAiScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static void _openReportAtBatchSevenBoundary() {
-    // 282:446 — P — Evaluation Report belongs to Batch 8.
-    // Kept presentation-only/no-op at the Batch 7 boundary.
   }
 }
