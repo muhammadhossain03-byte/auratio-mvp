@@ -20,6 +20,8 @@ class ManagePathsScreen extends StatelessWidget {
       ValueKey('manage-paths-professional-presenting-card');
   static const contentCreationCardKey =
       ValueKey('manage-paths-content-creation-card');
+  static const contentCreationTitleKey =
+      ValueKey('manage-paths-content-creation-title');
   static const infoCardKey = ValueKey('manage-paths-info-card');
   static const saveChangesButtonKey =
       ValueKey('manage-paths-save-changes-button');
@@ -66,7 +68,7 @@ class ManagePathsScreen extends StatelessWidget {
                         title: 'Public Speaking',
                         subtitle: 'Five speaking formats',
                         isSelected: true,
-                        onTap: null,
+                        onTitleTap: null,
                       ),
 
                       const SizedBox(height: 24),
@@ -77,18 +79,19 @@ class ManagePathsScreen extends StatelessWidget {
                         title: 'Professional Presenting',
                         subtitle: 'Five professional presentation modes',
                         isSelected: true,
-                        onTap: null,
+                        onTitleTap: null,
                       ),
 
                       const SizedBox(height: 24),
 
-                      // Content Creation Card (y=422, w=350, h=104) — Interactive
+                      // Content Creation Card (y=422, w=350, h=104) — Interactive on title only
                       _buildPathOptionCard(
                         key: contentCreationCardKey,
+                        titleKey: contentCreationTitleKey,
                         title: 'Content Creation',
                         subtitle: 'Three speaker-led content niches',
                         isSelected: isContentAdded,
-                        onTap: () {
+                        onTitleTap: () {
                           if (isContentAdded) {
                             context.push(AppRoutePaths.managePaths);
                           } else {
@@ -178,9 +181,31 @@ class ManagePathsScreen extends StatelessWidget {
     required String title,
     required String subtitle,
     required bool isSelected,
-    required VoidCallback? onTap,
+    required VoidCallback? onTitleTap,
+    Key? titleKey,
   }) {
-    final cardContent = Container(
+    final titleText = Text(
+      title,
+      style: AuratioTypography.titleMedium.copyWith(
+        color: const Color(0xFF111827),
+        fontSize: 16,
+        height: 23 / 16,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+
+    final titleWidget = onTitleTap != null
+        ? GestureDetector(
+            key: titleKey,
+            behavior: HitTestBehavior.opaque,
+            onTap: onTitleTap,
+            child: titleText,
+          )
+        : (titleKey != null
+            ? KeyedSubtree(key: titleKey, child: titleText)
+            : titleText);
+
+    return Container(
       key: key,
       width: double.infinity,
       height: 104,
@@ -196,7 +221,7 @@ class ManagePathsScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Checkbox (24 x 24)
+          // Checkbox (24 x 24) — presentation only
           Container(
             width: 24,
             height: 24,
@@ -232,15 +257,7 @@ class ManagePathsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: AuratioTypography.titleMedium.copyWith(
-                    color: const Color(0xFF111827),
-                    fontSize: 16,
-                    height: 23 / 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                titleWidget,
                 const SizedBox(height: 6),
                 Text(
                   subtitle,
@@ -257,14 +274,5 @@ class ManagePathsScreen extends StatelessWidget {
         ],
       ),
     );
-
-    if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: cardContent,
-      );
-    }
-
-    return cardContent;
   }
 }

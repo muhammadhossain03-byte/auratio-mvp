@@ -309,7 +309,8 @@ void main() {
   });
 
   group('Manage Paths (295:239) & Content Added (300:65)', () {
-    testWidgets('Base Manage Paths: Content Creation routes to content-added',
+    testWidgets(
+        'Base Manage Paths (295:239): Content Creation title is interactive, but checkbox, subtitle, background, and other cards are non-interactive',
         (tester) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
@@ -320,8 +321,45 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap Content Creation -> /profile/manage-paths/content-added
-      await tester.tap(find.byKey(ManagePathsScreen.contentCreationCardKey));
+      // 1. Tapping Public Speaking title / subtitle / card does NOT navigate
+      await tester.tap(find.text('Public Speaking'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePaths);
+
+      await tester.tap(find.text('Five speaking formats'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePaths);
+
+      // 2. Tapping Professional Presenting title / subtitle / card does NOT navigate
+      await tester.tap(find.text('Professional Presenting'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePaths);
+
+      await tester.tap(find.text('Five professional presentation modes'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePaths);
+
+      // 3. Tapping Content Creation checkbox does NOT navigate
+      final cardRect =
+          tester.getRect(find.byKey(ManagePathsScreen.contentCreationCardKey));
+      final checkboxCenter = cardRect.topLeft + const Offset(28, 52);
+      await tester.tapAt(checkboxCenter);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePaths);
+
+      // 4. Tapping Content Creation subtitle does NOT navigate
+      await tester.tap(find.text('Three speaker-led content niches'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePaths);
+
+      // 5. Tapping empty/background card space does NOT navigate
+      final cardBackground = cardRect.topRight + const Offset(-20, 20);
+      await tester.tapAt(cardBackground);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePaths);
+
+      // 6. ONLY tapping the "Content Creation" text affordance routes to content-added
+      await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
       await tester.pumpAndSettle();
       expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
     });
@@ -343,7 +381,7 @@ void main() {
     });
 
     testWidgets(
-        'Content Added: Content Creation routes back to base Manage Paths',
+        'Content Added (300:65): Content Creation title is interactive, but checkbox, subtitle, background, and other cards are non-interactive',
         (tester) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
@@ -354,8 +392,37 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap Content Creation -> /profile/manage-paths
-      await tester.tap(find.byKey(ManagePathsScreen.contentCreationCardKey));
+      // 1. Tapping Public Speaking does NOT navigate
+      await tester.tap(find.text('Public Speaking'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+
+      // 2. Tapping Professional Presenting does NOT navigate
+      await tester.tap(find.text('Professional Presenting'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+
+      // 3. Tapping Content Creation checkbox does NOT navigate
+      final cardRect =
+          tester.getRect(find.byKey(ManagePathsScreen.contentCreationCardKey));
+      final checkboxCenter = cardRect.topLeft + const Offset(28, 52);
+      await tester.tapAt(checkboxCenter);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+
+      // 4. Tapping Content Creation subtitle does NOT navigate
+      await tester.tap(find.text('Three speaker-led content niches'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+
+      // 5. Tapping empty/background card space does NOT navigate
+      final cardBackground = cardRect.topRight + const Offset(-20, 20);
+      await tester.tapAt(cardBackground);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+
+      // 6. ONLY tapping the "Content Creation" text affordance routes back to base manage-paths
+      await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
       await tester.pumpAndSettle();
       expect(router.state.uri.path, AppRoutePaths.managePaths);
     });
