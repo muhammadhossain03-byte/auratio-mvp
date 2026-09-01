@@ -265,12 +265,17 @@ void main() {
       await tester.pump();
       expect(router.state.uri.path, AppRoutePaths.home);
 
-      // Tap Leaderboards — stays on Home.
+      // Tap Leaderboards — navigates to Leaderboard in Batch 11+.
       await tester.tap(find.byKey(HomeScreen.leaderboardsButtonKey));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.leaderboard);
+
+      // Return to Home
+      await tester.tap(find.text('‹'));
+      await tester.pumpAndSettle();
       expect(router.state.uri.path, AppRoutePaths.home);
 
-      // Tap Events — stays on Home.
+      // Tap Events — stays on Home (out of scope).
       await tester.tap(find.byKey(HomeScreen.eventsButtonKey));
       await tester.pump();
       expect(router.state.uri.path, AppRoutePaths.home);

@@ -44,6 +44,7 @@ abstract final class AppRoutePaths {
   static const progress = '/progress';
   static const approvedEvaluationHistory = '$progress/approved-history';
   static const leaderboard = '/leaderboard';
+  static const leaderboardHuman = '$leaderboard/human';
   static const events = '/events';
   static const profile = '/profile';
 }

@@ -22,6 +22,8 @@ import '../../features/evaluations/presentation/screens/evaluation_result_human_
 import '../../features/evaluations/presentation/screens/evaluation_routing_screen.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/leaderboard/presentation/screens/leaderboard_ai_all_time_screen.dart';
+import '../../features/leaderboard/presentation/screens/leaderboard_human_all_time_screen.dart';
 import '../../features/onboarding/presentation/screens/choose_paths_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_intro_screen.dart';
 import '../../features/progress/presentation/screens/approved_evaluation_history_screen.dart';
@@ -240,6 +242,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _dissolvePage(
           key: state.pageKey,
           child: const ApprovedEvaluationHistoryScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.leaderboard,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const LeaderboardAiAllTimeScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.leaderboardHuman,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const LeaderboardHumanAllTimeScreen(),
         ),
       ),
     ],

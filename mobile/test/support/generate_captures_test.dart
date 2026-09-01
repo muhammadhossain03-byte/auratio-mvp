@@ -94,6 +94,8 @@ void main() {
     ('evaluation_rejected', AppRoutePaths.evaluationStatusRejected),
     ('private_progress', AppRoutePaths.progress),
     ('approved_evaluation_history', AppRoutePaths.approvedEvaluationHistory),
+    ('leaderboard_ai_all_time', AppRoutePaths.leaderboard),
+    ('leaderboard_human_all_time', AppRoutePaths.leaderboardHuman),
   ]) {
     testWidgets('generate capture for ${item.$1}', (tester) async {
       await _loadFonts();
