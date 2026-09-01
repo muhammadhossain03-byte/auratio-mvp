@@ -223,7 +223,7 @@ class RecordingAcceptedScreen extends StatelessWidget {
 
                       const SizedBox(height: 180),
 
-                      // Continue CTA (y=750, h=48) - Batch 5 boundary
+                      // Continue CTA (y=750, h=48)
                       SizedBox(
                         height: 48,
                         width: double.infinity,
@@ -232,7 +232,8 @@ class RecordingAcceptedScreen extends StatelessWidget {
                           label: 'Continue',
                           variant: AuratioButtonVariant.primary,
                           expand: true,
-                          onPressed: _continueAtBatchFiveBoundary,
+                          onPressed: () =>
+                              context.go(AppRoutePaths.chooseEvaluationMethod),
                         ),
                       ),
 
@@ -246,9 +247,5 @@ class RecordingAcceptedScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static void _continueAtBatchFiveBoundary() {
-    // 282:331 — P — Choose Evaluation Method belongs to Batch 5.
   }
 }

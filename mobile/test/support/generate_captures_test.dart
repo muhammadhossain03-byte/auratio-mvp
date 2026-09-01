@@ -74,6 +74,13 @@ void main() {
     ('upload_recording', AppRoutePaths.uploadRecording),
     ('checking_recording', AppRoutePaths.checkingRecording),
     ('recording_accepted', AppRoutePaths.recordingAccepted),
+    ('choose_evaluation_ai', AppRoutePaths.chooseEvaluationMethod),
+    (
+      'choose_evaluation_human',
+      '${AppRoutePaths.chooseEvaluationMethod}?method=human',
+    ),
+    ('routing_assigned_ai', AppRoutePaths.routingAssignedAi),
+    ('routing_assigned_human', AppRoutePaths.routingAssignedHuman),
   ]) {
     testWidgets('generate capture for ${item.$1}', (tester) async {
       await _loadFonts();

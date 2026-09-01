@@ -28,6 +28,9 @@ abstract final class AppRoutePaths {
   static const recordingAccepted = '/submissions/recording-accepted';
   static const submissions = '/submissions';
   static const evaluations = '/evaluations';
+  static const chooseEvaluationMethod = '$evaluations/choose-method';
+  static const routingAssignedAi = '$evaluations/routing/assigned-ai';
+  static const routingAssignedHuman = '$evaluations/routing/assigned-human';
   static const progress = '/progress';
   static const leaderboard = '/leaderboard';
   static const events = '/events';

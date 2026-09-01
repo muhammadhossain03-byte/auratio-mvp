@@ -9,6 +9,7 @@ class AuratioScreenHeader extends StatelessWidget {
     required this.title,
     this.showBack = false,
     this.onBack,
+    this.titleStyle,
     super.key,
   });
 
@@ -17,6 +18,7 @@ class AuratioScreenHeader extends StatelessWidget {
   final String title;
   final bool showBack;
   final VoidCallback? onBack;
+  final TextStyle? titleStyle;
 
   static double heightFor(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
@@ -48,11 +50,13 @@ class AuratioScreenHeader extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AuratioTypography.titleMedium.copyWith(
-                  color: AuratioColors.textOnBrand,
-                  fontSize: 17,
-                  height: 24 / 17,
-                ),
+                style:
+                    titleStyle ??
+                    AuratioTypography.titleMedium.copyWith(
+                      color: AuratioColors.textOnBrand,
+                      fontSize: 17,
+                      height: 24 / 17,
+                    ),
               ),
             ),
           ],

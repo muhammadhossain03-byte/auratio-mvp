@@ -248,7 +248,7 @@ void main() {
   });
 
   testWidgets(
-    'Recording Accepted Continue button stays at Batch 5 boundary without throw',
+    'Recording Accepted Continue button navigates to Choose Evaluation Method',
     (tester) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
@@ -263,10 +263,10 @@ void main() {
       expect(continueBtn, findsOneWidget);
 
       await tester.tap(continueBtn);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Confirms we stay on Recording Accepted and do not enter unimplemented 282:331
-      expect(router.state.uri.path, AppRoutePaths.recordingAccepted);
+      // In Batch 5, Continue enters Choose Evaluation Method (282:331)
+      expect(router.state.uri.path, AppRoutePaths.chooseEvaluationMethod);
       expect(tester.takeException(), isNull);
     },
   );
