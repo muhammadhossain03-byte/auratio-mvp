@@ -126,135 +126,23 @@ class EventsDiscoveryScreen extends StatelessWidget {
                               Row(
                                 children: [
                                   // Division Filter (Rect(34, 278, 102, 40))
-                                  Container(
+                                  const _FilterPill(
                                     key: filterDivisionKey,
-                                    width: 102,
-                                    height: 40,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                    ),
-                                    alignment: Alignment.centerLeft,
-                                    decoration: BoxDecoration(
-                                      color: AuratioColors.surfaceDefault,
-                                      border: Border.all(
-                                        color: const Color(0xFFC9D6E7),
-                                      ),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            'Dhaka Division',
-                                            maxLines: 1,
-                                            style: AuratioTypography.caption
-                                                .copyWith(
-                                                  color: AuratioColors
-                                                      .backgroundBrand,
-                                                  fontSize: 9.8,
-                                                  letterSpacing: -0.2,
-                                                  height: 16 / 9.8,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                        const Icon(
-                                          Icons.arrow_drop_down,
-                                          size: 14,
-                                          color: AuratioColors.backgroundBrand,
-                                        ),
-                                      ],
-                                    ),
+                                    label: 'Dhaka Division',
                                   ),
                                   const SizedBox(width: 8),
 
                                   // Path Filter (Rect(144, 278, 102, 40))
-                                  Container(
+                                  const _FilterPill(
                                     key: filterPathKey,
-                                    width: 102,
-                                    height: 40,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                    ),
-                                    alignment: Alignment.centerLeft,
-                                    decoration: BoxDecoration(
-                                      color: AuratioColors.surfaceDefault,
-                                      border: Border.all(
-                                        color: const Color(0xFFC9D6E7),
-                                      ),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            'All Paths',
-                                            maxLines: 1,
-                                            style: AuratioTypography.caption
-                                                .copyWith(
-                                                  color: AuratioColors
-                                                      .backgroundBrand,
-                                                  fontSize: 11,
-                                                  height: 16 / 11,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                        const Icon(
-                                          Icons.arrow_drop_down,
-                                          size: 14,
-                                          color: AuratioColors.backgroundBrand,
-                                        ),
-                                      ],
-                                    ),
+                                    label: 'All Paths',
                                   ),
                                   const SizedBox(width: 8),
 
                                   // Date Filter (Rect(254, 278, 102, 40))
-                                  Container(
+                                  const _FilterPill(
                                     key: filterDateKey,
-                                    width: 102,
-                                    height: 40,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                    ),
-                                    alignment: Alignment.centerLeft,
-                                    decoration: BoxDecoration(
-                                      color: AuratioColors.surfaceDefault,
-                                      border: Border.all(
-                                        color: const Color(0xFFC9D6E7),
-                                      ),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            'Upcoming',
-                                            maxLines: 1,
-                                            style: AuratioTypography.caption
-                                                .copyWith(
-                                                  color: AuratioColors
-                                                      .backgroundBrand,
-                                                  fontSize: 11,
-                                                  height: 16 / 11,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                        const Icon(
-                                          Icons.arrow_drop_down,
-                                          size: 14,
-                                          color: AuratioColors.backgroundBrand,
-                                        ),
-                                      ],
-                                    ),
+                                    label: 'Upcoming',
                                   ),
                                 ],
                               ),
@@ -372,3 +260,80 @@ class EventsDiscoveryScreen extends StatelessWidget {
     );
   }
 }
+
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    required this.label,
+    super.key,
+  });
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 102,
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(
+        color: AuratioColors.surfaceDefault,
+        border: Border.all(
+          color: const Color(0xFFC9D6E7),
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AuratioTypography.caption.copyWith(
+              color: AuratioColors.backgroundBrand,
+              fontSize: 11,
+              height: 16 / 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const _DropdownTriangle(),
+        ],
+      ),
+    );
+  }
+}
+
+class _DropdownTriangle extends StatelessWidget {
+  const _DropdownTriangle();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(6, 4),
+      painter: _TrianglePainter(color: AuratioColors.backgroundBrand),
+    );
+  }
+}
+
+class _TrianglePainter extends CustomPainter {
+  const _TrianglePainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrianglePainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
