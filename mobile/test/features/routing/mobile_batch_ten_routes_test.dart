@@ -20,8 +20,7 @@ void main() {
     _BatchScreenCase(
       name: 'Approved Evaluation History',
       path: AppRoutePaths.approvedEvaluationHistory,
-      identifyingCopy:
-          'Approved results remain in your private history even after they leave a public rating window.',
+      identifyingCopy: 'Approved results remain in your private history even after they leave a public rating window.',
     ),
   ];
 
@@ -123,7 +122,7 @@ void main() {
     );
 
     testWidgets(
-      'Bottom nav Tracks navigates to Tracks; Home and Profile remain non-interactive on this frame',
+      'Bottom nav: Tracks is interactive; Home, Progress, and Profile are non-interactive presentation-only items',
       (tester) async {
         final router = await pumpAuratioApp(tester);
         await openAuratioRoute(
@@ -136,32 +135,40 @@ void main() {
 
         expect(router.state.uri.path, AppRoutePaths.progress);
 
-        // Tap Home (index 0) - has no bound reaction on this frame in Figma
-        final homeNavFinder = find.widgetWithText(
-          AuratioMobileNavigationItem,
-          'Home',
+        // Home (index 0) - non-interactive (no InkResponse, isInteractive == false)
+        final homeItem = tester.widget<AuratioMobileNavigationItem>(
+          find.widgetWithText(AuratioMobileNavigationItem, 'Home'),
         );
-        expect(homeNavFinder, findsOneWidget);
-        await tester.tap(homeNavFinder);
-        await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.progress);
+        expect(homeItem.isInteractive, isFalse);
+        expect(homeItem.onTap, isNull);
 
-        // Tap Profile (index 3) - out of scope for Batch 10
-        final profileNavFinder = find.widgetWithText(
-          AuratioMobileNavigationItem,
-          'Profile',
+        // Progress (index 2) - visually active, but non-interactive
+        final progressItem = tester.widget<AuratioMobileNavigationItem>(
+          find.widgetWithText(AuratioMobileNavigationItem, 'Progress'),
         );
-        expect(profileNavFinder, findsOneWidget);
-        await tester.tap(profileNavFinder);
-        await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.progress);
+        expect(progressItem.active, isTrue);
+        expect(progressItem.isInteractive, isFalse);
+        expect(progressItem.onTap, isNull);
 
-        // Tap Tracks (index 1) - navigates to Tracks
+        // Profile (index 3) - non-interactive
+        final profileItem = tester.widget<AuratioMobileNavigationItem>(
+          find.widgetWithText(AuratioMobileNavigationItem, 'Profile'),
+        );
+        expect(profileItem.isInteractive, isFalse);
+        expect(profileItem.onTap, isNull);
+
+        // Tracks (index 1) - interactive with active button semantics & onTap
+        final tracksItem = tester.widget<AuratioMobileNavigationItem>(
+          find.widgetWithText(AuratioMobileNavigationItem, 'Tracks'),
+        );
+        expect(tracksItem.isInteractive, isTrue);
+        expect(tracksItem.onTap, isNotNull);
+
+        // Tap Tracks to verify navigation works
         final tracksNavFinder = find.widgetWithText(
           AuratioMobileNavigationItem,
           'Tracks',
         );
-        expect(tracksNavFinder, findsOneWidget);
         await tester.tap(tracksNavFinder);
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.tracks);
@@ -325,31 +332,34 @@ void main() {
       },
     );
 
-    testWidgets('Bottom navigation items do not gain invented interactions', (
-      tester,
-    ) async {
-      final router = await pumpAuratioApp(tester);
-      await openAuratioRoute(
-        tester,
-        router,
-        AppRoutePaths.approvedEvaluationHistory,
-        settle: false,
-      );
-      await tester.pumpAndSettle();
-
-      expect(router.state.uri.path, AppRoutePaths.approvedEvaluationHistory);
-
-      for (final label in ['Home', 'Tracks', 'Progress', 'Profile']) {
-        final itemFinder = find.widgetWithText(
-          AuratioMobileNavigationItem,
-          label,
+    testWidgets(
+      'Bottom navigation: all four items are presentation-only non-interactive items with Progress visually active',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.approvedEvaluationHistory,
+          settle: false,
         );
-        expect(itemFinder, findsOneWidget);
-        await tester.tap(itemFinder);
         await tester.pumpAndSettle();
+
         expect(router.state.uri.path, AppRoutePaths.approvedEvaluationHistory);
-      }
-    });
+
+        for (final label in ['Home', 'Tracks', 'Progress', 'Profile']) {
+          final item = tester.widget<AuratioMobileNavigationItem>(
+            find.widgetWithText(AuratioMobileNavigationItem, label),
+          );
+          expect(item.isInteractive, isFalse);
+          expect(item.onTap, isNull);
+          if (label == 'Progress') {
+            expect(item.active, isTrue);
+          } else {
+            expect(item.active, isFalse);
+          }
+        }
+      },
+    );
   });
 }
 

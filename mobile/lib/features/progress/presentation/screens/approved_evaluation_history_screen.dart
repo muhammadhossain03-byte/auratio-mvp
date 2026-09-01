@@ -505,11 +505,9 @@ class ApprovedEvaluationHistoryScreen extends StatelessWidget {
         bottomNavigationBar: AuratioMobileNavigationBar(
           destinations: canonicalMobileDestinations,
           currentIndex: 2,
-          onDestinationSelected: _noOpNavigation,
+          interactiveIndices: const {},
         ),
       ),
     );
   }
-
-  static void _noOpNavigation(int index) {}
 }
