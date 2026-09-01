@@ -31,6 +31,8 @@ abstract final class AppRoutePaths {
   static const chooseEvaluationMethod = '$evaluations/choose-method';
   static const routingAssignedAi = '$evaluations/routing/assigned-ai';
   static const routingAssignedHuman = '$evaluations/routing/assigned-human';
+  static const evaluationProcessingAi = '$evaluations/processing/ai';
+  static const evaluationProcessingHuman = '$evaluations/processing/human';
   static const progress = '/progress';
   static const leaderboard = '/leaderboard';
   static const events = '/events';

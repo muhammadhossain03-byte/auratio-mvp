@@ -134,13 +134,6 @@ void main() {
       expect(find.text('Current routing: Assigned to Human'), findsOneWidget);
       expect(find.text('Human evaluation'), findsOneWidget);
 
-      // Tap Continue to Status (no-op at Batch 5 boundary)
-      final statusBtn = find.byKey(EvaluationRoutingScreen.continueButtonKey);
-      expect(statusBtn, findsOneWidget);
-      await tester.tap(statusBtn);
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.routingAssignedHuman);
-
       // Back navigation from Routing Assigned Human goes back to Choose Evaluation
       final backAffordance = find.text('‹');
       expect(backAffordance, findsOneWidget);

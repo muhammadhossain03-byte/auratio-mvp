@@ -238,7 +238,15 @@ class EvaluationRoutingScreen extends StatelessWidget {
                           label: 'Continue to Status',
                           variant: AuratioButtonVariant.primary,
                           expand: true,
-                          onPressed: _continueAtBatchFiveBoundary,
+                          onPressed: () {
+                            if (_isAi) {
+                              context.go(AppRoutePaths.evaluationProcessingAi);
+                            } else {
+                              context.go(
+                                AppRoutePaths.evaluationProcessingHuman,
+                              );
+                            }
+                          },
                         ),
                       ),
 
@@ -252,10 +260,5 @@ class EvaluationRoutingScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static void _continueAtBatchFiveBoundary() {
-    // 282:374 — Evaluation Status • Processing belongs to a future batch.
-    // Kept presentation-only/no-op at the Batch 5 boundary.
   }
 }

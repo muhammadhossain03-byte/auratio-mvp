@@ -81,6 +81,8 @@ void main() {
     ),
     ('routing_assigned_ai', AppRoutePaths.routingAssignedAi),
     ('routing_assigned_human', AppRoutePaths.routingAssignedHuman),
+    ('evaluation_processing_ai', AppRoutePaths.evaluationProcessingAi),
+    ('evaluation_processing_human', AppRoutePaths.evaluationProcessingHuman),
   ]) {
     testWidgets('generate capture for ${item.$1}', (tester) async {
       await _loadFonts();
