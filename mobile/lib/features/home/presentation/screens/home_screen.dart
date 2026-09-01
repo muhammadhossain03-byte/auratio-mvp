@@ -272,11 +272,14 @@ class HomeScreen extends ConsumerWidget {
         bottomNavigationBar: AuratioMobileNavigationBar(
           destinations: canonicalMobileDestinations,
           currentIndex: 0,
+          interactiveIndices: const {1, 2, 3},
           onDestinationSelected: (index) {
             if (index == 1) {
               context.go(AppRoutePaths.tracks);
             } else if (index == 2) {
               context.go(AppRoutePaths.progress);
+            } else if (index == 3) {
+              context.go(AppRoutePaths.profile);
             }
           },
         ),

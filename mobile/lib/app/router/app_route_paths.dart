@@ -48,4 +48,8 @@ abstract final class AppRoutePaths {
   static const events = '/events';
   static const eventDetails = '$events/details';
   static const profile = '/profile';
+  static const profileSettings = '$profile/settings';
+  static const managePaths = '$profile/manage-paths';
+  static const managePathsContentAdded = '$profile/manage-paths/content-added';
+  static const profileThreePaths = '$profile/three-paths';
 }

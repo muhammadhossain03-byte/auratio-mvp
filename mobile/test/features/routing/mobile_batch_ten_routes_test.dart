@@ -150,12 +150,12 @@ void main() {
         expect(progressItem.isInteractive, isFalse);
         expect(progressItem.onTap, isNull);
 
-        // Profile (index 3) - non-interactive
+        // Profile (index 3) - interactive in Batch 13
         final profileItem = tester.widget<AuratioMobileNavigationItem>(
           find.widgetWithText(AuratioMobileNavigationItem, 'Profile'),
         );
-        expect(profileItem.isInteractive, isFalse);
-        expect(profileItem.onTap, isNull);
+        expect(profileItem.isInteractive, isTrue);
+        expect(profileItem.onTap, isNotNull);
 
         // Tracks (index 1) - interactive with active button semantics & onTap
         final tracksItem = tester.widget<AuratioMobileNavigationItem>(

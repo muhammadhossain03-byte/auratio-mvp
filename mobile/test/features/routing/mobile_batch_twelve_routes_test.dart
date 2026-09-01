@@ -151,12 +151,21 @@ void main() {
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.events);
 
-        // Tap Profile nav item -> stays on Events Discovery (presentation only)
+        // Tap Profile nav item -> navigates to /profile (activated in Batch 13)
         final profileNav = find.text('Profile');
         expect(profileNav, findsOneWidget);
         await tester.tap(profileNav);
         await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.events);
+        expect(router.state.uri.path, AppRoutePaths.profile);
+
+        // Return to Events
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.events,
+          settle: false,
+        );
+        await tester.pumpAndSettle();
 
         // Tap Tracks nav item -> navigates to Tracks
         final tracksNav = find.text('Tracks');

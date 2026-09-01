@@ -173,20 +173,31 @@ void main() {
     expect(router.state.uri.path, AppRoutePaths.tracks);
   });
 
-  testWidgets('Tracks -> Home navigation via bottom navigation bar', (
-    tester,
-  ) async {
-    final router = await pumpAuratioApp(tester);
-    await openAuratioRoute(tester, router, AppRoutePaths.tracks, settle: false);
-    await tester.pump(const Duration(milliseconds: 100));
+  testWidgets(
+    'Tracks screen bottom nav: Home is presentation-only, Profile navigates to Profile',
+    (tester) async {
+      final router = await pumpAuratioApp(tester);
+      await openAuratioRoute(
+        tester,
+        router,
+        AppRoutePaths.tracks,
+        settle: false,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
 
-    expect(router.state.uri.path, AppRoutePaths.tracks);
+      expect(router.state.uri.path, AppRoutePaths.tracks);
 
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+      // Home is presentation-only on Tracks
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.tracks);
 
-    expect(router.state.uri.path, AppRoutePaths.home);
-  });
+      // Profile routes to /profile
+      await tester.tap(find.text('Profile'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.profile);
+    },
+  );
 
   testWidgets(
     'Business Pitch / Sales Pitch -> Track Details -> Submission Requirements -> Back flows',

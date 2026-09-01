@@ -350,10 +350,12 @@ class PrivateProgressScreen extends StatelessWidget {
         bottomNavigationBar: AuratioMobileNavigationBar(
           destinations: canonicalMobileDestinations,
           currentIndex: 2,
-          interactiveIndices: const {1},
+          interactiveIndices: const {1, 3},
           onDestinationSelected: (index) {
             if (index == 1) {
               context.go(AppRoutePaths.tracks);
+            } else if (index == 3) {
+              context.go(AppRoutePaths.profile);
             }
           },
         ),

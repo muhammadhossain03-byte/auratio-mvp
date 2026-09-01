@@ -118,11 +118,12 @@ class TracksScreen extends StatelessWidget {
         bottomNavigationBar: AuratioMobileNavigationBar(
           destinations: canonicalMobileDestinations,
           currentIndex: 1,
+          interactiveIndices: const {2, 3},
           onDestinationSelected: (index) {
-            if (index == 0) {
-              context.go(AppRoutePaths.home);
-            } else if (index == 2) {
+            if (index == 2) {
               context.go(AppRoutePaths.progress);
+            } else if (index == 3) {
+              context.go(AppRoutePaths.profile);
             }
           },
         ),

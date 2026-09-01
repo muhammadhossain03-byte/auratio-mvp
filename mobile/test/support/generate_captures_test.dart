@@ -98,6 +98,11 @@ void main() {
     ('leaderboard_human_all_time', AppRoutePaths.leaderboardHuman),
     ('events_discovery', AppRoutePaths.events),
     ('event_details', AppRoutePaths.eventDetails),
+    ('profile', AppRoutePaths.profile),
+    ('settings', AppRoutePaths.profileSettings),
+    ('manage_paths', AppRoutePaths.managePaths),
+    ('manage_paths_content_added', AppRoutePaths.managePathsContentAdded),
+    ('profile_three_paths', AppRoutePaths.profileThreePaths),
   ]) {
     testWidgets('generate capture for ${item.$1}', (tester) async {
       await _loadFonts();
