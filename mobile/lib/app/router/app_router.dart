@@ -24,6 +24,8 @@ import '../../features/foundation/presentation/foundation_page.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/onboarding/presentation/screens/choose_paths_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_intro_screen.dart';
+import '../../features/progress/presentation/screens/approved_evaluation_history_screen.dart';
+import '../../features/progress/presentation/screens/private_progress_screen.dart';
 import '../../features/submissions/presentation/screens/checking_recording_screen.dart';
 import '../../features/submissions/presentation/screens/recording_accepted_screen.dart';
 import '../../features/submissions/presentation/screens/submission_requirements_screen.dart';
@@ -224,6 +226,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _dissolvePage(
           key: state.pageKey,
           child: const EvaluationRejectedScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.progress,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const PrivateProgressScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.approvedEvaluationHistory,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const ApprovedEvaluationHistoryScreen(),
         ),
       ),
     ],

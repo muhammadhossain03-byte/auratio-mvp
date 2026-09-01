@@ -90,14 +90,10 @@ void main() {
       'evaluation_report_download_simulated',
       AppRoutePaths.evaluationReportDownloadSimulated,
     ),
-    (
-      'pending_moderation',
-      AppRoutePaths.evaluationStatusPendingModeration,
-    ),
-    (
-      'evaluation_rejected',
-      AppRoutePaths.evaluationStatusRejected,
-    ),
+    ('pending_moderation', AppRoutePaths.evaluationStatusPendingModeration),
+    ('evaluation_rejected', AppRoutePaths.evaluationStatusRejected),
+    ('private_progress', AppRoutePaths.progress),
+    ('approved_evaluation_history', AppRoutePaths.approvedEvaluationHistory),
   ]) {
     testWidgets('generate capture for ${item.$1}', (tester) async {
       await _loadFonts();

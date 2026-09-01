@@ -42,6 +42,7 @@ abstract final class AppRoutePaths {
       '$evaluations/status/pending-moderation';
   static const evaluationStatusRejected = '$evaluations/status/rejected';
   static const progress = '/progress';
+  static const approvedEvaluationHistory = '$progress/approved-history';
   static const leaderboard = '/leaderboard';
   static const events = '/events';
   static const profile = '/profile';

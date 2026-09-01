@@ -121,6 +121,8 @@ class TracksScreen extends StatelessWidget {
           onDestinationSelected: (index) {
             if (index == 0) {
               context.go(AppRoutePaths.home);
+            } else if (index == 2) {
+              context.go(AppRoutePaths.progress);
             }
           },
         ),

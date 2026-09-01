@@ -256,9 +256,8 @@ class _EvaluationPendingModerationScreenState
                         height: 48,
                         width: double.infinity,
                         child: AuratioButton(
-                          key:
-                              EvaluationPendingModerationScreen
-                                  .returnHomeButtonKey,
+                          key: EvaluationPendingModerationScreen
+                              .returnHomeButtonKey,
                           label: 'Return to Home',
                           variant: AuratioButtonVariant.secondary,
                           expand: true,

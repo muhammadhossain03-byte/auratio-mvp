@@ -273,6 +273,8 @@ class HomeScreen extends ConsumerWidget {
           onDestinationSelected: (index) {
             if (index == 1) {
               context.go(AppRoutePaths.tracks);
+            } else if (index == 2) {
+              context.go(AppRoutePaths.progress);
             }
           },
         ),
