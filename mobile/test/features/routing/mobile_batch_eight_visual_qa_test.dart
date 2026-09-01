@@ -160,8 +160,15 @@ void main() {
 
       // CTAs
       expect(
-        find.widgetWithText(AuratioButton, 'Download started ✓'),
+        find.byKey(
+          EvaluationReportDownloadSimulatedScreen.downloadStartedButtonKey,
+        ),
         findsOneWidget,
+      );
+      expect(find.text('Download started ✓'), findsOneWidget);
+      expect(
+        find.widgetWithText(AuratioButton, 'Download started ✓'),
+        findsNothing,
       );
       expect(
         find.widgetWithText(AuratioButton, 'Back to Result'),

@@ -22,7 +22,7 @@ void main() {
       path: AppRoutePaths.evaluationReportDownloadSimulated,
       identifyingCopy:
           'Prototype simulation: the approved .docx download has started.',
-      ctaLabel: 'Download started ✓',
+      ctaLabel: null,
     ),
   ];
 
@@ -206,8 +206,13 @@ void main() {
       AppRoutePaths.evaluationReportDownloadSimulated,
     );
     expect(find.text('Download started ✓'), findsOneWidget);
+    // Confirm Download started is non-interactive presentation container and NOT an AuratioButton
+    expect(
+      find.widgetWithText(AuratioButton, 'Download started ✓'),
+      findsNothing,
+    );
 
-    // Tapping the status area causes no crashes or unhandled side-effects
+    // Tapping the status area causes no crashes, navigation, or unhandled side-effects
     await tester.tap(
       find.byKey(
         EvaluationReportDownloadSimulatedScreen.downloadStartedButtonKey,

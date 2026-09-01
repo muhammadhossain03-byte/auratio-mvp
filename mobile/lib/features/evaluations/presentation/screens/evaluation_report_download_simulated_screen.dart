@@ -76,21 +76,19 @@ class EvaluationReportDownloadSimulatedScreen extends StatelessWidget {
 
                       const SizedBox(height: 10),
 
-                      // Subtitle (y=162, w=350, h=20)
+                      // Subtitle (y=162, w=350, h=38)
                       Text(
                         'Prototype simulation: the approved .docx download has started.',
                         key: subtitleKey,
-                        maxLines: 1,
                         style: AuratioTypography.bodyMedium.copyWith(
                           color: AuratioColors.textSecondary,
-                          fontSize: 11.8,
-                          height: 19 / 11.8,
+                          fontSize: 13,
+                          height: 19 / 13,
                           fontWeight: FontWeight.w400,
-                          letterSpacing: -0.2,
                         ),
                       ),
 
-                      const SizedBox(height: 43),
+                      const SizedBox(height: 24),
 
                       // Card 1: REPORT FORMAT (y=224, w=350, h=108)
                       SizedBox(
@@ -236,16 +234,28 @@ class EvaluationReportDownloadSimulatedScreen extends StatelessWidget {
 
                       const SizedBox(height: 50),
 
-                      // Primary Status / CTA: Download started ✓ (y=688, w=350, h=48)
+                      // Primary Status: Download started ✓ (y=688, w=350, h=48) - non-interactive
                       SizedBox(
+                        key: downloadStartedButtonKey,
                         height: 48,
                         width: double.infinity,
-                        child: AuratioButton(
-                          key: downloadStartedButtonKey,
-                          label: 'Download started ✓',
-                          variant: AuratioButtonVariant.primary,
-                          expand: true,
-                          onPressed: () {},
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: AuratioColors.actionPrimaryBackground,
+                            borderRadius: BorderRadius.circular(
+                              AuratioRadii.md,
+                            ),
+                          ),
+                          child: Text(
+                            'Download started ✓',
+                            style: AuratioTypography.labelLarge.copyWith(
+                              color: AuratioColors.actionPrimaryForeground,
+                              fontSize: 14,
+                              height: 20 / 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
 
