@@ -13,6 +13,8 @@ import '../../features/authentication/presentation/screens/verify_email_screen.d
 import '../../features/evaluations/domain/evaluation_method.dart';
 import '../../features/evaluations/presentation/screens/choose_evaluation_method_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_processing_screen.dart';
+import '../../features/evaluations/presentation/screens/evaluation_result_ai_screen.dart';
+import '../../features/evaluations/presentation/screens/evaluation_result_human_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_routing_screen.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -176,6 +178,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           child: const EvaluationProcessingScreen(
             method: EvaluationMethod.human,
           ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.evaluationResultAi,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const EvaluationResultAiScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.evaluationResultHuman,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const EvaluationResultHumanScreen(),
         ),
       ),
     ],
