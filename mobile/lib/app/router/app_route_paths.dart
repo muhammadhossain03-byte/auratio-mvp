@@ -46,5 +46,6 @@ abstract final class AppRoutePaths {
   static const leaderboard = '/leaderboard';
   static const leaderboardHuman = '$leaderboard/human';
   static const events = '/events';
+  static const eventDetails = '$events/details';
   static const profile = '/profile';
 }

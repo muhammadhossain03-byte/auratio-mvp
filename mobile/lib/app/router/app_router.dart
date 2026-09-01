@@ -20,6 +20,8 @@ import '../../features/evaluations/presentation/screens/evaluation_report_screen
 import '../../features/evaluations/presentation/screens/evaluation_result_ai_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_result_human_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_routing_screen.dart';
+import '../../features/events/presentation/screens/event_details_screen.dart';
+import '../../features/events/presentation/screens/events_discovery_screen.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/leaderboard/presentation/screens/leaderboard_ai_all_time_screen.dart';
@@ -256,6 +258,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _dissolvePage(
           key: state.pageKey,
           child: const LeaderboardHumanAllTimeScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.events,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const EventsDiscoveryScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.eventDetails,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const EventDetailsScreen(),
         ),
       ),
     ],

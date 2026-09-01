@@ -38,7 +38,7 @@ void main() {
 
   group('Upstream Home Leaderboard Navigation', () {
     testWidgets(
-      'Home Leaderboards button navigates to AI Leaderboard, Events remains no-op',
+      'Home Leaderboards button navigates to AI Leaderboard',
       (tester) async {
         final router = await pumpAuratioApp(tester);
         await openAuratioRoute(
@@ -49,13 +49,6 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(router.state.uri.path, AppRoutePaths.home);
-
-        // Tap Events button -> remains on Home (no-op boundary)
-        final eventsBtn = find.byKey(HomeScreen.eventsButtonKey);
-        expect(eventsBtn, findsOneWidget);
-        await tester.tap(eventsBtn);
-        await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.home);
 
         // Tap Leaderboards button -> navigates to AI Leaderboard

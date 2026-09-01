@@ -273,12 +273,10 @@ void main() {
       // Return to Home
       await tester.tap(find.text('‹'));
       await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.home);
-
-      // Tap Events — stays on Home (out of scope).
+      // Tap Events — navigates to Events in Batch 12+.
       await tester.tap(find.byKey(HomeScreen.eventsButtonKey));
-      await tester.pump();
-      expect(router.state.uri.path, AppRoutePaths.home);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.events);
 
       expect(tester.takeException(), isNull);
     },

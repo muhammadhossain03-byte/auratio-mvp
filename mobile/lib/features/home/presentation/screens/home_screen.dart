@@ -240,7 +240,8 @@ class HomeScreen extends ConsumerWidget {
                                 label: 'Events',
                                 variant: AuratioButtonVariant.secondary,
                                 size: AuratioButtonSize.small,
-                                onPressed: _noOp,
+                                onPressed: () =>
+                                    context.go(AppRoutePaths.events),
                               ),
                             ),
                           ),
