@@ -60,7 +60,7 @@ class SettingsScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 100,
                         child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+                          padding: const EdgeInsets.fromLTRB(14, 14, 32, 10),
                           decoration: BoxDecoration(
                             color: AuratioColors.surfaceDefault,
                             border: Border.all(
@@ -113,7 +113,7 @@ class SettingsScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 164,
                         child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+                          padding: const EdgeInsets.fromLTRB(14, 12, 30, 6),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF3F8FE),
                             border: Border.all(
@@ -133,7 +133,7 @@ class SettingsScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 5),
                               Text(
                                 'Auratio lists Bangladesh events only and uses your saved Division plus selected paths for relevance.',
                                 style: AuratioTypography.bodySmall.copyWith(
@@ -143,7 +143,7 @@ class SettingsScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 5),
                               Text(
                                 'Country: Bangladesh (MVP)',
                                 style: AuratioTypography.bodySmall.copyWith(
@@ -153,7 +153,7 @@ class SettingsScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 3),
                               Text(
                                 'Division: Dhaka Division',
                                 style: AuratioTypography.bodySmall.copyWith(
@@ -163,7 +163,7 @@ class SettingsScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 3),
                               GestureDetector(
                                 key: managePathsLinkKey,
                                 onTap: () =>
@@ -191,7 +191,7 @@ class SettingsScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 154,
                         child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+                          padding: const EdgeInsets.fromLTRB(14, 12, 32, 6),
                           decoration: BoxDecoration(
                             color: AuratioColors.surfaceDefault,
                             border: Border.all(
@@ -211,7 +211,7 @@ class SettingsScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 5),
                               Text(
                                 'Performance videos are temporary evaluation artifacts. They remain through evaluation/moderation and are deleted after the final Approved or Rejected decision.',
                                 style: AuratioTypography.bodySmall.copyWith(
@@ -221,7 +221,7 @@ class SettingsScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 4),
                               Text(
                                 'Final .docx reports remain accessible after video deletion.',
                                 style: AuratioTypography.caption.copyWith(
