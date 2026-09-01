@@ -12,7 +12,9 @@ import '../../features/authentication/presentation/screens/sign_in_screen.dart';
 import '../../features/authentication/presentation/screens/verify_email_screen.dart';
 import '../../features/evaluations/domain/evaluation_method.dart';
 import '../../features/evaluations/presentation/screens/choose_evaluation_method_screen.dart';
+import '../../features/evaluations/presentation/screens/evaluation_pending_moderation_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_processing_screen.dart';
+import '../../features/evaluations/presentation/screens/evaluation_rejected_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_report_download_simulated_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_report_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_result_ai_screen.dart';
@@ -208,6 +210,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _dissolvePage(
           key: state.pageKey,
           child: const EvaluationReportDownloadSimulatedScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.evaluationStatusPendingModeration,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const EvaluationPendingModerationScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutePaths.evaluationStatusRejected,
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: const EvaluationRejectedScreen(),
         ),
       ),
     ],

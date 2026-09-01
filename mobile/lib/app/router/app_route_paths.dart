@@ -38,6 +38,9 @@ abstract final class AppRoutePaths {
   static const evaluationReport = '$evaluations/report';
   static const evaluationReportDownloadSimulated =
       '$evaluations/report/download-simulated';
+  static const evaluationStatusPendingModeration =
+      '$evaluations/status/pending-moderation';
+  static const evaluationStatusRejected = '$evaluations/status/rejected';
   static const progress = '/progress';
   static const leaderboard = '/leaderboard';
   static const events = '/events';

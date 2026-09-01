@@ -90,6 +90,14 @@ void main() {
       'evaluation_report_download_simulated',
       AppRoutePaths.evaluationReportDownloadSimulated,
     ),
+    (
+      'pending_moderation',
+      AppRoutePaths.evaluationStatusPendingModeration,
+    ),
+    (
+      'evaluation_rejected',
+      AppRoutePaths.evaluationStatusRejected,
+    ),
   ]) {
     testWidgets('generate capture for ${item.$1}', (tester) async {
       await _loadFonts();
@@ -112,7 +120,13 @@ void main() {
       final router = app.routerConfig! as GoRouter;
 
       router.go(item.$2);
-      await tester.pumpAndSettle();
+      if (item.$1 == 'pending_moderation') {
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pump();
+      } else {
+        await tester.pumpAndSettle();
+      }
 
       // Precache logo image if on home screen
       if (item.$1 == 'home') {
