@@ -27,9 +27,35 @@ class TrackDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final track = slug != null
-        ? AuratioTrackCatalog.findBySlug(slug!)
-        : ref.watch(selectedTrackProvider);
+    final TrackItem track;
+    if (slug != null) {
+      final trackFromSlug = AuratioTrackCatalog.findBySlug(slug!);
+      if (trackFromSlug == null) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          key: trackDetailsScreenKey,
+          value: _overlayStyle,
+          child: Scaffold(
+            backgroundColor: AuratioColors.backgroundApp,
+            body: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  AuratioScreenHeader(
+                    title: 'Track Details',
+                    showBack: true,
+                    onBack: () => context.go(AppRoutePaths.tracks),
+                  ),
+                  const Expanded(child: Center(child: Text('Track not found'))),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+      track = trackFromSlug;
+    } else {
+      track = ref.watch(selectedTrackProvider);
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: trackDetailsScreenKey,

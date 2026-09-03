@@ -37,6 +37,7 @@ import '../../features/submissions/presentation/screens/checking_recording_scree
 import '../../features/submissions/presentation/screens/recording_accepted_screen.dart';
 import '../../features/submissions/presentation/screens/submission_requirements_screen.dart';
 import '../../features/submissions/presentation/screens/upload_recording_screen.dart';
+import '../../features/tracks/domain/track_catalog.dart';
 import '../../features/tracks/presentation/screens/track_details_screen.dart';
 import '../../features/tracks/presentation/screens/tracks_screen.dart';
 import 'app_route_paths.dart';
@@ -127,6 +128,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/tracks/:slug',
+        redirect: (context, state) {
+          final slug = state.pathParameters['slug'];
+          if (slug == null || AuratioTrackCatalog.findBySlug(slug) == null) {
+            return AppRoutePaths.tracks;
+          }
+          return null;
+        },
         builder: (context, state) =>
             TrackDetailsScreen(slug: state.pathParameters['slug']),
       ),

@@ -316,6 +316,42 @@ void main() {
       expect(find.text('Marketing / Promotional'), findsOneWidget);
       expect(find.text('Content Creation'), findsOneWidget);
     });
+
+    testWidgets(
+      'invalid track slug /tracks/not-a-real-track does not display Business Pitch and redirects to /tracks',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+
+        // Attempt to open invalid slug route
+        await openAuratioRoute(
+          tester,
+          router,
+          '/tracks/not-a-real-track',
+          settle: false,
+        );
+        await tester.pumpAndSettle();
+
+        // Must redirect to /tracks and not display Business Pitch Track Details
+        expect(router.state.uri.path, AppRoutePaths.tracks);
+        expect(
+          find.byKey(TrackDetailsScreen.trackDetailsScreenKey),
+          findsNothing,
+        );
+
+        // Direct widget construction with invalid slug also does not display Business Pitch
+        await tester.pumpWidget(
+          const ProviderScope(
+            child: MaterialApp(
+              home: TrackDetailsScreen(slug: 'not-a-real-track'),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text(AuratioTrackCatalog.businessPitch.name), findsNothing);
+        expect(find.text('Track not found'), findsOneWidget);
+      },
+    );
   });
 
   group('Active Evaluation Journey Parameterization', () {

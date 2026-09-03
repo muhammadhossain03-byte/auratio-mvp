@@ -203,17 +203,23 @@ abstract final class AuratioTrackCatalog {
     ...contentCreationTracks,
   ];
 
-  static TrackItem findBySlug(String slug) {
-    return allTracks.firstWhere(
-      (t) => t.slug == slug,
-      orElse: () => businessPitch,
-    );
+  static TrackItem? findBySlug(String slug) {
+    for (final track in allTracks) {
+      if (track.slug == slug) {
+        return track;
+      }
+    }
+    return null;
   }
 
-  static TrackItem findByName(String name) {
-    return allTracks.firstWhere(
-      (t) => t.name == name,
-      orElse: () => businessPitch,
-    );
+  static TrackItem? findBySlugOrNull(String slug) => findBySlug(slug);
+
+  static TrackItem? findByName(String name) {
+    for (final track in allTracks) {
+      if (track.name == name) {
+        return track;
+      }
+    }
+    return null;
   }
 }

@@ -18,8 +18,13 @@ class SelectedTrackController extends Notifier<TrackItem> {
     state = track;
   }
 
-  void selectBySlug(String slug) {
-    state = AuratioTrackCatalog.findBySlug(slug);
+  bool selectBySlug(String slug) {
+    final track = AuratioTrackCatalog.findBySlug(slug);
+    if (track != null) {
+      state = track;
+      return true;
+    }
+    return false;
   }
 
   void reset() {
