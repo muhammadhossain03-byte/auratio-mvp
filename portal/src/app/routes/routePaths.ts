@@ -2,6 +2,10 @@ export const portalRoutePaths = {
   foundation: '/',
   authentication: {
     root: '/auth',
+    signIn: '/auth/sign-in',
+    roleAuthorization: '/auth/role-authorization',
+    emailVerification: '/auth/email-verification',
+    accessUnavailable: '/auth/access-unavailable',
   },
   volunteer: {
     root: '/volunteer',

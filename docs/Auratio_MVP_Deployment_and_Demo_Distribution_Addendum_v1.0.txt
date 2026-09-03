@@ -1,0 +1,62 @@
+AURATIO MVP — DEPLOYMENT & DEMO DISTRIBUTION ADDENDUM
+Version 1.0
+Effective: 31 August 2026
+Status: Authoritative project change declaration
+
+PURPOSE
+This addendum locks the MVP delivery/deployment choices for Auratio without forcing immediate edits to older product, scoring, UI, and planning documents.
+
+LOCKED MVP DELIVERY DECISIONS
+
+1. MOBILE APP DEMO DISTRIBUTION
+- The Auratio mobile app will be demonstrated to the project instructor/evaluator as an installable Android APK.
+- Google Play Store publication is NOT required for the academic MVP/demo.
+- The preferred final demo artifact is a release APK that can be installed directly on an Android device.
+- An Android App Bundle (AAB) / Play Store release may be produced later if the project is taken beyond the academic MVP, but it is not a current delivery requirement.
+
+2. WEB PORTAL HOSTING
+- The Auratio web portal will be hosted using the existing Hostinger hosting plan associated with the domain:
+  auratio.space
+- The intended public portal origin is:
+  https://auratio.space
+- The current portal stack is React + TypeScript + Vite. The production Vite build is therefore expected to be deployed as static web assets to Hostinger.
+- Hostinger must be configured for SPA routing so direct navigation/refreshes on portal routes resolve to the portal entry point rather than returning 404 errors.
+- HTTPS must be enabled for the deployed portal.
+
+3. BACKEND / API SEPARATION
+- Choosing Hostinger for the web portal does NOT require Auratio's future backend, database, AI evaluation service, storage, or authentication services to run on Hostinger.
+- Those services remain governed by the later Database / Backend / API phases and may use Supabase, Gemini, or other explicitly approved services.
+- The deployed portal may call those approved services over HTTPS once Steps V–VII are implemented.
+
+4. STEP IV SCOPE IMPACT
+- Step IV remains frontend/UI coding with local/mock state only.
+- The APK and Hostinger decisions are deployment targets and constraints; they do not authorize early implementation of production backend, database, storage, real authentication/RBAC, Gemini calls, scoring engines, report generation, or deployment work inside an unrelated Step IV batch.
+- Step IV mobile implementation should remain compatible with an eventual Android APK build.
+- Step IV portal implementation should remain compatible with a Vite production build and Hostinger static hosting.
+
+5. ANDROID TOOLCHAIN PREREQUISITE
+- Flutter and Dart are already installed on the development machine.
+- Before real Android device/emulator QA and the final APK build, the Android SDK/toolchain must be installed and recognized by `flutter doctor`.
+- Android Studio is the preferred simple way to install/manage the Android SDK and emulator components.
+- Visual Studio is not required for the current Android + web delivery target.
+
+6. FINAL QA / DELIVERY EXPECTATIONS
+Before the instructor demo, the project should include:
+- an installable, tested Android APK;
+- at least one real Android-device or Android-emulator QA pass;
+- the deployed web portal at https://auratio.space;
+- HTTPS and SPA route-refresh behavior verified on Hostinger;
+- the app and portal tested against the final production-facing configuration that is appropriate for the MVP.
+
+PHASE INTERPRETATION
+- Step IX — Deployment / Cloud Hosting remains a later phase, but its web target is now locked to Hostinger + auratio.space for the portal.
+- Step X — App Store Launch is no longer a mandatory academic-MVP deliverable. For the instructor presentation, direct APK distribution replaces Play Store publication.
+- Play Store publication remains an optional future/post-MVP activity.
+
+PRECEDENCE
+Where an older Auratio planning/status file implies that Play Store publication is mandatory for the academic MVP, or leaves the web-portal hosting target undefined, this addendum prevails for those delivery/deployment matters.
+
+This addendum does NOT change Auratio's product requirements, scoring rules, Path-selection behavior, evaluation workflows, governance, or UI source of truth.
+
+MAINTENANCE NOTE
+This addendum may later be merged into a consolidated execution/deployment specification. Until then, it should be treated as part of the authoritative project context.

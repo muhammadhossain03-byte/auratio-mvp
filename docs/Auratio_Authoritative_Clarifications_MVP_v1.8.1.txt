@@ -1,9 +1,9 @@
 AURATIO — AUTHORITATIVE CLARIFICATIONS & MVP SOURCE-OF-TRUTH
-Version: 1.8
-Date: 2026-08-25
+Version: 1.8.1
+Date: 2026-08-31
 Purpose: Resolve ambiguities and conflicts across the existing Auratio project materials.
 Status: Authoritative clarification layer for the MVP.
-Revision note: Version 1.8 retains the complete Version 1.7 MVP baseline except for one deliberate student-MVP simplification: AI evaluation now uses a single Gemini attempt with basic structured-output validation. A usable AI result may auto-approve; a failed or unusable AI evaluation becomes Rejected. Automatic AI retry and AI-failure Pending Moderation are deferred beyond the MVP. All scoring mathematics, Human moderation rules, report architecture, duplicate policy, Monthly attribution, video lifecycle, role governance, and wireframed flows otherwise remain unchanged.
+Revision note: Version 1.8.1 is a maintenance-only revision of Version 1.8. It changes no locked MVP product behavior, scoring mathematics, evaluation/moderation rules, report architecture, duplicate policy, Monthly attribution, video lifecycle, role governance, or Figma-derived product flows. It updates the authority hierarchy to include the Path Selection Addendum v1.0 and Deployment & Demo Distribution Addendum v1.0, and refreshes development-stage wording to reflect that Steps I–III are complete and Step IV — UI Coding is currently in progress. Version 1.8's one-shot Gemini student-MVP simplification remains unchanged.
 
 ======================================================================
 1. HOW TO USE THIS FILE
@@ -15,13 +15,15 @@ It supplements the detailed scoring specification and overrides it only where th
 
 Interpretation hierarchy for the MVP:
 
-1) This Authoritative Clarifications file, Version 1.8
-2) Auratio Scoring & Leaderboard System Specification, Version 3.7, except where overridden here
-3) Auratio Execution Specification / Master Brand Specification & Execution Plan, Version 1.8
-4) Auratio MVP Concepts & Requirements, Version 1.8, for implementation-oriented consolidation
-5) Earlier overview, brief, and handwritten planning/development documents
+1) This Authoritative Clarifications file, Version 1.8.1
+2) Auratio MVP — Path Selection Addendum, Version 1.0, for the Path-selection behavior it explicitly governs
+3) Auratio MVP — Deployment & Demo Distribution Addendum, Version 1.0, for the academic-MVP distribution/deployment matters it explicitly governs
+4) Auratio Scoring & Leaderboard System Specification, Version 3.7, except where overridden here
+5) Auratio Execution Specification / Master Brand Specification & Execution Plan, Version 1.8
+6) Auratio MVP Concepts & Requirements, Version 1.8, for implementation-oriented consolidation
+7) Earlier overview, brief, and handwritten planning/development documents
 
-If two documents conflict, use the higher-priority source above. Newer explicitly locked Q&A decisions incorporated through Version 1.8 supersede stale wording from prior versions.
+If two documents conflict, use the higher-priority applicable source above. The two addenda have scoped precedence only for the matters they explicitly govern; they do not override unrelated scoring, evaluation, governance, or architecture rules. Newer explicitly locked Q&A decisions incorporated through Version 1.8.1 supersede stale wording from prior versions.
 
 ======================================================================
 2. PRODUCT SCOPE: MVP VS LONG-TERM VISION
@@ -136,6 +138,8 @@ Store/deployment sequencing may still differ operationally, but the product arch
 itself is cross-platform Flutter.
 
 Any wording that implies the MVP is inherently Android-only is superseded.
+
+Academic-MVP distribution/deployment sequencing is governed by the Deployment & Demo Distribution Addendum v1.0. That addendum locks direct Android APK delivery for the instructor demo, makes Google Play publication optional rather than mandatory for the academic MVP, and locks the React/Vite portal hosting target to Hostinger at https://auratio.space. Those delivery choices do not change the cross-platform Flutter product architecture or the Supabase-first backend architecture defined here.
 
 ======================================================================
 6. VIDEO SUBMISSION AND STORAGE POLICY
@@ -465,7 +469,7 @@ These replacements remove the identified overlap with universal Hook strength / 
 18. DURATION ELIGIBILITY
 ======================================================================
 
-The track-specific duration system in Scoring & Leaderboard Specification v3.6 remains
+The track-specific duration system in Scoring & Leaderboard Specification v3.7 remains
 authoritative.
 
 Key principles:
@@ -631,7 +635,7 @@ Use .docx.
 
 J. "The product is Android-only / Google-Play-only"
 SUPERSEDED.
-The app is cross-platform Flutter.
+The app is cross-platform Flutter. For the academic MVP, direct Android APK distribution is the locked instructor-demo delivery method and Google Play publication is optional, as specified by the Deployment & Demo Distribution Addendum v1.0.
 
 K. "The full-window-average tie-break is neutral for users with 3–4 approved scores"
 CORRECTED.
@@ -655,6 +659,14 @@ Division is the authoritative geographic granularity; relevance uses BOTH Divisi
 user's selected Auratio path(s); and the end-user event experience provides manual Location
 (Division), Auratio Path, and Date filters. End users remain viewers only. This superseding
 statement aligns with Sections 16 and 28 of this clarification.
+
+O. "Selected Paths restrict track access or cannot be changed after onboarding"
+SUPERSEDED.
+The Path Selection Addendum v1.0 prevails: users may add/remove selected Paths later; selected Paths personalize the experience but do not restrict access to any of the 13 tracks; and Path changes do not retroactively alter historical evaluations, Approved scores, reports, mastery, or historical leaderboard/evaluation records.
+
+P. "Play Store publication is required for the academic MVP / portal hosting target is undefined"
+SUPERSEDED.
+The Deployment & Demo Distribution Addendum v1.0 prevails: the instructor-demo mobile artifact is an installable Android APK; Play Store publication is optional future/post-MVP work; and the React/Vite web portal deployment target is Hostinger at https://auratio.space with HTTPS and SPA route fallback required at deployment time.
 
 ======================================================================
 25. KNOWN MVP ASSUMPTIONS / ACCEPTED LIMITATIONS
@@ -690,7 +702,7 @@ H. Post-approval revocation — RESOLVED AS OUT OF MVP IN VERSION 1.3.
 I. Temporary-storage deletion mechanics — RESOLVED FOR MVP IN VERSION 1.6: best-effort primary deletion, automatic retries, persistent-failure logging, provider cache/backup lifecycle accepted.
 J. Admin governance and Human Evaluator operations — RESOLVED IN VERSION 1.4 and refined in Version 1.6 to remove evaluator .docx upload and require anchor-first structured scoring.
 
-Remaining implementation work is not an unresolved product rule: lightweight Gemini prompt/track modules, exact JSON schema realization, criterion-specific anchor prose, and final Word-template visual styling are to be authored/versioned during their later implementation workstreams. These AI artifacts are deferred to Backend/API integration and do not block Step III UI/UX.
+Remaining implementation work is not an unresolved product rule: lightweight Gemini prompt/track modules, exact JSON schema realization, criterion-specific anchor prose, and final Word-template visual styling are to be authored/versioned during their later implementation workstreams. These AI artifacts are deferred to Backend/API integration and do not block Step IV UI Coding.
 
 ======================================================================
 27. CANONICAL MVP SUMMARY
@@ -719,6 +731,10 @@ Portal governance remains Super Admin → Admin → Volunteer Evaluator. Assignm
 Supabase/PostgreSQL remains the shared authoritative backend/database with Supabase Edge Functions as the primary server-side execution/orchestration layer. Node/Express remains optional for specialized workloads only.
 
 The ALR formula and tie-break algorithm remain unchanged except for the already-corrected explanatory wording and the new Monthly submission-date attribution rule.
+
+Selected Auratio Paths remain personalization preferences rather than access controls. Users may modify them later without altering historical evaluations, Approved scores, reports, mastery, or historical records, as governed by the Path Selection Addendum v1.0.
+
+For academic delivery, the mobile demo is distributed as an installable Android APK rather than requiring Google Play publication, and the React/Vite portal deployment target is Hostinger at https://auratio.space. These delivery decisions are governed by the Deployment & Demo Distribution Addendum v1.0 and do not change the Supabase-first architecture.
 
 ======================================================================
 28. VERSION 1.3 REVISION SUMMARY (RETAINED)
@@ -851,14 +867,32 @@ Locked Version 1.8 changes:
 - AI-output failures do not enter Pending Moderation. Pending Moderation remains part of the Human evaluation/moderation workflow where already defined.
 - Rejected AI evaluations produce no official report, private-progress effect, qualification effect, or leaderboard effect. The user may submit a new request after the terminal Rejected outcome.
 - Advanced AI reliability engineering (automatic retry/recovery, AI-failure moderation, random double-scoring, multi-pass checking) is deferred beyond the student MVP.
-- Lightweight Gemini prompt/track modules, exact JSON realization, and criterion-specific anchor prose are implementation-stage artifacts deferred to Backend/API integration. They do not block Step III.
-- The immediate development stage is Step III — High-Fidelity UI/UX Design. Step II wireframes remain locked because this simplification removes backend complexity without introducing a new user-facing state.
+- Lightweight Gemini prompt/track modules, exact JSON realization, and criterion-specific anchor prose are implementation-stage artifacts deferred to Backend/API integration. They do not block Step IV UI Coding.
+- Steps I–III are complete and locked. The immediate development stage is Step IV — UI Coding. Step IV remains frontend/local-mock work; production database/backend/API integration remains deferred to the later numbered phases.
 
 Current authoritative source set:
-- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8
+- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8.1
+- Auratio MVP — Path Selection Addendum v1.0
+- Auratio MVP — Deployment & Demo Distribution Addendum v1.0
 - Auratio Scoring & Leaderboard System Specification v3.7
 - Auratio Execution Specification / Master Brand Specification & Execution Plan v1.8
 - Auratio MVP Concepts & Requirements v1.8
+
+======================================================================
+34. VERSION 1.8.1 MAINTENANCE REVISION SUMMARY
+======================================================================
+
+Version 1.8.1 changes no locked MVP product behavior. It performs documentation maintenance only:
+
+- adds the Path Selection Addendum v1.0 to the authoritative source hierarchy for its scoped Path-selection rules;
+- adds the Deployment & Demo Distribution Addendum v1.0 to the authoritative source hierarchy for its scoped academic-MVP distribution/deployment rules;
+- records that selected Paths are editable personalization preferences and not track-access restrictions, without changing any historical evaluation/progress/report behavior;
+- records the academic delivery targets already locked by the deployment addendum: direct Android APK for the instructor demo, optional Play Store publication, and Hostinger/https://auratio.space for the React/Vite portal;
+- updates stale development-stage wording from Step III to Step IV — UI Coding;
+- updates the current authoritative source-set listing;
+- corrects the Section 18 reference from Scoring & Leaderboard Specification v3.6 to the current v3.7.
+
+All Version 1.8 AI simplification rules and all compatible prior rules remain retained.
 
 END OF AUTHORITATIVE CLARIFICATIONS
 ======================================================================

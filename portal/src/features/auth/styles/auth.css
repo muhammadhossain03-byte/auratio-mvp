@@ -1,0 +1,209 @@
+/* Auratio Portal — Authentication Layout & Component Styles */
+
+.auratio-auth-viewport {
+  position: relative;
+  width: 1366px;
+  height: 900px;
+  min-width: 1366px;
+  min-height: 900px;
+  margin: 0 auto;
+  background-color: var(--auratio-brand-navy-900);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.auratio-auth-logo {
+  position: absolute;
+  top: 44px;
+  left: 553px;
+  width: 260px;
+  height: 77px;
+  display: block;
+}
+
+.auratio-auth-card {
+  position: absolute;
+  top: 142px;
+  left: 428px;
+  width: 510px;
+  height: 610px;
+  background-color: var(--auratio-surface-default);
+  border-radius: 24px;
+  box-sizing: border-box;
+  padding: 48px 40px 14px 40px;
+}
+
+.auratio-auth-header {
+  margin: 0;
+  padding: 0;
+}
+
+.auratio-auth-title {
+  margin: 0;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  color: var(--auratio-neutral-900);
+  letter-spacing: var(--auratio-tracking-normal);
+}
+
+.auratio-auth-subtitle {
+  margin: 6px 0 0 0;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--auratio-neutral-500);
+}
+
+/* Form Controls */
+.auratio-auth-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.auratio-auth-label {
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--auratio-neutral-500);
+  text-transform: uppercase;
+  letter-spacing: var(--auratio-tracking-label);
+  margin-bottom: 8px;
+}
+
+.auratio-auth-input {
+  width: 100%;
+  height: 50px;
+  background-color: var(--auratio-surface-default);
+  border: 1px solid var(--auratio-neutral-300);
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 19px;
+  color: var(--auratio-neutral-600);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auratio-auth-input:focus {
+  border-color: var(--auratio-border-focus);
+  box-shadow: inset 0 0 0 1px var(--auratio-border-focus);
+}
+
+.auratio-auth-input::placeholder {
+  color: var(--auratio-neutral-600);
+  opacity: 1;
+}
+
+.auratio-auth-input:read-only {
+  cursor: default;
+}
+
+/* Primary Button */
+.auratio-auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 42px;
+  background-color: var(--auratio-brand-navy-900);
+  color: var(--auratio-neutral-white);
+  border: 0;
+  border-radius: 10px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 19px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease;
+}
+
+.auratio-auth-btn:hover {
+  background-color: var(--auratio-brand-navy-800);
+}
+
+.auratio-auth-btn:focus-visible {
+  outline: 2px solid var(--auratio-border-focus);
+  outline-offset: 2px;
+}
+
+/* Info Callout Box */
+.auratio-auth-info-card {
+  width: 100%;
+  background-color: var(--auratio-brand-blue-50);
+  border: 1px solid var(--auratio-neutral-200);
+  border-radius: 16px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+}
+
+.auratio-auth-info-title {
+  margin: 0 0 8px 0;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 19px;
+  color: var(--auratio-brand-navy-900);
+}
+
+.auratio-auth-info-body {
+  margin: 0;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--auratio-neutral-600);
+}
+
+/* Action Links & Simulation Controls */
+.auratio-auth-link {
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--auratio-neutral-500);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: left;
+}
+
+.auratio-auth-link:hover {
+  color: var(--auratio-neutral-900);
+  text-decoration: underline;
+}
+
+.auratio-auth-link:focus-visible {
+  outline: 2px solid var(--auratio-border-focus);
+  outline-offset: 2px;
+}
+
+.auratio-auth-section-title {
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--auratio-neutral-500);
+  text-transform: uppercase;
+  letter-spacing: var(--auratio-tracking-label);
+}
+
+.auratio-auth-note {
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--auratio-neutral-500);
+}

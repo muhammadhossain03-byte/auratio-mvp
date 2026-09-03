@@ -1,0 +1,323 @@
+Auratio — Step IV Implementation Handoff
+Version 1.5
+Date: 1 September 2026
+
+PURPOSE
+Use this file to resume Auratio Step IV in a fresh ChatGPT conversation and a fresh Antigravity 2 conversation/workspace without reconstructing implementation history.
+
+CURRENT STATE
+Steps I–III are complete and locked.
+Step IV — UI Coding is IN PROGRESS overall.
+The complete end-user mobile UI is finished, runtime-visually QA'd, independently reviewed, and locked at 41 / 41 authoritative mobile frames.
+Portal product/auth screens have not yet been implemented beyond the shared portal foundation.
+No production database/backend/API/deployment work has started.
+
+AUTHORITATIVE PRODUCT SOURCES
+1. Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8.1
+2. Auratio MVP — Path Selection Addendum v1.0
+3. Auratio MVP — Deployment & Demo Distribution Addendum v1.0
+4. Auratio Scoring & Leaderboard System Specification v3.7
+5. Auratio Execution Specification v1.8
+6. Auratio MVP Concepts & Requirements v1.8
+7. Older briefs/overviews/planning files are contextual only
+
+STEP IV EXECUTION SOURCE
+- Auratio Step IV Runtime Visual QA Protocol v1.1 — mandatory for both mobile and portal runtime screenshot/Figma comparison
+
+Figma page `03 — Interactive Prototype — MVP v1.8` is authoritative for visual appearance and prototype interactions.
+Written sources prevail for product rules, security, persistence, scoring, moderation, governance, and backend semantics.
+The Deployment & Demo Distribution Addendum v1.0 prevails for the academic-MVP APK and Hostinger/auratio.space decisions it explicitly covers.
+
+FIGMA
+File key:
+naweFj39KPJSa18ARtl0ll
+
+Inventory:
+- 41 User Mobile screens — COMPLETE
+- 8 Shared Portal Authentication screens — PENDING
+- 16 Volunteer Evaluator screens — PENDING
+- 23 Admin screens — PENDING
+- 5 Super Admin screens — PENDING
+- 52 total portal/auth screens remaining
+- 93 total screens
+- 436 interaction bindings
+- 0 invalid destinations after final prototype QA
+
+GITHUB
+Repository:
+muhammadhossain03-byte/auratio-mvp
+
+Current Step IV branch:
+step-iv/ui-foundation
+
+CURRENT APPROVED HEAD
+1f20a0718a766400af186e2132c124574e9b4dc4
+
+Commit:
+fix: adjust Settings privacy paragraph text layout to match authoritative line wrapping
+
+This exact commit is the locked end-of-mobile starting point for portal planning unless ChatGPT explicitly reviews and supplies a later clean descendant.
+
+IMPORTANT CHECKPOINTS
+1d9db3d7828de01dcea3257f2890d7058b2aa125
+- authoritative project-source baseline
+
+8f1115111182967151c23fa9418df73094325f5d
+- Flutter + portal scaffold
+
+a06c2d8bc64bf65252f245125a46e3b87685212f
+- shared Figma-derived UI foundation
+
+80d3624b042005b4071e58790dea202a0caf19c4
+- foundation hardening
+
+2bfa094d5ad4d83e47c8242b39428b02121db4ac
+- final pre-batch foundation QA fixes
+
+MOBILE FINAL APPROVED HEADS
+Batch 1 — c9895035fa02268145e376d90439607bc2b765f8
+Batch 2 — f8ec470113e2694ae41c58aba4cdc30b19f48988
+Batch 3 — 5d7baa6d1c44ef76039caa28a0cb8d56f849a7ad
+Batch 4 — 701b3ab49bc207d86f08b07169fdfa649bb0bbc0
+Batch 5 — dda3f117880ac3ca5e97e9605802ba26c0ad053f
+Batch 6 — 270bb811db8fd346d24a435167ff7f7fbef6e0c3
+Batch 7 — d4d28aa428b8e75f4aab18c5be3a2b351abc6ff5
+Batch 8 — 7fc9b72f12d38d6a2f64bdb5dcabbc6c6fc1f69f
+Batch 9 — 1ee470961733c3dd500d60e5c93cc82ca6d89d4d
+Batch 10 — 01585b44b77c0455485b49bc61e4b528cc67a405
+Batch 11 — 1e3888d2062cf23e0e7ee743b5ffd10d9dc266b9
+Batch 12 — 2584f43c104a111d926e2f60e911ead5f9dd5f24
+Batch 13 — 1f20a0718a766400af186e2132c124574e9b4dc4
+
+IMPLEMENTED FOUNDATION
+/mobile:
+- Flutter
+- Riverpod
+- go_router
+- Figma-derived design system
+- Button, Input, Card, Status Badge, Chip/Tab
+- reusable mobile navigation/shell
+- route-group foundation
+- locally bundled Inter
+- safe-area/touch-target/semantics hardening
+- exact geometry QA tests where useful
+- runtime raster-capture QA support
+- standard local capture directory: `/mobile/capture_output/`
+
+/portal:
+- React
+- TypeScript
+- Vite
+- React Router
+- matching design tokens and typography
+- Button, Input, Card, Status Badge, Chip/Tab
+- portal sidebar/shell/navigation foundation
+- route-group foundation
+- locally bundled Inter
+- stable focus geometry and hit-target handling
+- product/auth screens still pending
+
+Root:
+- /docs authoritative sources
+- AGENTS.md implementation guardrails
+- Inter third-party license
+
+MOBILE STEP IV — COMPLETE AND LOCKED
+Final count:
+41 / 41 User Mobile frames implemented and approved.
+
+Batch counts:
+- Batch 1: 7
+- Batch 2: 4
+- Batch 3: 4
+- Batch 4: 3
+- Batch 5: 4
+- Batch 6: 2
+- Batch 7: 2
+- Batch 8: 2
+- Batch 9: 2
+- Batch 10: 2
+- Batch 11: 2
+- Batch 12: 2
+- Batch 13: 5
+Total: 41
+
+Completed mobile areas:
+- Sign In / Create Account / Verify Email / onboarding
+- password recovery
+- Home / Tracks / Track Details / Submission Requirements
+- upload / checking / recording accepted
+- Choose Evaluation AI/Human + routing states
+- AI/Human Processing
+- Approved AI/Human results
+- Evaluation Report + simulated download
+- Pending Moderation + Rejected
+- Private Progress + Approved History
+- AI/Human All-Time Leaderboards
+- Events Discovery + Event Details
+- Profile + Settings + Manage Paths two-state flow + Profile 3 Paths
+
+FINAL MOBILE QA
+At locked HEAD `1f20a0718a766400af186e2132c124574e9b4dc4`:
+- dart format clean
+- flutter analyze: 0 issues
+- flutter test: 229 / 229 passed
+- runtime screenshots generated for every new/changed screen batch-by-batch
+- mobile captures used authoritative 390 x 844 where applicable
+- ChatGPT independently compared final runtime PNGs with Figma before each batch approval
+- final Batch 13 visual/interaction issues were corrected before mobile was locked
+
+Important quality rules proven during mobile and REQUIRED for portal:
+- do not accept executor claims of visual correctness without actual runtime captures
+- do not use no-op callbacks to fake presentation-only states
+- do not widen interaction hit targets beyond authoritative prototype intent without justification
+- do not shrink typography merely to make text fit; preserve Figma metrics/wrapping
+- geometry tests supplement but never replace direct runtime image comparison
+- one clean batch at a time; no automatic continuation
+
+STEP IV BOUNDARY
+Use local/mock frontend state only.
+Do not add production Supabase, database, storage, Gemini, APIs/Edge Functions, real auth/RBAC, scoring engines, leaderboard engines, report generation, production moderation, or other Steps V–VII responsibilities unless a later phase explicitly begins.
+
+LOCKED PRODUCT RULES RELEVANT TO PORTAL
+- Volunteers, Admins, and Super Admin use the shared portal/authentication surface with role-based downstream experiences.
+- Admins can manage Volunteer Evaluators.
+- Super Admin governs Admins and retains higher administrative authority.
+- Human evaluator workflow, moderation, report-generation semantics, events governance, scoring, and leaderboard rules must follow authoritative written specifications.
+- Step IV shows these states locally/mock only; it does not implement real backend enforcement.
+
+PORTAL STATUS
+Product/auth implementation pending:
+- 8 Shared Portal Authentication frames
+- 16 Volunteer Evaluator frames
+- 23 Admin frames
+- 5 Super Admin frames
+- 52 portal/auth frames total
+
+Do NOT assume all 52 belong in one sequence or that role clusters should be implemented in one large batch.
+Fresh ChatGPT must inspect Figma and determine the safest exact Portal Batch 1 boundary.
+
+MANDATORY PORTAL RUNTIME VISUAL-QA WORKFLOW — DO NOT OMIT
+The portal must now be completed using the SAME approval philosophy used for mobile.
+
+For every portal batch Antigravity 2 must:
+1. Implement only the exact assigned batch.
+2. Run portal validation (format/lint/build/tests as applicable).
+3. Render the actual React/Vite application in a real browser runtime.
+4. Generate a real PNG for EVERY new or visually changed portal screen/state.
+5. Capture at the exact authoritative Figma frame/viewport dimensions for that screen.
+6. Prefer deviceScaleFactor / pixel ratio 1 so output image pixels correspond directly to the Figma frame dimensions.
+7. Store captures locally under repo-relative `/portal/capture_output/`.
+8. Use stable descriptive filenames such as `portal_<screen_name>.png`.
+9. Capture the exact prototype-visible state; for transient/overlay/dialog states, reproduce the intended state before capturing.
+10. Directly compare every runtime PNG against its exact Figma frame.
+11. Fix every meaningful visible discrepancy and regenerate affected captures.
+12. Re-run validation after visual corrections.
+13. Attach/display or otherwise expose the final PNGs in the completion report.
+14. Create one clean commit/push only after the assigned batch is ready.
+15. STOP. Do not start the next portal batch.
+16. ChatGPT independently reviews GitHub + Figma + runtime PNGs and must explicitly approve the batch before continuation.
+
+Portal comparison checklist must include, where applicable:
+- exact viewport/frame dimensions
+- page shell and content area
+- sidebar width/position/active state
+- top bar/header geometry
+- role labels / identity / account controls
+- tables: columns, row heights, density, alignment, dividers, pagination
+- forms: labels, fields, help text, errors, buttons
+- cards/panels
+- chips/tabs/status badges
+- modal/dialog/drawer geometry
+- overlays/backdrops
+- dropdown/menu visible states
+- typography size/weight/line-height/wrapping
+- borders/radii/shadows/colors
+- icons and alignment
+- disabled/loading/status states
+- scrolling/overflow/scrollbar behavior visible in Figma
+- hover/focus/selected states only when the authoritative Figma frame explicitly depicts them
+- clipping and responsive layout assumptions
+
+No portal batch is approved without real runtime screenshots plus direct Figma comparison.
+
+PORTAL CAPTURE ARTIFACT POLICY
+Locked standard path:
+`/portal/capture_output/`
+
+Preferred stable filenames:
+`portal_<screen_name>.png`
+
+Captures are local QA artifacts and need not be committed unless ChatGPT explicitly requests otherwise.
+Do not delete the latest captures before independent ChatGPT review.
+Fresh Antigravity accounts/conversations do not change this repo-relative requirement.
+
+If the portal lacks a deterministic runtime capture harness when Portal Batch 1 begins, that first portal batch must establish a minimal reproducible browser-capture harness before claiming visual completion. The harness must capture the actual running Vite app, not static recreated markup.
+
+LOCKED MVP DELIVERY / DEPLOYMENT DECISIONS
+Mobile:
+- instructor/demo delivery = installable Android APK
+- Google Play publication not required
+- Android SDK/toolchain still must be installed before real Android device/emulator QA and final APK build
+
+Portal:
+- Hostinger static deployment target
+- domain: https://auratio.space
+- React + TypeScript + Vite
+- eventual HTTPS + SPA route fallback/refresh support required
+- Hostinger does not constrain Supabase/Gemini/backend hosting
+
+TOOL UTILIZATION
+ChatGPT = project headquarters:
+- inspect specs/Figma/GitHub
+- define exact portal batch
+- prepare executor prompt
+- review commit/diff
+- inspect runtime PNGs
+- compare them with Figma
+- approve/reject batch
+
+Antigravity 2 = primary Step IV executor:
+- fetch latest approved branch
+- read AGENTS.md + /docs
+- inspect assigned Figma nodes and reactions
+- implement only exact batch
+- validate code
+- generate portal runtime PNGs under `/portal/capture_output/`
+- compare with Figma
+- fix discrepancies
+- expose final images
+- clean commit/push
+- stop
+
+Codex = fallback/specialist executor.
+Claude Code = difficult architecture/state/navigation/debugging/refactoring/deep-review specialist.
+Kimi Code = backup/overflow executor.
+
+Execution cycle:
+ChatGPT scopes -> Antigravity implements/tests/captures -> one clean commit/push -> ChatGPT independently reviews -> batch approved -> next batch scoped.
+Never let two coding agents work on different uncommitted states of the same batch.
+Never switch agents in the middle of an uncommitted batch.
+
+NEXT PORTAL ACTION
+Portal Batch 1 is NOT yet formally scoped.
+
+Before assigning it:
+1. Verify remote `step-iv/ui-foundation` is exactly at approved HEAD `1f20a0718a766400af186e2132c124574e9b4dc4` or an explicitly reviewed clean descendant.
+2. Re-inspect the authoritative Figma portal clusters, starting points, authentication states, role routing, and immediate downstream bindings.
+3. Determine the safest exact first portal batch. Shared portal authentication is a likely candidate cluster, but do not assume the entire 8-screen auth set belongs in one batch without Figma inspection.
+4. Confirm the exact authoritative viewport dimensions for every selected portal frame.
+5. Include the mandatory real-browser runtime capture workflow in the Antigravity prompt.
+6. Antigravity implements/tests/captures/compares/commits only that batch and stops.
+7. ChatGPT independently reviews before Portal Batch 2.
+
+STARTING INSTRUCTION FOR A FRESH CHATGPT CONVERSATION
+Continue Auratio Step IV from Project Status v7, Step IV Implementation Handoff v1.5, and Step IV Runtime Visual QA Protocol v1.1. Mobile Step IV is fully complete and locked at 41/41 User Mobile frames. The approved repository HEAD is `1f20a0718a766400af186e2132c124574e9b4dc4` on `step-iv/ui-foundation`. Portal product/auth screens remain pending: 8 Shared Portal Authentication, 16 Volunteer Evaluator, 23 Admin, and 5 Super Admin = 52 portal/auth frames. Re-inspect Figma page `03 — Interactive Prototype — MVP v1.8` in file `naweFj39KPJSa18ARtl0ll`, determine the safest exact Portal Batch 1 boundary from the portal interaction graph, and prepare the Antigravity 2 prompt. Keep Step IV frontend-only/local/mock. Every portal batch must render the actual React/Vite app, generate real PNGs for every new/changed screen under `/portal/capture_output/` at the exact authoritative Figma frame dimensions, directly compare them with Figma, fix discrepancies, expose the final images for independent ChatGPT QA, commit/push once ready, and stop before the next batch.
+
+STARTING INSTRUCTION FOR A FRESH ANTIGRAVITY 2 CONVERSATION
+Open repository `muhammadhossain03-byte/auratio-mvp` and work only from branch `step-iv/ui-foundation`. Fetch/pull and verify HEAD is exactly `1f20a0718a766400af186e2132c124574e9b4dc4` or the exact clean descendant explicitly supplied by ChatGPT. Read root AGENTS.md and `/docs`, especially the updated Step IV Runtime Visual QA Protocol v1.1. Treat Figma page `03 — Interactive Prototype — MVP v1.8` in file `naweFj39KPJSa18ARtl0ll` as authoritative for visual/prototype behavior while written specs prevail for product/backend semantics. Do not implement anything until ChatGPT supplies the exact Portal Batch 1 Figma node list and acceptance criteria. For every assigned portal batch, use the actual running React/Vite app to generate final PNGs for every new/changed screen under `/portal/capture_output/` at each authoritative Figma frame's exact dimensions, compare each directly with Figma, fix visible discrepancies, expose the final PNGs for independent ChatGPT review, make one clean commit/push when ready, and STOP. Do not implement production auth/RBAC/database/backend/API/Gemini/deployment as part of Step IV unless explicitly authorized.
+
+BOTTOM LINE
+Mobile Step IV is CLOSED at 41 / 41 frames on approved HEAD `1f20a0718a766400af186e2132c124574e9b4dc4`.
+The remaining task is 52 portal/auth frames.
+The portal will be executed exactly like mobile: small exact batches, real runtime captures, direct Figma comparison, correction loops, one clean commit/push, and independent ChatGPT approval before the next batch.

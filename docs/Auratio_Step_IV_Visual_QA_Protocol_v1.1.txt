@@ -1,0 +1,297 @@
+Auratio — Step IV Runtime Visual QA Protocol
+Version 1.1
+Date: 1 September 2026
+
+PURPOSE
+Lock one repeatable runtime visual-QA procedure for every Auratio Step IV implementation batch so Figma fidelity is verified from the actual running frontend, not inferred only from code, metadata, geometry tests, or executor claims.
+
+STATUS
+MANDATORY for all remaining Step IV batches unless a later explicitly approved protocol supersedes this file.
+
+This version supersedes v1.0 and extends the proven mobile process into a fully specified portal runtime-capture standard.
+
+AUTHORITY
+- Figma page `03 — Interactive Prototype — MVP v1.8` in file `naweFj39KPJSa18ARtl0ll` is authoritative for visual appearance and prototype interactions.
+- Written Auratio specifications remain authoritative for product/backend/security/scoring/moderation/governance semantics.
+- This file governs only the Step IV runtime visual-QA execution workflow.
+
+PRIMARY EXECUTOR
+Antigravity 2 is the primary Step IV coding executor.
+
+CORE RULE
+A batch is NOT visually complete merely because:
+- Flutter/React code looks correct
+- geometry tests pass
+- Figma metadata matches
+- `flutter analyze`, lint, unit/widget/component tests, or builds pass
+- the executor states that visual QA was performed
+
+The actual rendered runtime screens must be captured as image files and visually compared against the corresponding authoritative Figma frames.
+
+INDEPENDENT APPROVAL RULE
+A batch is not formally approved until BOTH are satisfactory:
+1. code / behavior / scope QA
+2. runtime visual QA from actual captures
+
+ChatGPT performs the final independent review after the executor completion report.
+
+==================================================
+MOBILE CAPTURE WORKFLOW — LOCKED / PROVEN
+==================================================
+
+Mobile Step IV is now complete at 41 / 41 screens, but this workflow remains the reference standard.
+
+For every mobile batch or future mobile visual correction:
+1. Implement only the exact assigned batch/change.
+2. Run normal formatting, analysis, and tests.
+3. Use the repository's Flutter raster-capture infrastructure.
+4. Current proven command/infrastructure includes:
+   `flutter test test/support/generate_captures_test.dart`
+   or the current equivalent if later renamed/refactored.
+5. Generate a real runtime PNG for EVERY new or visually changed mobile screen.
+6. Capture size must equal the authoritative Figma frame; established User Mobile standard is exactly 390 x 844.
+7. Save PNGs locally under:
+   `/mobile/capture_output/`
+8. Use stable descriptive filenames, preferably:
+   `flutter_<screen_name>.png`
+9. For timed/transient screens, capture the intended state before automatic navigation occurs.
+10. Compare each runtime PNG directly against the matching Figma frame.
+11. Fix discrepancies, recapture, and recompare until acceptable.
+
+==================================================
+PORTAL CAPTURE WORKFLOW — REQUIRED FOR ALL REMAINING PORTAL BATCHES
+==================================================
+
+The portal must be completed with the same rigor that closed mobile.
+
+For EVERY portal batch:
+1. Implement only the exact assigned batch.
+2. Run normal portal validation before capture:
+   - formatting if configured
+   - lint
+   - component/unit tests if configured or batch-relevant
+   - production build
+3. Run the actual React + TypeScript + Vite application in a real browser runtime.
+4. Capture a real browser-rendered PNG for EVERY new or visually changed portal screen/state.
+5. Capture at the exact authoritative Figma frame/viewport dimensions for that specific screen.
+6. Prefer browser `deviceScaleFactor = 1` / pixel ratio 1 so PNG pixel dimensions directly equal the authoritative Figma frame dimensions.
+7. Save portal captures locally under the repo-relative directory:
+   `/portal/capture_output/`
+8. Use stable filenames, preferably:
+   `portal_<screen_name>.png`
+9. Capture the exact prototype-visible state.
+10. If the screen uses transient content such as menus, dropdowns, dialogs, drawers, loading/status states, or overlays that are represented as separate authoritative Figma frames, deterministically place the running app in that exact state before capture.
+11. Compare each runtime PNG directly against its exact Figma frame.
+12. Fix visible discrepancies within the same batch.
+13. Re-run validation after visual corrections.
+14. Regenerate affected captures.
+15. Repeat until visually acceptable.
+16. Expose/display all final captures in the completion report for independent ChatGPT review.
+17. STOP after the assigned batch. Do not begin the next portal batch automatically.
+
+PORTAL CAPTURE HARNESS
+If a deterministic browser-capture harness does not yet exist when Portal Batch 1 begins, Portal Batch 1 must establish a minimal reproducible harness before claiming visual completion.
+
+The harness should normally use the project's existing browser/testing ecosystem where practical. A browser automation tool such as Playwright is appropriate if already available or reasonably introduced for deterministic QA, but the implementation choice is secondary to the locked requirements below.
+
+The harness MUST:
+- capture the actual running Vite app, not manually recreated static markup
+- navigate to the real app route/state
+- set the exact Figma viewport dimensions
+- use a deterministic pixel ratio where possible
+- wait for fonts/layout/data state to stabilize
+- avoid hiding real layout defects with screenshot-only CSS
+- save files under `/portal/capture_output/`
+- support repeatable capture after corrections
+
+If a new test/capture dependency is proposed, it must be minimal, justified, compatible with the repository, and scoped to QA; do not change the product architecture merely to capture screenshots.
+
+==================================================
+VISUAL COMPARISON CHECKLIST — ALL PLATFORMS
+==================================================
+
+For every captured screen inspect at minimum:
+- frame / viewport size
+- safe areas / system-chrome assumptions where applicable
+- header / top bar position and height
+- horizontal gutters
+- card/panel positions, widths, and heights
+- vertical rhythm and spacing
+- typography family, size, weight, line-height, and wrapping
+- button size, position, radius, fill, border, and label alignment
+- borders, dividers, shadows, and radii
+- colors and semantic states
+- icons/glyphs and centering
+- clipping / overflow
+- scrolling behavior where visible
+- disabled / loading / status visuals
+- prototype-relevant visible state
+
+Portal-specific checks additionally include:
+- sidebar width, padding, active item, icon alignment, and collapse state if depicted
+- shell/content-area geometry
+- top-navigation/header controls
+- role label / account / identity areas
+- tables: column widths, header heights, row heights, text alignment, density, dividers, sorting indicators, pagination if visible
+- forms: labels, field heights, placeholder/value text, help text, errors, validation states
+- chips/tabs/status badges
+- dropdowns/menus and open/closed visible states
+- modal/dialog/drawer width, height, placement, overlay/backdrop opacity
+- confirmation/review states
+- tooltips only where represented by Figma
+- focus/hover/selected states only where the authoritative frame explicitly depicts them
+- responsive assumptions and browser scrollbars if visible
+
+==================================================
+GEOMETRY TESTS
+==================================================
+
+Exact geometry tests are strongly encouraged where useful.
+
+Mobile examples:
+- `tester.getRect`
+
+Portal examples may include:
+- browser bounding-box assertions
+- computed layout assertions
+- component-level geometry tests
+
+But geometry tests do NOT replace runtime image comparison.
+
+==================================================
+VISIBLE DISCREPANCIES
+==================================================
+
+If any meaningful visible discrepancy is found:
+1. Fix it within the same assigned batch.
+2. Re-run formatting/lint/analysis/tests/build as applicable.
+3. Regenerate affected runtime capture(s).
+4. Recompare against Figma.
+5. Repeat until visually acceptable.
+
+Examples that MUST NOT be ignored:
+- incorrect card/panel height hidden by compensating spacing
+- unsupported/malformed glyphs or icons
+- wrong text wrapping caused by layout or typography errors
+- clipped chips/buttons/labels
+- wrong CTA vertical position
+- wrong sidebar active state
+- wrong table density/column alignment
+- wrong modal size or overlay state
+- wrong prototype transition or visible status state
+- entire cards made clickable when Figma binds only a text/link affordance
+- enabled no-op controls used to mimic presentation-only prototype elements
+- font shrinking/compression used simply to force text to fit
+
+Minor platform/browser font-rasterization differences that do not reflect a layout or implementation defect may be accepted by ChatGPT after direct comparison.
+
+==================================================
+INTERACTION-FIDELITY RULE
+==================================================
+
+Visual QA and interaction QA are linked.
+
+If Figma has no reaction on a visual element, do not automatically implement it as an enabled control with an empty/no-op callback.
+
+Presentation-only states should not expose misleading tap/click/ripple/button semantics.
+
+Conversely, do not expand a small authoritative interaction affordance to an entire card/row unless Figma or usability requirements explicitly justify that change and ChatGPT approves it.
+
+This rule applies equally to mobile and portal.
+
+==================================================
+COMPLETION REPORT REQUIREMENT
+==================================================
+
+Antigravity's completion report for EVERY Step IV batch must include:
+- exact Figma node IDs implemented
+- exact routes/screens/states added or modified
+- exact authoritative interactions implemented
+- final full commit SHA from `git rev-parse HEAD`
+- validation results
+- exact runtime capture filenames
+- exact capture dimensions
+- confirmation every batch screen/state was directly compared with Figma
+- every remaining visual discrepancy, even if judged minor
+- final PNGs attached/displayed or otherwise directly accessible for independent ChatGPT review
+- explicit confirmation the next batch was NOT started
+
+Portal reports must additionally include:
+- browser/runtime capture method used
+- exact viewport dimensions per capture
+- confirmation captures came from the actual running React/Vite app
+- lint/build/test results
+
+Do NOT merely say “visual QA passed” without producing the actual runtime captures.
+
+==================================================
+CAPTURE ARTIFACT POLICY
+==================================================
+
+Mobile standard location:
+`/mobile/capture_output/`
+
+Portal standard location:
+`/portal/capture_output/`
+
+Stable naming:
+- mobile: `flutter_<screen_name>.png`
+- portal: `portal_<screen_name>.png`
+
+Captures are QA artifacts and do not need to be committed to Git unless a later batch explicitly requires it.
+Do not delete the latest captures before ChatGPT has independently reviewed them.
+Account switches or fresh Antigravity conversations do not change this protocol because capture paths are repo-relative.
+
+==================================================
+INDEPENDENT CHATGPT REVIEW
+==================================================
+
+After Antigravity completes a batch:
+1. ChatGPT reviews the actual GitHub diff/commit.
+2. ChatGPT re-inspects the exact authoritative Figma frames/bindings.
+3. The user supplies or exposes the final runtime PNGs if they are not directly accessible.
+4. ChatGPT directly compares runtime captures against Figma.
+5. ChatGPT checks interaction fidelity and batch-scope compliance.
+6. ChatGPT either:
+   - approves and locks the batch, or
+   - identifies exact corrections and requires recapture/revalidation.
+7. Only after approval may the next batch be scoped.
+
+==================================================
+PROVEN MOBILE EXAMPLES
+==================================================
+
+The process caught and corrected issues that code/geometry inspection alone missed, including:
+- malformed full-width Unicode plus glyph on Upload Recording
+- Figma/Flutter text wrapping mismatches
+- no-op interaction semantics where a state should have been presentation-only
+- overly broad hit target on Manage Paths
+- subtle Settings paragraph width/wrapping mismatch
+
+These examples are why real runtime screenshot QA remains mandatory for portal.
+
+==================================================
+FUTURE ANTIGRAVITY PROMPTS
+==================================================
+
+Every future Step IV Antigravity prompt must explicitly include the visual-QA requirement.
+
+For portal batches at minimum it must state:
+- use the actual running React/Vite app
+- generate a runtime PNG for every new/changed portal screen/state
+- capture at each exact authoritative Figma frame dimension
+- save under `/portal/capture_output/`
+- compare each capture directly with Figma
+- fix visible mismatches
+- expose final images for independent ChatGPT review
+- do not proceed to the next batch
+
+==================================================
+BOTTOM LINE
+==================================================
+
+No remaining Auratio Step IV portal batch is fully approved without actual runtime browser screenshot capture plus direct Figma comparison.
+
+Mobile established the standard.
+Portal must now follow the same cycle:
+exact small batch -> real implementation -> tests/build -> real runtime PNGs -> direct Figma comparison -> correction loop -> clean commit/push -> independent ChatGPT approval -> next batch.
