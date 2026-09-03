@@ -116,6 +116,13 @@ async function inspectGeometry() {
       '/auth/reset-link-sent',
       '/auth/reset-password',
       '/auth/password-reset-complete',
+      '/volunteer/assignments',
+      '/volunteer/assignments/sub-8821',
+      '/volunteer/assignments/sub-8821/decline',
+      '/volunteer/availability',
+      '/volunteer/evaluation/sub-8821',
+      '/volunteer/assignments/after-decline',
+      '/volunteer/availability/unavailable',
     ]
 
     for (const route of routes) {

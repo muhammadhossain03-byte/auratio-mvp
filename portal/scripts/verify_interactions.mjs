@@ -130,6 +130,26 @@ async function run() {
       return evalRes.result.value
     }
 
+    async function setInputValue(selector, value) {
+      const evalRes = await sendCdp(ws, 'Runtime.evaluate', {
+        expression: `(() => {
+          const el = document.querySelector('${selector}');
+          if (el) {
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            nativeInputValueSetter.call(el, ${JSON.stringify(value)});
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+          }
+          return false;
+        })()`,
+      })
+      if (!evalRes.result.value) {
+        throw new Error(`Element not found for selector "${selector}"`)
+      }
+      await new Promise((r) => setTimeout(r, 200))
+    }
+
     // 1. AUTH FLOW
     console.log('--- Testing Auth Flow ---')
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/auth/sign-in` })
@@ -172,7 +192,7 @@ async function run() {
     console.log('Path after Accept:', await getPathname())
     if (await getPathname() !== '/volunteer/evaluation/sub-8821') throw new Error('Expected /volunteer/evaluation/sub-8821')
 
-    // 3. DECLINE FLOW & CANCEL
+    // 3. DECLINE FLOW & CANCEL & REASON REQUIREMENT
     console.log('\n--- Testing Volunteer Decline Flow ---')
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/assignments/sub-8821` })
     await new Promise((r) => setTimeout(r, 500))
@@ -186,9 +206,40 @@ async function run() {
     if (await getPathname() !== '/volunteer/assignments/sub-8821') throw new Error('Expected /volunteer/assignments/sub-8821')
 
     await clickByText('button.auratio-volunteer-btn--secondary', 'Decline')
+    console.log('Path after re-opening Decline page:', await getPathname())
+    if (await getPathname() !== '/volunteer/assignments/sub-8821/decline') throw new Error('Expected /volunteer/assignments/sub-8821/decline')
+
+    // Case A: EMPTY REASON
+    console.log('Checking Case A: Empty reason...')
+    const emptyValueCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('input.auratio-volunteer-decline-input').value`,
+    })
+    if (emptyValueCheck.result.value !== '') {
+      throw new Error(`Expected initial decline reason to be empty, found: "${emptyValueCheck.result.value}"`)
+    }
+
     await clickByText('button.auratio-volunteer-btn--primary', 'Confirm Decline')
-    console.log('Path after Confirm Decline:', await getPathname())
-    if (await getPathname() !== '/volunteer/assignments/after-decline') throw new Error('Expected /volunteer/assignments/after-decline')
+    console.log('Path after Confirm Decline with empty reason:', await getPathname())
+    if (await getPathname() !== '/volunteer/assignments/sub-8821/decline') {
+      throw new Error('Confirm Decline navigated with empty reason! Pathname changed.')
+    }
+
+    // Whitespace check
+    await setInputValue('input.auratio-volunteer-decline-input', '   ')
+    await clickByText('button.auratio-volunteer-btn--primary', 'Confirm Decline')
+    console.log('Path after Confirm Decline with whitespace reason:', await getPathname())
+    if (await getPathname() !== '/volunteer/assignments/sub-8821/decline') {
+      throw new Error('Confirm Decline navigated with whitespace reason!')
+    }
+
+    // Case B: VALID REASON
+    console.log('Checking Case B: Valid reason...')
+    await setInputValue('input.auratio-volunteer-decline-input', 'Scheduling conflict / cannot review in time')
+    await clickByText('button.auratio-volunteer-btn--primary', 'Confirm Decline')
+    console.log('Path after Confirm Decline with valid reason:', await getPathname())
+    if (await getPathname() !== '/volunteer/assignments/after-decline') {
+      throw new Error('Expected /volunteer/assignments/after-decline after valid decline reason')
+    }
 
     // 4. AVAILABILITY TOGGLE
     console.log('\n--- Testing Availability Toggle Flow ---')

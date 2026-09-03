@@ -5,9 +5,10 @@ import { VolunteerLayout } from '../components/VolunteerLayout'
 
 export function VolunteerDeclineAssignmentPage() {
   const navigate = useNavigate()
-  const [reason, setReason] = useState('Scheduling conflict / cannot review in time…')
+  const [reason, setReason] = useState('')
 
   function handleConfirmDecline() {
+    if (!reason.trim()) return
     navigate(portalRoutePaths.volunteer.activeAssignmentsAfterDecline)
   }
 
@@ -242,19 +243,10 @@ export function VolunteerDeclineAssignmentPage() {
         >
           <input
             type="text"
+            className="auratio-volunteer-decline-input"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            style={{
-              width: '100%',
-              border: 0,
-              outline: 'none',
-              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-              fontSize: '14px',
-              fontWeight: 400,
-              lineHeight: '20px',
-              color: 'var(--auratio-neutral-500)',
-              backgroundColor: 'transparent',
-            }}
+            placeholder="Scheduling conflict / cannot review in time…"
           />
         </div>
 

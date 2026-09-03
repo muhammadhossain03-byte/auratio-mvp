@@ -366,3 +366,20 @@
 .auratio-volunteer-btn--presentation:hover {
   background-color: inherit;
 }
+
+.auratio-volunteer-decline-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--auratio-neutral-900);
+  background-color: transparent;
+}
+
+.auratio-volunteer-decline-input::placeholder {
+  color: var(--auratio-neutral-500);
+  opacity: 1;
+}
