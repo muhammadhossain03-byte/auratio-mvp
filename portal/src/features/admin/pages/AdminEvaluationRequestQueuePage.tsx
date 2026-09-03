@@ -112,6 +112,7 @@ export function AdminEvaluationRequestQueuePage() {
         {initialAdminQueueItems.map((item, index) => (
           <div key={item.id}>
             <div
+              data-request-id={item.id}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -142,6 +143,7 @@ export function AdminEvaluationRequestQueuePage() {
                 {item.interactive && item.destinationPath ? (
                   <button
                     type="button"
+                    aria-label={`Open ${item.id}`}
                     onClick={() => navigate(item.destinationPath!)}
                     className="auratio-admin-btn--table-open"
                     style={{ width: '88px', height: '28px' }}

@@ -525,13 +525,38 @@ async function run() {
       throw new Error('Expected /admin/requests after clicking Open Requests metric')
     }
 
-    // 14. REQUEST QUEUE -> HUMAN REQUEST DETAILS & ASSIGNMENT PICKER
-    console.log('\n--- Testing Request Queue -> REQ-1042 -> Assignment Picker ---')
-    // Click Open button for row 1 (REQ-1042)
-    await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelectorAll('button.auratio-admin-btn--table-open')[0].click()`,
-    })
-    await new Promise((r) => setTimeout(r, 300))
+    // Helper functions for semantic targeting
+    async function clickQueueOpen(requestId) {
+      const expr = `(() => {
+        const row = document.querySelector('[data-request-id="${requestId}"]');
+        if (!row) throw new Error('Row not found for: ${requestId}');
+        const btn = row.querySelector('button.auratio-admin-btn--table-open');
+        if (!btn) throw new Error('Open button not found for: ${requestId}');
+        btn.click();
+        return true;
+      })()`
+      await sendCdp(ws, 'Runtime.evaluate', { expression: expr })
+      await new Promise((r) => setTimeout(r, 300))
+    }
+
+    async function clickCandidateSelect(candidateName) {
+      const expr = `(() => {
+        const btn = document.querySelector('button[data-candidate="${candidateName}"]');
+        if (!btn) throw new Error('Select button not found for: ${candidateName}');
+        btn.click();
+        return true;
+      })()`
+      await sendCdp(ws, 'Runtime.evaluate', { expression: expr })
+      await new Promise((r) => setTimeout(r, 300))
+    }
+
+    // 14. NORMAL ASSIGNMENT: Request Queue -> REQ-1042 -> Assign Human -> Assignment Picker
+    console.log('\n--- Testing Normal Assignment Flow ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Open REQ-1042
+    await clickQueueOpen('REQ-1042')
     console.log('Path after opening REQ-1042:', await getPathname())
     if (await getPathname() !== '/admin/requests/req-1042') {
       throw new Error('Expected /admin/requests/req-1042')
@@ -544,75 +569,103 @@ async function run() {
       throw new Error('Expected /admin/requests/req-1042/assign')
     }
 
-    // In Assignment Picker, click Select on Farhana Islam (candidate 0)
-    await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[0].click()`,
-    })
-    await new Promise((r) => setTimeout(r, 300))
+    // Test Select Farhana Islam -> must navigate to /admin/requests
+    await clickCandidateSelect('Farhana Islam')
     console.log('Path after selecting Farhana Islam:', await getPathname())
-    if (await getPathname() !== '/admin/requests/req-1042') {
-      throw new Error('Expected /admin/requests/req-1042 after selecting Farhana')
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after selecting Farhana Islam')
     }
 
-    // Click Back to Queue
-    await clickByText('button.auratio-admin-btn--secondary', 'Back to Queue')
-    console.log('Path after Back to Queue:', await getPathname())
+    // Test Select Rakib Hasan -> must navigate to /admin/requests
+    await clickQueueOpen('REQ-1042')
+    await clickByText('button.auratio-admin-btn--primary', 'Assign Human')
+    await clickCandidateSelect('Rakib Hasan')
+    console.log('Path after selecting Rakib Hasan:', await getPathname())
     if (await getPathname() !== '/admin/requests') {
-      throw new Error('Expected /admin/requests after Back to Queue')
+      throw new Error('Expected /admin/requests after selecting Rakib Hasan')
+    }
+
+    // Test Select Tasnim Noor -> must navigate to /admin/requests
+    await clickQueueOpen('REQ-1042')
+    await clickByText('button.auratio-admin-btn--primary', 'Assign Human')
+    await clickCandidateSelect('Tasnim Noor')
+    console.log('Path after selecting Tasnim Noor:', await getPathname())
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after selecting Tasnim Noor')
     }
 
     // 15. AI ROUTING: REQ-1041 (Assigned AI) & REQ-1034 (Redirected Human)
     console.log('\n--- Testing Request Queue -> REQ-1041 & REQ-1034 ---')
-    // Row 2: REQ-1041
-    await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelectorAll('button.auratio-admin-btn--table-open')[1].click()`,
-    })
-    await new Promise((r) => setTimeout(r, 300))
+    await clickQueueOpen('REQ-1041')
     console.log('Path after opening REQ-1041:', await getPathname())
     if (await getPathname() !== '/admin/requests/req-1041') {
       throw new Error('Expected /admin/requests/req-1041')
     }
-
     await clickByText('button.auratio-admin-btn--secondary', 'Back to Queue')
     if (await getPathname() !== '/admin/requests') {
       throw new Error('Expected /admin/requests after Back to Queue from REQ-1041')
     }
 
-    // Row 4: REQ-1034
-    await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelectorAll('button.auratio-admin-btn--table-open')[2].click()`,
-    })
-    await new Promise((r) => setTimeout(r, 300))
+    await clickQueueOpen('REQ-1034')
     console.log('Path after opening REQ-1034:', await getPathname())
     if (await getPathname() !== '/admin/requests/req-1034') {
       throw new Error('Expected /admin/requests/req-1034')
     }
-
     await clickByText('button.auratio-admin-btn--secondary', 'Back to Queue')
     if (await getPathname() !== '/admin/requests') {
       throw new Error('Expected /admin/requests after Back to Queue from REQ-1034')
     }
 
-    // 16. REASSIGNMENT: Cancel & Confirm Flow
+    // 16. REASSIGNMENT: REQ-1038 Entry, Cancel, and Confirm Flow
     console.log('\n--- Testing Reassignment Flow ---')
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042/reassign` })
-    await new Promise((r) => setTimeout(r, 500))
+    // Reset mock assignment state in browser
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__resetHE0142Reassignment && window.__resetHE0142Reassignment()`,
+    })
 
-    // Click Cancel -> returns to assignment picker
-    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
-    console.log('Path after Cancel:', await getPathname())
-    if (await getPathname() !== '/admin/requests/req-1042/assign') {
-      throw new Error('Expected /admin/requests/req-1042/assign after Cancel')
+    // B. REASSIGNMENT ENTRY: From /admin/requests, click Open belonging specifically to REQ-1038
+    await clickQueueOpen('REQ-1038')
+    console.log('Path after opening REQ-1038:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1042/reassign') {
+      throw new Error('Expected /admin/requests/req-1042/reassign when opening REQ-1038')
     }
 
-    // Navigate back to reassign to test Confirm
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042/reassign` })
-    await new Promise((r) => setTimeout(r, 500))
+    // C. CANCEL: REQ-1038 -> Confirm Reassignment -> Cancel
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    console.log('Path after Cancel:', await getPathname())
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after Cancel')
+    }
+    // Verify assignment ownership was NOT mutated
+    const stateAfterCancel = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify(window.__getHE0142AssignmentState())`,
+    })
+    const cancelObj = JSON.parse(stateAfterCancel.result.value)
+    console.log('State after Cancel:', cancelObj)
+    if (cancelObj.activeOwner !== 'Farhana Islam' || cancelObj.supersededOwner !== null) {
+      throw new Error(`Expected unmutated ownership after Cancel, got ${JSON.stringify(cancelObj)}`)
+    }
+
+    // D. CONFIRM: REQ-1038 -> Confirm Reassignment -> Confirm Reassignment
+    await clickQueueOpen('REQ-1038')
+    console.log('Path after re-entering REQ-1038:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1042/reassign') {
+      throw new Error('Expected /admin/requests/req-1042/reassign when opening REQ-1038')
+    }
 
     await clickByText('button.auratio-admin-btn--primary', 'Confirm Reassignment')
     console.log('Path after Confirm Reassignment:', await getPathname())
-    if (await getPathname() !== '/admin/requests/req-1042') {
-      throw new Error('Expected /admin/requests/req-1042 after Confirm Reassignment')
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after Confirm Reassignment')
+    }
+    // Verify mock state has supersededOwner = Farhana Islam, activeOwner = Nadia Rahman, sole active owner
+    const stateAfterConfirm = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify(window.__getHE0142AssignmentState())`,
+    })
+    const confirmObj = JSON.parse(stateAfterConfirm.result.value)
+    console.log('State after Confirm:', confirmObj)
+    if (confirmObj.supersededOwner !== 'Farhana Islam' || confirmObj.activeOwner !== 'Nadia Rahman') {
+      throw new Error(`Expected superseded Farhana and active Nadia, got ${JSON.stringify(confirmObj)}`)
     }
 
     // 17. EVALUATION RECORDS -> PROCESSING HUMAN & APPROVED AI
@@ -686,16 +739,6 @@ async function run() {
     })
     if (!sub8821Pres.result.value) {
       throw new Error('Expected SUB-8821 action to be presentation-only')
-    }
-
-    // Check request queue row 3 (REQ-1038) presentation button
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests` })
-    await new Promise((r) => setTimeout(r, 500))
-    const req1038Pres = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelector('.auratio-admin-btn--presentation') !== null`,
-    })
-    if (!req1038Pres.result.value) {
-      throw new Error('Expected REQ-1038 action to be presentation-only')
     }
 
     console.log('\nALL 18 INTERACTION FLOWS PASSED PERFECTLY!')

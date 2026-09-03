@@ -56,7 +56,8 @@ export const initialAdminQueueItems: AdminQueueItem[] = [
     requestedMethod: 'Human',
     routing: 'Assigned Human',
     eligibility: 'Eligible',
-    interactive: false,
+    interactive: true,
+    destinationPath: '/admin/requests/req-1042/reassign',
   },
   {
     id: 'REQ-1034',
@@ -137,7 +138,18 @@ export function confirmHE0142Reassignment() {
   return getHE0142AssignmentState()
 }
 
+export function assignHE0142Candidate(name: string) {
+  he0142ActiveOwner = name
+  he0142SupersededOwner = null
+  return getHE0142AssignmentState()
+}
+
 export function resetHE0142Reassignment() {
   he0142ActiveOwner = 'Farhana Islam'
   he0142SupersededOwner = null
+}
+
+if (typeof window !== 'undefined') {
+  ;(window as unknown as { __getHE0142AssignmentState: typeof getHE0142AssignmentState }).__getHE0142AssignmentState = getHE0142AssignmentState
+  ;(window as unknown as { __resetHE0142Reassignment: typeof resetHE0142Reassignment }).__resetHE0142Reassignment = resetHE0142Reassignment
 }

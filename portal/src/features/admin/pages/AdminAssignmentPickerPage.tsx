@@ -1,19 +1,14 @@
 import { useNavigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { adminCandidates } from '../data/mockAdminData'
+import { adminCandidates, assignHE0142Candidate } from '../data/mockAdminData'
 import { AdminLayout } from '../components/AdminLayout'
 
 export function AdminAssignmentPickerPage() {
   const navigate = useNavigate()
 
   function handleSelectCandidate(name: string) {
-    if (name === 'Farhana Islam') {
-      // In the mock journey, selecting Farhana assigns her and routes back to request details
-      navigate(portalRoutePaths.admin.requestDetailsRouting)
-    } else {
-      // Selecting another candidate or testing reassignment flow
-      navigate(portalRoutePaths.admin.confirmReassignment)
-    }
+    assignHE0142Candidate(name)
+    navigate(portalRoutePaths.admin.requests)
   }
 
   return (
@@ -129,6 +124,8 @@ export function AdminAssignmentPickerPage() {
               <div style={{ width: '120px' }}>
                 <button
                   type="button"
+                  data-candidate={c.name}
+                  aria-label={`Select ${c.name}`}
                   onClick={() => handleSelectCandidate(c.name)}
                   className="auratio-admin-btn auratio-admin-btn--secondary"
                   style={{

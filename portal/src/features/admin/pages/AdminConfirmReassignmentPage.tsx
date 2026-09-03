@@ -8,11 +8,11 @@ export function AdminConfirmReassignmentPage() {
 
   function handleConfirm() {
     confirmHE0142Reassignment()
-    navigate(portalRoutePaths.admin.requestDetailsRouting)
+    navigate(portalRoutePaths.admin.requests)
   }
 
   function handleCancel() {
-    navigate(portalRoutePaths.admin.assignmentPicker)
+    navigate(portalRoutePaths.admin.requests)
   }
 
   return (
