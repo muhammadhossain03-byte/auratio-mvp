@@ -279,5 +279,94 @@ void main() {
         expect(find.text('84.2 / 100'), findsOneWidget); // Score intact
       },
     );
+
+    testWidgets(
+      '11. Removing Content Creation from saved 3-Path state results in 2-Path Profile without Content Creation',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(MaterialApp)),
+        );
+
+        // 1. Saved 3 Paths
+        container
+            .read(selectedPathsProvider.notifier)
+            .setPaths(AuratioPath.values.toSet());
+
+        // 2. Enter Profile
+        await openAuratioRoute(tester, router, AppRoutePaths.profile);
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Content Creation  •  Manage Paths  →'),
+          findsOneWidget,
+        );
+
+        // 3. Enter Manage Paths through the 3-Path affordance
+        await tester.tap(find.byKey(ProfileScreen.managePathsLinkKey));
+        await tester.pumpAndSettle();
+
+        // 4. Remove Content Creation
+        await tester.tap(find.byKey(ManagePathsScreen.contentCreationCardKey));
+        await tester.pumpAndSettle();
+
+        // 5. Save
+        await tester.tap(find.byKey(ManagePathsScreen.saveChangesButtonKey));
+        await tester.pumpAndSettle();
+
+        // 6. Assert provider has exactly 2 Paths
+        final saved = container.read(selectedPathsProvider);
+        expect(saved.length, 2);
+        expect(saved.contains(AuratioPath.contentCreation), isFalse);
+
+        // 7. Assert Profile does NOT contain Content Creation
+        expect(find.byKey(ProfileScreen.selectedPathsCardKey), findsOneWidget);
+        expect(find.text('Content Creation'), findsNothing);
+        expect(find.text('Content Creation  •  Manage Paths  →'), findsNothing);
+        expect(find.text('Manage Paths  →'), findsOneWidget);
+        expect(router.state.uri.path, AppRoutePaths.profile);
+      },
+    );
+
+    testWidgets(
+      '12. Tapping Content Creation title affordance toggles selection without losing unsaved draft changes',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(MaterialApp)),
+        );
+
+        container
+            .read(selectedPathsProvider.notifier)
+            .setPaths(AuratioPath.values.toSet());
+
+        await openAuratioRoute(tester, router, AppRoutePaths.managePaths);
+        await tester.pumpAndSettle();
+
+        // Uncheck Public Speaking in draft
+        await tester.tap(find.text('Public Speaking'));
+        await tester.pumpAndSettle();
+
+        // Tap Content Creation title to remove Content Creation
+        await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
+        await tester.pumpAndSettle();
+
+        // Public Speaking must STILL be unselected (draft not reset!)
+        // Toggle Public Speaking back on
+        await tester.tap(find.text('Public Speaking'));
+        await tester.pumpAndSettle();
+
+        // Save
+        await tester.tap(find.byKey(ManagePathsScreen.saveChangesButtonKey));
+        await tester.pumpAndSettle();
+
+        final saved = container.read(selectedPathsProvider);
+        expect(saved.length, 2);
+        expect(saved, contains(AuratioPath.publicSpeaking));
+        expect(saved, contains(AuratioPath.professionalPresenting));
+        expect(saved, isNot(contains(AuratioPath.contentCreation)));
+
+        expect(find.text('Content Creation'), findsNothing);
+      },
+    );
   });
 }

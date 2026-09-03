@@ -15,7 +15,11 @@ export function AdminVolunteerAccountPage() {
   const lifecycle = isFarhana ? 'Active' : (volunteer?.lifecycle || 'Invited')
   const effectiveAvailability = isFarhana ? farhanaState.effectiveAvailability : (volunteer?.effectiveAvailability || 'Available')
   const overrideReason = isFarhana ? farhanaState.overrideReason : 'None'
-  const tracksDisplay = isFarhana ? farhanaTracks.join(' • ') : (volunteer?.tracks || '0 tracks')
+  const tracksDisplay = isFarhana
+    ? farhanaTracks.join(' • ')
+    : (volunteer?.selectedTracks && volunteer.selectedTracks.length > 0
+        ? volunteer.selectedTracks.join(' • ')
+        : (volunteer?.tracks || '0 tracks'))
 
   return (
     <AdminLayout
@@ -130,8 +134,10 @@ export function AdminVolunteerAccountPage() {
 
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.volunteerTrackEligibility)}
-          className="auratio-admin-btn auratio-admin-btn--primary"
+          disabled={!isFarhana}
+          onClick={isFarhana ? () => navigate(portalRoutePaths.admin.volunteerTrackEligibility) : undefined}
+          className={`auratio-admin-btn ${isFarhana ? 'auratio-admin-btn--primary' : 'auratio-admin-btn--disabled'}`}
+          title={isFarhana ? undefined : 'Track management is available once volunteer completes account activation.'}
           style={{ width: '230px', height: '44px', fontSize: '14px', fontWeight: 600, marginTop: '30px' }}
         >
           Manage Track Eligibility
@@ -211,8 +217,10 @@ export function AdminVolunteerAccountPage() {
 
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.availabilityOverride)}
-          className="auratio-admin-btn auratio-admin-btn--primary"
+          disabled={!isFarhana}
+          onClick={isFarhana ? () => navigate(portalRoutePaths.admin.availabilityOverride) : undefined}
+          className={`auratio-admin-btn ${isFarhana ? 'auratio-admin-btn--primary' : 'auratio-admin-btn--disabled'}`}
+          title={isFarhana ? undefined : 'Availability override is available once volunteer completes account activation.'}
           style={{ width: '210px', height: '44px', fontSize: '14px', fontWeight: 600, marginTop: '28px' }}
         >
           Override Availability

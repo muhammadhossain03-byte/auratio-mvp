@@ -1,7 +1,11 @@
 import 'package:auratio_mobile/app/router/app_route_paths.dart';
+import 'package:auratio_mobile/features/onboarding/application/path_selection_controller.dart';
+import 'package:auratio_mobile/features/onboarding/domain/auratio_path.dart';
 import 'package:auratio_mobile/features/profile/presentation/screens/manage_paths_screen.dart';
 import 'package:auratio_mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:auratio_mobile/features/profile/presentation/screens/settings_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/auratio_test_harness.dart';
@@ -58,6 +62,12 @@ void main() {
       tester,
     ) async {
       final router = await pumpAuratioApp(tester);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MaterialApp)),
+      );
+      container
+          .read(selectedPathsProvider.notifier)
+          .setPaths(AuratioPath.values.toSet());
       await openAuratioRoute(
         tester,
         router,
@@ -169,6 +179,12 @@ void main() {
         expect(find.text('✓'), findsNWidgets(2));
 
         // Content Added
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(MaterialApp)),
+        );
+        container
+            .read(selectedPathsProvider.notifier)
+            .setPaths(AuratioPath.values.toSet());
         await openAuratioRoute(
           tester,
           router,

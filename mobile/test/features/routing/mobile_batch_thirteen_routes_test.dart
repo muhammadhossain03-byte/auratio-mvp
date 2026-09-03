@@ -1,8 +1,11 @@
 import 'package:auratio_mobile/app/router/app_route_paths.dart';
+import 'package:auratio_mobile/features/onboarding/application/path_selection_controller.dart';
+import 'package:auratio_mobile/features/onboarding/domain/auratio_path.dart';
 import 'package:auratio_mobile/features/profile/presentation/screens/manage_paths_screen.dart';
 import 'package:auratio_mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:auratio_mobile/features/profile/presentation/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/auratio_test_harness.dart';
@@ -41,6 +44,15 @@ void main() {
       tester,
     ) async {
       final router = await pumpAuratioApp(tester);
+      if (screen.path == AppRoutePaths.profileThreePaths ||
+          screen.path == AppRoutePaths.managePathsContentAdded) {
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(MaterialApp)),
+        );
+        container
+            .read(selectedPathsProvider.notifier)
+            .setPaths(AuratioPath.values.toSet());
+      }
       await openAuratioRoute(tester, router, screen.path, settle: false);
       await tester.pumpAndSettle();
 
@@ -333,14 +345,19 @@ void main() {
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-        // 2. Tapping Professional Presenting title / subtitle / card does NOT navigate
+        // 1. Tapping Public Speaking does NOT navigate
+        await tester.tap(find.text('Public Speaking'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
+        await tester.tap(find.text('Public Speaking'));
+        await tester.pumpAndSettle();
+
+        // 2. Tapping Professional Presenting does NOT navigate
         await tester.tap(find.text('Professional Presenting'));
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.managePaths);
-
-        await tester.tap(find.text('Five professional presentation modes'));
+        await tester.tap(find.text('Professional Presenting'));
         await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.managePaths);
 
         // 3. Tapping Content Creation checkbox does NOT navigate
         final cardRect = tester.getRect(
@@ -350,6 +367,11 @@ void main() {
         await tester.tapAt(checkboxCenter);
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.managePaths);
+        // Toggle Content Creation back off if checkbox tapped
+        if (find.text('✓').evaluate().length == 3) {
+          await tester.tapAt(checkboxCenter);
+          await tester.pumpAndSettle();
+        }
 
         // 4. Tapping Content Creation subtitle does NOT navigate
         await tester.tap(find.text('Three speaker-led content niches'));
@@ -362,10 +384,10 @@ void main() {
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-        // 6. ONLY tapping the "Content Creation" text affordance routes to content-added
+        // 6. ONLY tapping the "Content Creation" text affordance toggles Content Creation in draft
         await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
         await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        expect(find.text('✓'), findsNWidgets(3));
       },
     );
 
@@ -390,6 +412,12 @@ void main() {
       'Content Added (300:65): Content Creation title is interactive, but checkbox, subtitle, background, and other cards are non-interactive',
       (tester) async {
         final router = await pumpAuratioApp(tester);
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(MaterialApp)),
+        );
+        container
+            .read(selectedPathsProvider.notifier)
+            .setPaths(AuratioPath.values.toSet());
         await openAuratioRoute(
           tester,
           router,
@@ -402,11 +430,15 @@ void main() {
         await tester.tap(find.text('Public Speaking'));
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        await tester.tap(find.text('Public Speaking'));
+        await tester.pumpAndSettle();
 
         // 2. Tapping Professional Presenting does NOT navigate
         await tester.tap(find.text('Professional Presenting'));
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        await tester.tap(find.text('Professional Presenting'));
+        await tester.pumpAndSettle();
 
         // 3. Tapping Content Creation checkbox does NOT navigate
         final cardRect = tester.getRect(
@@ -416,6 +448,10 @@ void main() {
         await tester.tapAt(checkboxCenter);
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        if (find.text('✓').evaluate().length == 2) {
+          await tester.tapAt(checkboxCenter);
+          await tester.pumpAndSettle();
+        }
 
         // 4. Tapping Content Creation subtitle does NOT navigate
         await tester.tap(find.text('Three speaker-led content niches'));
@@ -428,10 +464,10 @@ void main() {
         await tester.pumpAndSettle();
         expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
 
-        // 6. ONLY tapping the "Content Creation" text affordance routes back to base manage-paths
+        // 6. ONLY tapping the "Content Creation" text affordance toggles Content Creation in draft
         await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
         await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.managePaths);
+        expect(find.text('✓'), findsNWidgets(2));
       },
     );
 
@@ -439,6 +475,12 @@ void main() {
       tester,
     ) async {
       final router = await pumpAuratioApp(tester);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MaterialApp)),
+      );
+      container
+          .read(selectedPathsProvider.notifier)
+          .setPaths(AuratioPath.values.toSet());
       await openAuratioRoute(
         tester,
         router,
@@ -459,6 +501,12 @@ void main() {
       'Manage Paths affordance routes to /profile/manage-paths/content-added',
       (tester) async {
         final router = await pumpAuratioApp(tester);
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(MaterialApp)),
+        );
+        container
+            .read(selectedPathsProvider.notifier)
+            .setPaths(AuratioPath.values.toSet());
         await openAuratioRoute(
           tester,
           router,

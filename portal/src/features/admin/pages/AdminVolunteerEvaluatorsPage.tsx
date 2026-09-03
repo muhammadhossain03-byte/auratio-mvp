@@ -88,6 +88,7 @@ export function AdminVolunteerEvaluatorsPage() {
           borderRadius: '16px',
           boxSizing: 'border-box',
           padding: '18px',
+          overflowY: 'auto',
         }}
       >
         {/* Table Headers */}

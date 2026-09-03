@@ -160,6 +160,7 @@ export interface AdminVolunteerItem {
   lifecycle: string
   actionLabel: string
   destinationPath: string
+  selectedTracks?: string[]
 }
 
 export const CANONICAL_VOLUNTEERS: AdminVolunteerItem[] = [
@@ -173,6 +174,7 @@ export const CANONICAL_VOLUNTEERS: AdminVolunteerItem[] = [
     lifecycle: 'Active',
     actionLabel: 'Open',
     destinationPath: '/admin/volunteers/farhana',
+    selectedTracks: ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch'],
   },
   {
     id: 'rakib',
@@ -222,26 +224,51 @@ export function resetAdminVolunteers(): void {
 export function addAdminVolunteer(params: {
   name: string
   email: string
-  trackCount: number
+  trackCount?: number
+  selectedTracks?: string[]
 }): AdminVolunteerItem {
   const slug = params.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `vol-${Date.now()}`
+  const selectedTracks = params.selectedTracks || ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch']
+  const count = params.selectedTracks ? params.selectedTracks.length : (params.trackCount || 1)
   const newItem: AdminVolunteerItem = {
     id: slug,
     name: params.name,
     email: params.email,
-    tracks: `${params.trackCount} track${params.trackCount === 1 ? '' : 's'}`,
+    tracks: `${count} track${count === 1 ? '' : 's'}`,
     effectiveAvailability: 'Available',
     activeAssignments: '0',
     lifecycle: 'Invited',
     actionLabel: 'Open',
     destinationPath: `/admin/volunteers/${slug}`,
+    selectedTracks: [...selectedTracks],
   }
   adminVolunteers = [...adminVolunteers, newItem]
   return newItem
 }
 
 export function getAdminVolunteerById(id: string): AdminVolunteerItem | undefined {
-  return adminVolunteers.find((v) => v.id === id) || (id === 'farhana' ? adminVolunteers.find((v) => v.id === 'farhana') : undefined)
+  const found = adminVolunteers.find((v) => v.id === id)
+  if (found) return found
+  if (id === 'farhana') return adminVolunteers.find((v) => v.id === 'farhana')
+  if (id) {
+    const formattedName = id
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+    return {
+      id,
+      name: formattedName || 'Custom Volunteer',
+      email: `${id}@auratio.org`,
+      tracks: '1 track',
+      effectiveAvailability: 'Available',
+      activeAssignments: '0',
+      lifecycle: 'Invited',
+      actionLabel: 'Open',
+      destinationPath: `/admin/volunteers/${id}`,
+      selectedTracks: ['Informative'],
+    }
+  }
+  return undefined
 }
 
 export const adminVolunteersList: AdminVolunteerItem[] = adminVolunteers
@@ -253,7 +280,7 @@ export interface AdminEventItem {
   location: string
   relevantPaths: string
   status: 'Published' | 'Draft'
-  actionLabel: string
+  actionLabel: 'View' | 'Edit'
   destinationPath: string
   organizer?: string
   description?: string
@@ -267,15 +294,15 @@ export interface AdminEventItem {
 export const CANONICAL_EVENTS: AdminEventItem[] = [
   {
     id: 'summit',
-    title: 'Public Speaking Summit',
-    date: 'Upcoming date',
+    title: 'Public Speaking Summit 2026',
+    date: '14-16 Nov 2026',
     location: 'Dhaka Division',
     relevantPaths: 'Public Speaking',
     status: 'Published',
-    actionLabel: 'Edit',
+    actionLabel: 'View',
     destinationPath: '/admin/events/editor?id=summit',
-    organizer: 'National Debate Federation Bangladesh',
-    description: 'National public speaking championship and workshop series for university and college speakers.',
+    organizer: 'Auratio Events Team',
+    description: 'National public speaking summit featuring keynote speeches, panel discussions, and competitive showcase rounds.',
     paths: {
       publicSpeaking: true,
       professionalPresenting: false,
@@ -329,7 +356,33 @@ export function resetAdminEvents(): void {
 }
 
 export function getAdminEventById(id: string): AdminEventItem | undefined {
-  return adminEvents.find((e) => e.id === id) || (id === 'draft' ? adminEvents[2] : undefined)
+  const found = adminEvents.find((e) => e.id === id)
+  if (found) return found
+  if (id === 'draft') return adminEvents[2]
+  if (id) {
+    const formattedTitle = id
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+    return {
+      id,
+      title: formattedTitle || 'Custom Event',
+      date: 'Upcoming date',
+      location: 'Dhaka Division',
+      relevantPaths: 'Public Speaking',
+      status: 'Draft',
+      actionLabel: 'Edit',
+      destinationPath: `/admin/events/${id}`,
+      organizer: 'Auratio Community',
+      description: 'Custom parameterized event.',
+      paths: {
+        publicSpeaking: true,
+        professionalPresenting: false,
+        contentCreation: false,
+      },
+    }
+  }
+  return undefined
 }
 
 export function saveAdminEvent(event: {

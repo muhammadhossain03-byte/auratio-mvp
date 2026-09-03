@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getInviteVolunteerTrackDraft, addAdminVolunteer } from '../data/mockAdminData'
+import { getInviteVolunteerTrackDraft, addAdminVolunteer, resetInviteVolunteerTrackDraft } from '../data/mockAdminData'
 
 export function AdminInviteVolunteerPage() {
   const navigate = useNavigate()
@@ -46,13 +46,15 @@ export function AdminInviteVolunteerPage() {
     addAdminVolunteer({
       name: trimmedName,
       email: trimmedEmail,
-      trackCount: inviteTracks.length,
+      selectedTracks: [...inviteTracks],
     })
 
+    resetInviteVolunteerTrackDraft()
     navigate(portalRoutePaths.admin.volunteers)
   }
 
   function handleCancel() {
+    resetInviteVolunteerTrackDraft()
     navigate(portalRoutePaths.admin.volunteers)
   }
 

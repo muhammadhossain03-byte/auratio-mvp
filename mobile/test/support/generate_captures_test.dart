@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:auratio_mobile/app/app.dart';
 import 'package:auratio_mobile/app/router/app_route_paths.dart';
+import 'package:auratio_mobile/features/onboarding/application/path_selection_controller.dart';
+import 'package:auratio_mobile/features/onboarding/domain/auratio_path.dart';
 import 'package:auratio_mobile/features/shared/presentation/widgets/auratio_brand_lockup.dart';
 import 'package:auratio_mobile/foundation/design_system/auratio_design_system.dart';
 import 'package:flutter/material.dart';
@@ -123,6 +125,16 @@ void main() {
 
       final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
       final router = app.routerConfig! as GoRouter;
+
+      if (item.$1 == 'manage_paths_content_added' ||
+          item.$1 == 'profile_three_paths') {
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(MaterialApp)),
+        );
+        container
+            .read(selectedPathsProvider.notifier)
+            .setPaths(AuratioPath.values.toSet());
+      }
 
       router.go(item.$2);
       if (item.$1 == 'pending_moderation') {

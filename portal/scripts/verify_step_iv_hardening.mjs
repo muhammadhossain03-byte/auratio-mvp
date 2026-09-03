@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join, resolve } from 'node:path'
 
@@ -316,12 +316,37 @@ async function run() {
     bodyText = await getBodyText()
     if (!bodyText.includes('Tanvir Ahmed')) throw new Error('Expected Tanvir Ahmed on account page')
     if (!bodyText.includes('Invited')) throw new Error('Expected Invited status on Tanvir account')
+    if (!bodyText.includes('Informative • Persuasive • Business Pitch / Sales Pitch')) {
+      throw new Error('Expected exact authorized tracks displayed on Tanvir account')
+    }
 
-    // Navigate back to Volunteers via sidebar and verify Farhana canonical account is untouched
+    // Verify track management and availability override buttons are disabled on custom/invited volunteer
+    const trackMgmtDisabled = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Manage Track Eligibility'));
+        return btn ? btn.disabled : false;
+      })()`,
+    })
+    if (!trackMgmtDisabled.result.value) throw new Error('Expected Manage Track Eligibility to be disabled for non-Farhana')
+
+    const availOverrideDisabled = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Override Availability'));
+        return btn ? btn.disabled : false;
+      })()`,
+    })
+    if (!availOverrideDisabled.result.value) throw new Error('Expected Override Availability to be disabled for non-Farhana')
+
+    // Navigate back to Volunteers via sidebar and capture runtime screenshot of 5-row directory
     await clickByText('button.auratio-admin-nav-item', 'Dashboard')
     await new Promise((r) => setTimeout(r, 300))
     await clickByText('button.auratio-admin-nav-item', 'Volunteers')
-    await new Promise((r) => setTimeout(r, 300))
+    await new Promise((r) => setTimeout(r, 400))
+
+    const volScreenshot = await sendCdp(ws, 'Page.captureScreenshot', { format: 'png' })
+    writeFileSync(join(process.cwd(), 'runtime_volunteer_directory_overflow.png'), Buffer.from(volScreenshot.data, 'base64'))
+
+    // Verify Farhana canonical account is untouched
     await sendCdp(ws, 'Runtime.evaluate', {
       expression: `(() => {
         const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
@@ -410,6 +435,10 @@ async function run() {
       throw new Error('Expected New National Meetup QA in event directory')
     }
 
+    // Capture runtime screenshot of 4-row event directory with internal scroll
+    const eventScreenshot = await sendCdp(ws, 'Page.captureScreenshot', { format: 'png' })
+    writeFileSync(join(process.cwd(), 'runtime_event_directory_overflow.png'), Buffer.from(eventScreenshot.data, 'base64'))
+
     // Verify Publish and Delete buttons are presentation-only per live Figma
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events/editor?id=draft` })
     await new Promise((r) => setTimeout(r, 500))
@@ -465,7 +494,7 @@ async function run() {
     bodyText = await getBodyText()
     if (!bodyText.includes('Kazi Anis')) throw new Error('Expected Kazi Anis in admin accounts')
 
-    // Verify Kazi Anis is role Admin, NOT Super Admin
+    // Verify Kazi Anis is role Admin, NOT Super Admin, and has status Invited
     const kaziRole = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `(() => {
         const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
@@ -475,6 +504,84 @@ async function run() {
     })
     if (!kaziRole.result.value.includes('Admin')) throw new Error('Expected Kazi Anis to have Admin role')
     if (kaziRole.result.value.includes('Super Admin')) throw new Error('Invited admin must NOT have Super Admin role')
+    if (!kaziRole.result.value.includes('Invited')) throw new Error('Expected Kazi Anis to have Invited status upon invite')
+
+    // Open Kazi Anis account via SPA navigation
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
+        const kaziRow = rows.find(r => r.innerText.includes('Kazi Anis'));
+        if (kaziRow) {
+          const btn = kaziRow.querySelector('button');
+          if (btn) btn.click();
+        }
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 400))
+    if (await getPathname() !== '/super-admin/admin-accounts/kazi-anis') throw new Error('Expected /super-admin/admin-accounts/kazi-anis')
+    bodyText = await getBodyText()
+    if (!bodyText.includes('Invited')) throw new Error('Expected Invited status pill on Kazi Anis account')
+
+    // Edit Kazi Anis details and Save
+    await setInputValue('input[aria-label="Display name"]', 'Kazi Anis Updated')
+    await setInputValue('input[aria-label="Email / auth identity"]', 'kazi.updated@auratio.org')
+    await clickByText('button.auratio-admin-btn--primary', 'Save Changes')
+    if (await getPathname() !== '/super-admin/admin-accounts') throw new Error('Expected navigate back to accounts on Save')
+    bodyText = await getBodyText()
+    if (!bodyText.includes('Kazi Anis Updated') || !bodyText.includes('kazi.updated@auratio.org')) {
+      throw new Error('Expected updated Kazi Anis details in accounts directory')
+    }
+
+    // Verify Nadia account was NOT mutated
+    const nadiaState = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__getNadiaAdminAccount && window.__getNadiaAdminAccount()',
+      returnByValue: true,
+    })
+    if (nadiaState.result.value.displayName !== 'Nadia Rahman' || nadiaState.result.value.email !== 'nadia@auratio.org') {
+      throw new Error('Nadia account must NEVER be mutated by custom admin changes')
+    }
+
+    // Reopen Kazi Anis via SPA row button, click Deactivate, and verify parameterized deactivation flow
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
+        const kaziRow = rows.find(r => r.innerText.includes('Kazi Anis Updated'));
+        if (kaziRow) {
+          const btn = kaziRow.querySelector('button');
+          if (btn) btn.click();
+        }
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 400))
+    await clickByText('button.auratio-admin-btn--secondary', 'Deactivate')
+    if (await getPathname() !== '/super-admin/admin-accounts/kazi-anis/deactivate') {
+      throw new Error(`Expected /super-admin/admin-accounts/kazi-anis/deactivate, got ${await getPathname()}`)
+    }
+    bodyText = await getBodyText()
+    if (!bodyText.includes('Deactivate Kazi Anis Updated?') || !bodyText.includes('kazi.updated@auratio.org • Admin')) {
+      throw new Error('Expected deactivation screen to target Kazi Anis, not Nadia')
+    }
+
+    // Confirm deactivation
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Deactivation')
+    if (await getPathname() !== '/super-admin/admin-accounts') throw new Error('Expected navigate to accounts after deactivation')
+    bodyText = await getBodyText()
+
+    const kaziDeactivatedRow = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
+        const kaziRow = rows.find(r => r.innerText.includes('Kazi Anis Updated'));
+        return kaziRow ? kaziRow.innerText : '';
+      })()`,
+    })
+    if (!kaziDeactivatedRow.result.value.includes('Deactivated')) throw new Error('Expected Kazi Anis to be Deactivated')
+
+    // Verify Nadia remains Active
+    const nadiaAfter = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__getNadiaAdminAccount && window.__getNadiaAdminAccount()',
+      returnByValue: true,
+    })
+    if (nadiaAfter.result.value.status === 'Deactivated') throw new Error('Nadia must remain Active')
 
     // Verify Root account remains Protected and Active
     const rootRow = await sendCdp(ws, 'Runtime.evaluate', {
@@ -487,17 +594,17 @@ async function run() {
     if (!rootRow.result.value.includes('Super Admin') || !rootRow.result.value.includes('Protected') || !rootRow.result.value.includes('Active')) {
       throw new Error('Expected Root account to remain Super Admin, Protected, and Active')
     }
-    console.log('  ✓ Super Admin Invite Admin validation, mock provisioning, and root protection passed.')
+    console.log('  ✓ Super Admin Invite Admin validation, mock provisioning, entity isolation, and root protection passed.')
 
-    // 6. COMPANION PARAMETERIZED ROUTES
-    console.log('\n[6/6] Testing Companion Parameterized Routes...')
+    // 6. COMPANION PARAMETERIZED ROUTES & EXACT ENTITY IDENTITIES
+    console.log('\n[6/6] Testing Companion Parameterized Routes & Exact Entity Identities...')
     const companionRoutes = [
-      { path: '/admin/requests/req-9999', expectedLabel: 'Request Details' },
-      { path: '/admin/evaluations/sub-9999', expectedLabel: 'Evaluation Record' },
-      { path: '/admin/moderation/sub-9999', expectedLabel: 'Moderation Review' },
-      { path: '/admin/volunteers/custom-vol', expectedLabel: 'Volunteer Account' },
-      { path: '/admin/events/custom-ev', expectedLabel: 'Event information' },
-      { path: '/super-admin/admin-accounts/custom-admin', expectedLabel: 'Admin Account' },
+      { path: '/admin/requests/req-9999', expectedLabel: 'Request Details', exactId: 'REQ-9999' },
+      { path: '/admin/evaluations/sub-9999', expectedLabel: 'Evaluation Record', exactId: 'SUB-9999' },
+      { path: '/admin/moderation/sub-9999', expectedLabel: 'Moderation Review', exactId: 'SUB-9999' },
+      { path: '/admin/volunteers/custom-vol', expectedLabel: 'Volunteer Account', exactId: 'Custom Vol' },
+      { path: '/admin/events/custom-ev', expectedLabel: 'Event information', inputSelector: '#event-title', exactId: 'Custom Ev' },
+      { path: '/super-admin/admin-accounts/custom-admin', expectedLabel: 'Admin Account', exactId: 'Custom Admin' },
     ]
 
     for (const route of companionRoutes) {
@@ -507,7 +614,17 @@ async function run() {
       if (!bodyText.toLowerCase().includes(route.expectedLabel.toLowerCase())) {
         throw new Error(`Companion route ${route.path} failed to render expected label "${route.expectedLabel}"`)
       }
-      console.log(`  ✓ ${route.path} successfully resolved companion screen.`)
+      if (route.inputSelector) {
+        const inputVal = await sendCdp(ws, 'Runtime.evaluate', {
+          expression: `document.querySelector('${route.inputSelector}')?.value || ''`,
+        })
+        if (!inputVal.result.value.includes(route.exactId)) {
+          throw new Error(`Companion route ${route.path} input "${route.inputSelector}" failed to render "${route.exactId}", got "${inputVal.result.value}"`)
+        }
+      } else if (route.exactId && !bodyText.includes(route.exactId)) {
+        throw new Error(`Companion route ${route.path} failed to render exact entity ID "${route.exactId}"`)
+      }
+      console.log(`  ✓ ${route.path} successfully resolved companion screen with exact identity "${route.exactId}".`)
     }
 
     console.log('\n==================================================')

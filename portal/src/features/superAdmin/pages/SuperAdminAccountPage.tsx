@@ -2,27 +2,27 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getNadiaAdminAccount, updateNadiaAdminAccount, getAdminAccountsList } from '../data/mockSuperAdminData'
+import { getAdminAccountById, updateAdminAccount } from '../data/mockSuperAdminData'
 
 export function SuperAdminAccountPage() {
   const navigate = useNavigate()
   const { adminId } = useParams<{ adminId?: string }>()
-  const isNadia = !adminId || adminId === 'nadia'
-  const nadiaAccount = getNadiaAdminAccount()
-  const customAccount = !isNadia ? getAdminAccountsList().find((a) => a.id === adminId) : undefined
+  const resolvedId = adminId || 'nadia'
+  const isNadia = resolvedId === 'nadia'
+  const account = getAdminAccountById(resolvedId)
 
   const [displayName, setDisplayName] = useState(
-    isNadia ? nadiaAccount.displayName : (customAccount?.name || 'Admin User'),
+    account?.name || (isNadia ? 'Nadia Rahman' : 'Admin User'),
   )
   const [email, setEmail] = useState(
-    isNadia ? nadiaAccount.email : (customAccount?.email || 'admin@auratio.org'),
+    account?.email || (isNadia ? 'nadia@auratio.org' : 'admin@auratio.org'),
   )
-  const deactivated = isNadia ? nadiaAccount.status === 'Deactivated' : (customAccount?.status === 'Deactivated')
+  const status = account?.status || 'Active'
+  const deactivated = status === 'Deactivated'
+  const isInvited = status === 'Invited'
 
   function handleSave() {
-    if (isNadia) {
-      updateNadiaAdminAccount({ displayName, email })
-    }
+    updateAdminAccount(resolvedId, { displayName, email })
     navigate(portalRoutePaths.superAdmin.adminAccounts)
   }
 
@@ -31,7 +31,11 @@ export function SuperAdminAccountPage() {
   }
 
   function handleDeactivate() {
-    navigate(portalRoutePaths.superAdmin.confirmAdminDeactivation)
+    if (isNadia) {
+      navigate(portalRoutePaths.superAdmin.confirmAdminDeactivation)
+    } else {
+      navigate(`/super-admin/admin-accounts/${resolvedId}/deactivate`)
+    }
   }
 
   return (
@@ -43,7 +47,7 @@ export function SuperAdminAccountPage() {
         className="auratio-admin-page-title"
         style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
       >
-        {isNadia ? nadiaAccount.displayName : (customAccount?.name || 'Admin Account')}
+        {account?.name || (isNadia ? 'Nadia Rahman' : 'Admin Account')}
       </h2>
       <p
         className="auratio-admin-page-subtitle"
@@ -60,17 +64,17 @@ export function SuperAdminAccountPage() {
           top: '36px',
           width: '130px',
           height: '34px',
-          backgroundColor: deactivated ? '#EEF2F7' : '#EAF7F0',
+          backgroundColor: deactivated ? '#EEF2F7' : isInvited ? '#FFF7E8' : '#EAF7F0',
           borderRadius: '17px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontSize: '12px',
           fontWeight: 600,
-          color: deactivated ? '#6B788A' : '#1F6B48',
+          color: deactivated ? '#6B788A' : isInvited ? '#925F12' : '#1F6B48',
         }}
       >
-        {deactivated ? 'Deactivated' : 'Active'}
+        {status}
       </div>
 
       {/* Left Card: Account details */}

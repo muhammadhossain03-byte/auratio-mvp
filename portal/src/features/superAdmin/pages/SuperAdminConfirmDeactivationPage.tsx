@@ -1,21 +1,28 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { deactivateNadia, getNadiaAdminAccount } from '../data/mockSuperAdminData'
+import { deactivateAdminAccount, getAdminAccountById } from '../data/mockSuperAdminData'
 
 export function SuperAdminConfirmDeactivationPage() {
   const navigate = useNavigate()
-  const nadiaAccount = getNadiaAdminAccount()
+  const { adminId } = useParams<{ adminId?: string }>()
+  const resolvedId = adminId || 'nadia'
+  const isNadia = resolvedId === 'nadia'
+  const account = getAdminAccountById(resolvedId)
   const [reason, setReason] = useState('')
 
   function handleConfirm() {
-    deactivateNadia()
+    deactivateAdminAccount(resolvedId)
     navigate(portalRoutePaths.superAdmin.adminAccounts)
   }
 
   function handleCancel() {
-    navigate(portalRoutePaths.superAdmin.adminAccount)
+    if (isNadia) {
+      navigate(portalRoutePaths.superAdmin.adminAccount)
+    } else {
+      navigate(`/super-admin/admin-accounts/${resolvedId}`)
+    }
   }
 
   return (
@@ -53,7 +60,7 @@ export function SuperAdminConfirmDeactivationPage() {
         }}
       >
         <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: '32px', color: '#111827' }}>
-          Deactivate {nadiaAccount.displayName}?
+          Deactivate {account?.name || 'Admin'}?
         </div>
         <div
           style={{
@@ -64,7 +71,7 @@ export function SuperAdminConfirmDeactivationPage() {
             color: '#4E5968',
           }}
         >
-          {nadiaAccount.email} • Admin
+          {account?.email || 'admin@auratio.org'} • Admin
         </div>
 
         {/* Impact Box */}

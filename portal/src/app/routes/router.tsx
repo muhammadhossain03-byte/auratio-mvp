@@ -319,6 +319,10 @@ export const router = createBrowserRouter([
     element: <SuperAdminConfirmDeactivationPage />,
   },
   {
+    path: '/super-admin/admin-accounts/:adminId/deactivate',
+    element: <SuperAdminConfirmDeactivationPage />,
+  },
+  {
     path: portalRoutePaths.superAdmin.protectedRootAccount,
     element: <SuperAdminProtectedRootPage />,
   },

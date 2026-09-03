@@ -43,9 +43,6 @@ class _ManagePathsScreenState extends ConsumerState<ManagePathsScreen> {
     super.initState();
     final saved = ref.read(selectedPathsProvider);
     _draftSelection = Set<AuratioPath>.from(saved);
-    if (widget.isContentAdded) {
-      _draftSelection.add(AuratioPath.contentCreation);
-    }
   }
 
   void _togglePath(AuratioPath path) {
@@ -63,7 +60,7 @@ class _ManagePathsScreenState extends ConsumerState<ManagePathsScreen> {
       return;
     }
     ref.read(selectedPathsProvider.notifier).setPaths(_draftSelection);
-    if (_draftSelection.length >= 3 || widget.isContentAdded) {
+    if (_draftSelection.length >= 3) {
       context.go(AppRoutePaths.profileThreePaths);
     } else {
       context.go(AppRoutePaths.profile);
@@ -148,11 +145,6 @@ class _ManagePathsScreenState extends ConsumerState<ManagePathsScreen> {
                             _togglePath(AuratioPath.contentCreation),
                         onTitleTap: () {
                           _togglePath(AuratioPath.contentCreation);
-                          if (widget.isContentAdded) {
-                            context.push(AppRoutePaths.managePaths);
-                          } else {
-                            context.push(AppRoutePaths.managePathsContentAdded);
-                          }
                         },
                       ),
 

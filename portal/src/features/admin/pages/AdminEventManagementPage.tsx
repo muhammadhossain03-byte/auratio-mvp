@@ -77,6 +77,7 @@ export function AdminEventManagementPage() {
           borderRadius: '16px',
           boxSizing: 'border-box',
           padding: '16px 20px',
+          overflowY: 'auto',
         }}
       >
         {/* Headers */}

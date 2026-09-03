@@ -34,7 +34,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final savedPaths = ref.watch(selectedPathsProvider);
-    final isThreePaths = showThreePaths || savedPaths.length >= 3;
+    final isThreePaths = savedPaths.length >= 3;
     final orderedPaths = AuratioPath.values.where(savedPaths.contains).toList();
     return Scaffold(
       key: screenKey,

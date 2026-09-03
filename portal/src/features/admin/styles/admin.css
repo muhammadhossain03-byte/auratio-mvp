@@ -367,6 +367,14 @@
   line-height: 16px;
 }
 
+.auratio-admin-status-pill--invited {
+  background-color: #FFF7E8;
+  color: #925F12;
+  border-radius: 17px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
 .auratio-admin-status-pill--submitted {
   background-color: #F3F8FE;
   color: #256EA5;

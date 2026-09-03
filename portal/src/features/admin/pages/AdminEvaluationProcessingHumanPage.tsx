@@ -1,9 +1,11 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { AdminLayout } from '../components/AdminLayout'
 
 export function AdminEvaluationProcessingHumanPage() {
   const navigate = useNavigate()
+  const { submissionId } = useParams<{ submissionId?: string }>()
+  const displayId = submissionId ? submissionId.toUpperCase() : 'SUB-8834'
 
   return (
     <AdminLayout
@@ -16,7 +18,7 @@ export function AdminEvaluationProcessingHumanPage() {
         className="auratio-admin-page-title"
         style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
       >
-        SUB-8834 — Evaluation Record
+        {displayId} — Evaluation Record
       </h2>
 
       {/* Processing Status Pill */}
