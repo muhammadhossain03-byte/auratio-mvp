@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { getAdminEventById, saveAdminEvent } from '../data/mockAdminData'
@@ -25,6 +25,10 @@ export function AdminEventEditorPage() {
     professionalPresenting: Boolean(existing?.paths?.professionalPresenting),
     contentCreation: Boolean(existing?.paths?.contentCreation),
   }))
+
+  if (eventId && !existing) {
+    return <Navigate to={portalRoutePaths.admin.events} replace />
+  }
 
   const togglePath = (key: 'publicSpeaking' | 'professionalPresenting' | 'contentCreation') => {
     setPaths((prev) => ({ ...prev, [key]: !prev[key] }))

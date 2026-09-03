@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { deactivateAdminAccount, getAdminAccountById } from '../data/mockSuperAdminData'
@@ -11,6 +11,14 @@ export function SuperAdminConfirmDeactivationPage() {
   const isNadia = resolvedId === 'nadia'
   const account = getAdminAccountById(resolvedId)
   const [reason, setReason] = useState('')
+
+  if (resolvedId === 'root') {
+    return <Navigate to={portalRoutePaths.superAdmin.protectedRootAccount} replace />
+  }
+
+  if (!isNadia && !account) {
+    return <Navigate to={portalRoutePaths.superAdmin.adminAccounts} replace />
+  }
 
   function handleConfirm() {
     deactivateAdminAccount(resolvedId)

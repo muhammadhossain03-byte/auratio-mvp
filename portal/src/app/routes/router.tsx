@@ -211,10 +211,6 @@ export const router = createBrowserRouter([
     element: <AdminRequestRedirectedHumanPage />,
   },
   {
-    path: '/admin/requests/:requestId',
-    element: <AdminRequestDetailsRoutingPage />,
-  },
-  {
     path: portalRoutePaths.admin.evaluations,
     element: <AdminEvaluationRecordsPage />,
   },
@@ -225,10 +221,6 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.admin.evaluationApprovedAi,
     element: <AdminEvaluationApprovedAiPage />,
-  },
-  {
-    path: '/admin/evaluations/:submissionId',
-    element: <AdminEvaluationProcessingHumanPage />,
   },
   {
     path: portalRoutePaths.admin.moderation,
@@ -249,10 +241,6 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.admin.requestReReview,
     element: <AdminRequestReReviewPage />,
-  },
-  {
-    path: '/admin/moderation/:submissionId',
-    element: <AdminModerationReviewPage />,
   },
   {
     path: portalRoutePaths.admin.volunteers,

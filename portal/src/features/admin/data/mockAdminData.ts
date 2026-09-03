@@ -211,14 +211,39 @@ export const CANONICAL_VOLUNTEERS: AdminVolunteerItem[] = [
   },
 ]
 
-let adminVolunteers: AdminVolunteerItem[] = [...CANONICAL_VOLUNTEERS]
+const VOLUNTEERS_STORAGE_KEY = 'auratio_extra_volunteers'
+
+function loadExtraVolunteers(): AdminVolunteerItem[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.sessionStorage?.getItem(VOLUNTEERS_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return []
+}
+
+function saveExtraVolunteers(items: AdminVolunteerItem[]): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage?.setItem(VOLUNTEERS_STORAGE_KEY, JSON.stringify(items))
+  } catch {}
+}
+
+let adminVolunteers: AdminVolunteerItem[] = [...CANONICAL_VOLUNTEERS, ...loadExtraVolunteers()]
 
 export function getAdminVolunteersList(): AdminVolunteerItem[] {
+  const extra = loadExtraVolunteers()
+  adminVolunteers = [...CANONICAL_VOLUNTEERS, ...extra]
   return [...adminVolunteers]
 }
 
 export function resetAdminVolunteers(): void {
   adminVolunteers = [...CANONICAL_VOLUNTEERS]
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.removeItem(VOLUNTEERS_STORAGE_KEY)
+    } catch {}
+  }
 }
 
 export function addAdminVolunteer(params: {
@@ -242,33 +267,15 @@ export function addAdminVolunteer(params: {
     destinationPath: `/admin/volunteers/${slug}`,
     selectedTracks: [...selectedTracks],
   }
-  adminVolunteers = [...adminVolunteers, newItem]
+  const extra = loadExtraVolunteers()
+  saveExtraVolunteers([...extra, newItem])
+  adminVolunteers = [...CANONICAL_VOLUNTEERS, ...extra, newItem]
   return newItem
 }
 
 export function getAdminVolunteerById(id: string): AdminVolunteerItem | undefined {
-  const found = adminVolunteers.find((v) => v.id === id)
-  if (found) return found
-  if (id === 'farhana') return adminVolunteers.find((v) => v.id === 'farhana')
-  if (id) {
-    const formattedName = id
-      .split('-')
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ')
-    return {
-      id,
-      name: formattedName || 'Custom Volunteer',
-      email: `${id}@auratio.org`,
-      tracks: '1 track',
-      effectiveAvailability: 'Available',
-      activeAssignments: '0',
-      lifecycle: 'Invited',
-      actionLabel: 'Open',
-      destinationPath: `/admin/volunteers/${id}`,
-      selectedTracks: ['Informative'],
-    }
-  }
-  return undefined
+  const all = getAdminVolunteersList()
+  return all.find((v) => v.id === id) || (id === 'farhana' ? all.find((v) => v.id === 'farhana') : undefined)
 }
 
 export const adminVolunteersList: AdminVolunteerItem[] = adminVolunteers
@@ -294,15 +301,15 @@ export interface AdminEventItem {
 export const CANONICAL_EVENTS: AdminEventItem[] = [
   {
     id: 'summit',
-    title: 'Public Speaking Summit 2026',
-    date: '14-16 Nov 2026',
+    title: 'Public Speaking Summit',
+    date: 'Upcoming date',
     location: 'Dhaka Division',
     relevantPaths: 'Public Speaking',
     status: 'Published',
-    actionLabel: 'View',
+    actionLabel: 'Edit',
     destinationPath: '/admin/events/editor?id=summit',
-    organizer: 'Auratio Events Team',
-    description: 'National public speaking summit featuring keynote speeches, panel discussions, and competitive showcase rounds.',
+    organizer: 'National Debate Federation Bangladesh',
+    description: 'National public speaking championship and workshop series for university and college speakers.',
     paths: {
       publicSpeaking: true,
       professionalPresenting: false,
@@ -345,44 +352,43 @@ export const CANONICAL_EVENTS: AdminEventItem[] = [
   },
 ]
 
-let adminEvents: AdminEventItem[] = [...CANONICAL_EVENTS]
+const EVENTS_STORAGE_KEY = 'auratio_extra_events'
+
+function loadEvents(): AdminEventItem[] {
+  if (typeof window === 'undefined') return CANONICAL_EVENTS
+  try {
+    const raw = window.sessionStorage?.getItem(EVENTS_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return CANONICAL_EVENTS
+}
+
+function saveEvents(items: AdminEventItem[]): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage?.setItem(EVENTS_STORAGE_KEY, JSON.stringify(items))
+  } catch {}
+}
+
+let adminEvents: AdminEventItem[] = loadEvents()
 
 export function getAdminEventsList(): AdminEventItem[] {
+  adminEvents = loadEvents()
   return [...adminEvents]
 }
 
 export function resetAdminEvents(): void {
   adminEvents = [...CANONICAL_EVENTS]
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.removeItem(EVENTS_STORAGE_KEY)
+    } catch {}
+  }
 }
 
 export function getAdminEventById(id: string): AdminEventItem | undefined {
-  const found = adminEvents.find((e) => e.id === id)
-  if (found) return found
-  if (id === 'draft') return adminEvents[2]
-  if (id) {
-    const formattedTitle = id
-      .split('-')
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ')
-    return {
-      id,
-      title: formattedTitle || 'Custom Event',
-      date: 'Upcoming date',
-      location: 'Dhaka Division',
-      relevantPaths: 'Public Speaking',
-      status: 'Draft',
-      actionLabel: 'Edit',
-      destinationPath: `/admin/events/${id}`,
-      organizer: 'Auratio Community',
-      description: 'Custom parameterized event.',
-      paths: {
-        publicSpeaking: true,
-        professionalPresenting: false,
-        contentCreation: false,
-      },
-    }
-  }
-  return undefined
+  const all = getAdminEventsList()
+  return all.find((e) => e.id === id) || (id === 'draft' ? all[2] : undefined)
 }
 
 export function saveAdminEvent(event: {
@@ -404,8 +410,9 @@ export function saveAdminEvent(event: {
   if (event.paths.contentCreation) pathLabels.push('Content Creation')
   const relevantPaths = pathLabels.join(', ') || 'None selected'
 
+  const currentEvents = [...getAdminEventsList()]
   const eventId = event.id || `event-${Date.now()}`
-  const existingIdx = adminEvents.findIndex((e) => e.id === eventId)
+  const existingIdx = currentEvents.findIndex((e) => e.id === eventId)
 
   const savedItem: AdminEventItem = {
     id: eventId,
@@ -422,11 +429,12 @@ export function saveAdminEvent(event: {
   }
 
   if (existingIdx >= 0) {
-    adminEvents[existingIdx] = savedItem
+    currentEvents[existingIdx] = savedItem
   } else {
-    adminEvents = [savedItem, ...adminEvents]
+    currentEvents.push(savedItem)
   }
-
+  saveEvents(currentEvents)
+  adminEvents = currentEvents
   return savedItem
 }
 
@@ -627,4 +635,3 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __saveAdminEvent: typeof saveAdminEvent }).__saveAdminEvent = saveAdminEvent
   ;(window as unknown as { __addAdminVolunteer: typeof addAdminVolunteer }).__addAdminVolunteer = addAdminVolunteer
 }
-

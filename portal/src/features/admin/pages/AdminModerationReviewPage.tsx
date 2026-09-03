@@ -1,24 +1,22 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 
 export function AdminModerationReviewPage() {
   const navigate = useNavigate()
-  const { submissionId } = useParams<{ submissionId?: string }>()
-  const displayId = submissionId ? submissionId.toUpperCase() : 'SUB-8821'
 
   return (
     <AdminLayout
-      ariaLabel="Moderation Review"
+      ariaLabel="Admin Moderation Review"
       topbarTitle="Moderation Review"
       activeNav="moderation"
-      topbarRightVariant="pill"
+      topbarRightVariant="avatar"
     >
       <h2
         className="auratio-admin-page-title"
         style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
       >
-        {displayId} — Moderation Review
+        SUB-8821 — Moderation Review
       </h2>
       <p
         className="auratio-admin-page-subtitle"

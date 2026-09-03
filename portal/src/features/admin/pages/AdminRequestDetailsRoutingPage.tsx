@@ -1,11 +1,9 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { AdminLayout } from '../components/AdminLayout'
 
 export function AdminRequestDetailsRoutingPage() {
   const navigate = useNavigate()
-  const { requestId } = useParams<{ requestId?: string }>()
-  const displayId = requestId ? requestId.toUpperCase() : 'REQ-1042'
 
   return (
     <AdminLayout
@@ -18,7 +16,7 @@ export function AdminRequestDetailsRoutingPage() {
         className="auratio-admin-page-title"
         style={{ top: '32px', fontSize: '26px', lineHeight: '34px', fontWeight: 700 }}
       >
-        {displayId}
+        REQ-1042
       </h2>
 
       {/* Eligible Status Pill */}

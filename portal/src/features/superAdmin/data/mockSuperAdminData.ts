@@ -47,9 +47,29 @@ export function deactivateNadia(): void {
   nadiaProfile.status = 'Deactivated'
 }
 
-let extraAdminAccounts: SuperAdminAccountItem[] = []
+const SESSION_STORAGE_KEY = 'auratio_extra_admin_accounts'
+
+function loadExtraAdminAccounts(): SuperAdminAccountItem[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.sessionStorage?.getItem(SESSION_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return []
+}
+
+function saveExtraAdminAccounts(accounts: SuperAdminAccountItem[]): void {
+  extraAdminAccounts = accounts
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage?.setItem(SESSION_STORAGE_KEY, JSON.stringify(accounts))
+  } catch {}
+}
+
+let extraAdminAccounts: SuperAdminAccountItem[] = loadExtraAdminAccounts()
 
 export function getAdminAccountsList(): SuperAdminAccountItem[] {
+  extraAdminAccounts = loadExtraAdminAccounts()
   return [
     {
       id: 'root',
@@ -90,27 +110,7 @@ export function getAdminAccountsList(): SuperAdminAccountItem[] {
 
 export function getAdminAccountById(id: string): SuperAdminAccountItem | undefined {
   const all = getAdminAccountsList()
-  const found = all.find((a) => a.id === id)
-  if (found) return found
-  if (id === 'nadia') return all.find((a) => a.id === 'nadia')
-  if (id && id !== 'root') {
-    const formattedName = id
-      .split('-')
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ')
-    return {
-      id,
-      name: formattedName || 'Admin User',
-      email: `${id}@auratio.org`,
-      accountType: 'Admin',
-      status: 'Active',
-      protection: '—',
-      isRoot: false,
-      actionLabel: 'Open',
-      destinationPath: `/super-admin/admin-accounts/${id}`,
-    }
-  }
-  return undefined
+  return all.find((a) => a.id === id) || (id === 'nadia' ? all.find((a) => a.id === 'nadia') : undefined)
 }
 
 export function updateAdminAccount(id: string, updates: { displayName?: string; email?: string }): void {
@@ -130,6 +130,7 @@ export function updateAdminAccount(id: string, updates: { displayName?: string; 
     if (updates.email !== undefined) {
       custom.email = updates.email
     }
+    saveExtraAdminAccounts([...extraAdminAccounts])
   }
 }
 
@@ -145,6 +146,7 @@ export function deactivateAdminAccount(id: string): void {
   const custom = extraAdminAccounts.find((a) => a.id === id)
   if (custom) {
     custom.status = 'Deactivated'
+    saveExtraAdminAccounts([...extraAdminAccounts])
   }
 }
 
@@ -161,13 +163,18 @@ export function inviteAdminAccount(params: { fullName: string; email: string }):
     actionLabel: 'Open',
     destinationPath: `/super-admin/admin-accounts/${slug}`,
   }
-  extraAdminAccounts = [...extraAdminAccounts, newAccount]
+  saveExtraAdminAccounts([...extraAdminAccounts, newAccount])
   return newAccount
 }
 
 export function resetSuperAdminState(): void {
   nadiaProfile = { ...CANONICAL_NADIA_PROFILE }
   extraAdminAccounts = []
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.removeItem(SESSION_STORAGE_KEY)
+    } catch {}
+  }
 }
 
 if (typeof window !== 'undefined') {

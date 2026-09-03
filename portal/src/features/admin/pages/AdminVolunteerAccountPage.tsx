@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { getFarhanaAvailabilityState, getFarhanaTrackEligibility, getAdminVolunteerById } from '../data/mockAdminData'
@@ -6,8 +6,12 @@ import { getFarhanaAvailabilityState, getFarhanaTrackEligibility, getAdminVolunt
 export function AdminVolunteerAccountPage() {
   const navigate = useNavigate()
   const { volunteerId } = useParams<{ volunteerId?: string }>()
-  const volunteer = getAdminVolunteerById(volunteerId || 'farhana')
   const isFarhana = !volunteerId || volunteerId === 'farhana'
+  const volunteer = getAdminVolunteerById(volunteerId || 'farhana')
+
+  if (!isFarhana && !volunteer) {
+    return <Navigate to={portalRoutePaths.admin.volunteers} replace />
+  }
   const farhanaState = getFarhanaAvailabilityState()
   const farhanaTracks = getFarhanaTrackEligibility()
 

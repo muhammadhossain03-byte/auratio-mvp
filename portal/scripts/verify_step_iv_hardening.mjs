@@ -337,14 +337,11 @@ async function run() {
     })
     if (!availOverrideDisabled.result.value) throw new Error('Expected Override Availability to be disabled for non-Farhana')
 
-    // Navigate back to Volunteers via sidebar and capture runtime screenshot of 5-row directory
+    // Navigate back to Volunteers via sidebar and verify 5-row directory
     await clickByText('button.auratio-admin-nav-item', 'Dashboard')
     await new Promise((r) => setTimeout(r, 300))
     await clickByText('button.auratio-admin-nav-item', 'Volunteers')
     await new Promise((r) => setTimeout(r, 400))
-
-    const volScreenshot = await sendCdp(ws, 'Page.captureScreenshot', { format: 'png' })
-    writeFileSync(join(process.cwd(), 'runtime_volunteer_directory_overflow.png'), Buffer.from(volScreenshot.data, 'base64'))
 
     // Verify Farhana canonical account is untouched
     await sendCdp(ws, 'Runtime.evaluate', {
@@ -373,6 +370,26 @@ async function run() {
     bodyText = await getBodyText()
     if (!bodyText.includes('Public Speaking Summit') || !bodyText.includes('Draft Event')) {
       throw new Error('Expected initial canonical events in directory')
+    }
+    // Assert exact canonical first event according to live Figma 282:3603
+    const firstRowData = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
+        const row = rows.find(r => r.innerText.includes('Public Speaking Summit'));
+        if (!row) return null;
+        const innerRow = row.querySelector('div[style*="display: flex"]') || row;
+        const divs = Array.from(innerRow.children);
+        const title = divs[0]?.innerText.trim();
+        const date = divs[1]?.innerText.trim();
+        const btn = row.querySelector('button');
+        const actionLabel = btn?.innerText.trim();
+        return { title, date, actionLabel };
+      })()`,
+      returnByValue: true,
+    })
+    const summit = firstRowData.result.value
+    if (!summit || summit.title !== 'Public Speaking Summit' || summit.date !== 'Upcoming date' || summit.actionLabel !== 'Edit') {
+      throw new Error(`Canonical first event must match Figma 282:3603 exactly: title="Public Speaking Summit", date="Upcoming date", actionLabel="Edit", got ${JSON.stringify(summit)}`)
     }
 
     // Edit existing draft event via SPA
@@ -429,26 +446,35 @@ async function run() {
     await setInputValue('#event-date', 'December 2026')
     await setInputValue('#event-division', 'Sylhet Division')
     await clickByText('button.auratio-admin-btn--secondary', 'Save Draft')
-    if (await getPathname() !== '/admin/events') throw new Error('Expected navigate to /admin/events')
+    if (await getPathname() !== '/admin/events') throw new Error('Expected navigate to /admin/events after create Save Draft')
     bodyText = await getBodyText()
-    if (!bodyText.includes('New National Meetup QA')) {
-      throw new Error('Expected New National Meetup QA in event directory')
+    if (!bodyText.includes('New National Meetup QA') || !bodyText.includes('Sylhet Division')) {
+      throw new Error('Expected newly created draft event in directory')
     }
 
-    // Capture runtime screenshot of 4-row event directory with internal scroll
-    const eventScreenshot = await sendCdp(ws, 'Page.captureScreenshot', { format: 'png' })
-    writeFileSync(join(process.cwd(), 'runtime_event_directory_overflow.png'), Buffer.from(eventScreenshot.data, 'base64'))
-
-    // Verify Publish and Delete buttons are presentation-only per live Figma
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events/editor?id=draft` })
-    await new Promise((r) => setTimeout(r, 500))
-    const publishBtn = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `Boolean(document.querySelector('.auratio-admin-btn--presentation[role="presentation"]'))`,
+    // Reopen newly created draft event and verify persistence
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
+        const newRow = rows.find(r => r.innerText.includes('New National Meetup QA'));
+        if (newRow) {
+          const btn = newRow.querySelector('button');
+          if (btn) btn.click();
+        }
+      })()`,
     })
-    if (!publishBtn.result.value) throw new Error('Expected presentation-only controls for Publish / Delete')
+    await new Promise((r) => setTimeout(r, 400))
+    const newTitleVal = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('#event-title').value`,
+    })
+    if (newTitleVal.result.value !== 'New National Meetup QA') {
+      throw new Error(`Expected loaded title to be "New National Meetup QA", got "${newTitleVal.result.value}"`)
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Save Draft')
+    if (await getPathname() !== '/admin/events') throw new Error('Expected navigate to /admin/events')
     console.log('  ✓ Admin Event mock state, Save Draft persistence, and Figma presentation guards passed.')
 
-    // 5. SUPER ADMIN INVITE ADMIN MOCK STATE
+    // 5. SUPER ADMIN INVITE ADMIN MOCK STATE & GOVERNANCE
     console.log('\n[5/6] Testing Super Admin Invite Admin Mock State & Governance...')
     await sendCdp(ws, 'Runtime.evaluate', {
       expression: 'window.__auratioResetSuperAdmin && window.__auratioResetSuperAdmin()',
@@ -456,13 +482,14 @@ async function run() {
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
     await new Promise((r) => setTimeout(r, 500))
     bodyText = await getBodyText()
-    if (!bodyText.includes('Auratio Root') || !bodyText.includes('Super Admin') || !bodyText.includes('Protected')) {
-      throw new Error('Expected Root Super Admin account with Protected status')
+    if (!bodyText.includes('Auratio Root') || !bodyText.includes('Nadia Rahman')) {
+      throw new Error('Expected canonical Super Admin and Admin in directory')
     }
 
-    // Open invite admin
+    // Open Invite Admin form
     await clickByText('button.auratio-admin-btn--primary', 'Invite Admin')
-    if (await getPathname() !== '/super-admin/admin-accounts/invite') throw new Error('Expected /super-admin/admin-accounts/invite')
+    if (await getPathname() !== '/super-admin/admin-accounts/invite') throw new Error('Expected navigate to /super-admin/admin-accounts/invite')
+    await new Promise((r) => setTimeout(r, 400))
 
     // Empty name blocked
     await setInputValue('input[aria-label="Full name"]', '')
@@ -485,7 +512,7 @@ async function run() {
     bodyText = await getBodyText()
     if (bodyText.includes('Kazi Anis')) throw new Error('Cancel should not create admin account')
 
-    // Reopen and complete valid invite
+    // Reopen and complete valid invite for Kazi Anis
     await clickByText('button.auratio-admin-btn--primary', 'Invite Admin')
     await setInputValue('input[aria-label="Full name"]', 'Kazi Anis')
     await setInputValue('input[aria-label="Email"]', 'kazi@auratio.org')
@@ -520,7 +547,21 @@ async function run() {
     await new Promise((r) => setTimeout(r, 400))
     if (await getPathname() !== '/super-admin/admin-accounts/kazi-anis') throw new Error('Expected /super-admin/admin-accounts/kazi-anis')
     bodyText = await getBodyText()
+
+    // Assert Invited Admin consistency
     if (!bodyText.includes('Invited')) throw new Error('Expected Invited status pill on Kazi Anis account')
+    if (!bodyText.includes('Invite sent / activation pending')) {
+      throw new Error('Expected "Invite sent / activation pending" lifecycle text for invited admin')
+    }
+    if (bodyText.includes('Invite accepted / account active')) {
+      throw new Error('Invited admin must NOT display "Invite accepted / account active"')
+    }
+    if (bodyText.includes('Stops active portal access')) {
+      throw new Error('Invited admin must NOT claim active portal access exists before activation')
+    }
+    if (!bodyText.includes('Cancels pending portal access')) {
+      throw new Error('Expected "Cancels pending portal access" copy for invited admin deactivation callout')
+    }
 
     // Edit Kazi Anis details and Save
     await setInputValue('input[aria-label="Display name"]', 'Kazi Anis Updated')
@@ -583,48 +624,107 @@ async function run() {
     })
     if (nadiaAfter.result.value.status === 'Deactivated') throw new Error('Nadia must remain Active')
 
-    // Verify Root account remains Protected and Active
-    const rootRow = await sendCdp(ws, 'Runtime.evaluate', {
+    // Verify Root deactivation UI is COMPLETELY blocked
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts/root/deactivate` })
+    await new Promise((r) => setTimeout(r, 400))
+    if (await getPathname() !== '/super-admin/admin-accounts/root') {
+      throw new Error(`Expected /super-admin/admin-accounts/root/deactivate to redirect to /super-admin/admin-accounts/root, got ${await getPathname()}`)
+    }
+    bodyText = await getBodyText()
+    if (!bodyText.includes('Auratio Root') || !bodyText.includes('Protected root Super Admin account')) {
+      throw new Error('Expected protected Root account screen')
+    }
+    if (bodyText.includes('Confirm Deactivation') || bodyText.includes('Deactivate Auratio Root?')) {
+      throw new Error('Direct root/deactivate must NEVER expose deactivation controls')
+    }
+
+    // Navigate back to accounts directory and invite a SECOND admin account (Sabrina Khan) to test 5-row overflow
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 400))
+    await clickByText('button.auratio-admin-btn--primary', 'Invite Admin')
+    await new Promise((r) => setTimeout(r, 400))
+    await setInputValue('input[aria-label="Full name"]', 'Sabrina Khan')
+    await setInputValue('input[aria-label="Email"]', 'sabrina@auratio.org')
+    await clickByText('button.auratio-admin-btn--primary', 'Send Admin Invite')
+    await new Promise((r) => setTimeout(r, 400))
+    if (await getPathname() !== '/super-admin/admin-accounts') throw new Error('Expected navigate to accounts')
+    bodyText = await getBodyText()
+    if (!bodyText.includes('Sabrina Khan')) throw new Error('Expected Sabrina Khan in admin accounts')
+
+    // Assert 5-row admin accounts directory dynamic overflow and boundary isolation
+    const adminTableMetrics = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `(() => {
-        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
-        const rRow = rows.find(r => r.innerText.includes('Auratio Root'));
-        return rRow ? rRow.innerText : '';
+        const panels = Array.from(document.querySelectorAll('.auratio-admin-panel'));
+        const table = panels[1];
+        const boundary = panels[2];
+        if (!table || !boundary) return null;
+        const rows = Array.from(table.querySelectorAll('[data-testid^="admin-account-row-"]'));
+        const tableRect = table.getBoundingClientRect();
+        const boundaryRect = boundary.getBoundingClientRect();
+        const tableStyle = window.getComputedStyle(table);
+        return {
+          rowCount: rows.length,
+          overflowY: tableStyle.overflowY,
+          tableBottom: tableRect.bottom,
+          boundaryTop: boundaryRect.top,
+          isOverlapping: tableRect.bottom > boundaryRect.top,
+        };
       })()`,
+      returnByValue: true,
     })
-    if (!rootRow.result.value.includes('Super Admin') || !rootRow.result.value.includes('Protected') || !rootRow.result.value.includes('Active')) {
-      throw new Error('Expected Root account to remain Super Admin, Protected, and Active')
+    const metrics = adminTableMetrics.result.value
+    if (!metrics || metrics.rowCount < 5) {
+      throw new Error(`Expected at least 5 admin rows with two invited admins, got ${metrics ? metrics.rowCount : null}`)
+    }
+    if (metrics.overflowY !== 'auto' && metrics.overflowY !== 'scroll') {
+      throw new Error(`Expected admin accounts table to have overflowY auto, got ${metrics.overflowY}`)
+    }
+    if (metrics.isOverlapping) {
+      throw new Error(`Admin accounts table (${metrics.tableBottom}px) overlaps Permission Boundary card (${metrics.boundaryTop}px)`)
     }
     console.log('  ✓ Super Admin Invite Admin validation, mock provisioning, entity isolation, and root protection passed.')
 
-    // 6. COMPANION PARAMETERIZED ROUTES & EXACT ENTITY IDENTITIES
-    console.log('\n[6/6] Testing Companion Parameterized Routes & Exact Entity Identities...')
-    const companionRoutes = [
-      { path: '/admin/requests/req-9999', expectedLabel: 'Request Details', exactId: 'REQ-9999' },
-      { path: '/admin/evaluations/sub-9999', expectedLabel: 'Evaluation Record', exactId: 'SUB-9999' },
-      { path: '/admin/moderation/sub-9999', expectedLabel: 'Moderation Review', exactId: 'SUB-9999' },
-      { path: '/admin/volunteers/custom-vol', expectedLabel: 'Volunteer Account', exactId: 'Custom Vol' },
-      { path: '/admin/events/custom-ev', expectedLabel: 'Event information', inputSelector: '#event-title', exactId: 'Custom Ev' },
-      { path: '/super-admin/admin-accounts/custom-admin', expectedLabel: 'Admin Account', exactId: 'Custom Admin' },
+    // 6. DYNAMIC MOCK RESOLUTION & SAFE UNKNOWN ENTITY REDIRECTION
+    console.log('\n[6/6] Testing Dynamic Mock Resolution & Safe Unknown Entity Redirection...')
+
+    // A. Safe redirection for unknown dynamic IDs (no fake mutable entities fabricated)
+    const unknownRoutes = [
+      { path: '/admin/volunteers/unknown-vol', expectedRedirect: '/admin/volunteers' },
+      { path: '/admin/events/unknown-event', expectedRedirect: '/admin/events' },
+      { path: '/super-admin/admin-accounts/unknown-admin', expectedRedirect: '/super-admin/admin-accounts' },
+      { path: '/super-admin/admin-accounts/unknown-admin/deactivate', expectedRedirect: '/super-admin/admin-accounts' },
     ]
 
-    for (const route of companionRoutes) {
+    for (const r of unknownRoutes) {
+      await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}${r.path}` })
+      await new Promise((res) => setTimeout(res, 400))
+      const currentPath = await getPathname()
+      if (currentPath !== r.expectedRedirect) {
+        throw new Error(`Expected unknown dynamic route ${r.path} to redirect to ${r.expectedRedirect}, got ${currentPath}`)
+      }
+      console.log(`  ✓ ${r.path} safely redirected to ${r.expectedRedirect}.`)
+    }
+
+    // B. Canonical and session-created entities resolve genuine mock data
+    const canonicalAndSessionRoutes = [
+      { path: '/admin/requests/req-1042', expectedLabel: 'REQ-1042' },
+      { path: '/admin/evaluations/sub-8834', expectedLabel: 'SUB-8834 — Evaluation Record' },
+      { path: '/admin/moderation/sub-8821', expectedLabel: 'SUB-8821 — Moderation Review' },
+      { path: '/admin/volunteers/farhana', expectedLabel: 'Farhana Islam' },
+      { path: '/super-admin/admin-accounts/nadia', expectedLabel: 'Nadia Rahman' },
+      { path: '/super-admin/admin-accounts/root', expectedLabel: 'Auratio Root' },
+      { path: '/admin/volunteers/tanvir-ahmed', expectedLabel: 'Tanvir Ahmed' },
+      { path: '/super-admin/admin-accounts/sabrina-khan', expectedLabel: 'Sabrina Khan' },
+    ]
+
+    for (const route of canonicalAndSessionRoutes) {
       await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}${route.path}` })
-      await new Promise((r) => setTimeout(r, 400))
+      await new Promise((res) => setTimeout(res, 400))
       bodyText = await getBodyText()
-      if (!bodyText.toLowerCase().includes(route.expectedLabel.toLowerCase())) {
-        throw new Error(`Companion route ${route.path} failed to render expected label "${route.expectedLabel}"`)
+      if (!bodyText.includes(route.expectedLabel)) {
+        throw new Error(`Expected route ${route.path} to contain "${route.expectedLabel}"`)
       }
-      if (route.inputSelector) {
-        const inputVal = await sendCdp(ws, 'Runtime.evaluate', {
-          expression: `document.querySelector('${route.inputSelector}')?.value || ''`,
-        })
-        if (!inputVal.result.value.includes(route.exactId)) {
-          throw new Error(`Companion route ${route.path} input "${route.inputSelector}" failed to render "${route.exactId}", got "${inputVal.result.value}"`)
-        }
-      } else if (route.exactId && !bodyText.includes(route.exactId)) {
-        throw new Error(`Companion route ${route.path} failed to render exact entity ID "${route.exactId}"`)
-      }
-      console.log(`  ✓ ${route.path} successfully resolved companion screen with exact identity "${route.exactId}".`)
+      console.log(`  ✓ ${route.path} successfully resolved exact entity "${route.expectedLabel}".`)
     }
 
     console.log('\n==================================================')

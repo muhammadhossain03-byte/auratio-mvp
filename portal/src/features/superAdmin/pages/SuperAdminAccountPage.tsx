@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { getAdminAccountById, updateAdminAccount } from '../data/mockSuperAdminData'
@@ -17,6 +17,10 @@ export function SuperAdminAccountPage() {
   const [email, setEmail] = useState(
     account?.email || (isNadia ? 'nadia@auratio.org' : 'admin@auratio.org'),
   )
+
+  if (!isNadia && !account) {
+    return <Navigate to={portalRoutePaths.superAdmin.adminAccounts} replace />
+  }
   const status = account?.status || 'Active'
   const deactivated = status === 'Deactivated'
   const isInvited = status === 'Invited'
@@ -234,7 +238,7 @@ export function SuperAdminAccountPage() {
             color: '#6B788A',
           }}
         >
-          {deactivated ? 'Deactivated' : 'Active'}
+          {status}
         </div>
 
         {/* Action Buttons */}
@@ -335,7 +339,11 @@ export function SuperAdminAccountPage() {
             color: '#111827',
           }}
         >
-          Invite accepted / account active
+          {isInvited
+            ? 'Invite sent / activation pending'
+            : deactivated
+              ? 'Account deactivated'
+              : 'Invite accepted / account active'}
         </div>
 
         {/* Deactivate Admin Callout */}
@@ -364,7 +372,9 @@ export function SuperAdminAccountPage() {
               width: '350px',
             }}
           >
-            Stops active portal access. This is not a role-transfer or history-deletion action.
+            {isInvited
+              ? 'Cancels pending portal access. This is not a role-transfer or history-deletion action.'
+              : 'Stops active portal access. This is not a role-transfer or history-deletion action.'}
           </div>
           <button
             type="button"
