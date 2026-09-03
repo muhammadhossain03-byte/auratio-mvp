@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getFarhanaAvailabilityState } from '../data/mockAdminData'
+import { getFarhanaAvailabilityState, getFarhanaTrackEligibility } from '../data/mockAdminData'
 
 export function AdminVolunteerAccountPage() {
   const navigate = useNavigate()
   const farhanaState = getFarhanaAvailabilityState()
+  const farhanaTracks = getFarhanaTrackEligibility()
 
   return (
     <AdminLayout
@@ -114,7 +115,7 @@ export function AdminVolunteerAccountPage() {
             Authorized tracks
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            Informative • Persuasive • Business Pitch / Sales Pitch
+            {farhanaTracks.join(' • ')}
           </div>
         </div>
 

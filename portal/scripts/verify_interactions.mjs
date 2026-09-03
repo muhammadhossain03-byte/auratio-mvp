@@ -914,13 +914,149 @@ async function run() {
       throw new Error('Expected /admin/volunteers/farhana after Apply Override')
     }
 
-    // Volunteer Account -> Manage Track Eligibility
-    await clickByText('button.auratio-admin-btn--primary', 'Manage Track Eligibility')
-    if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
-      throw new Error('Expected /admin/volunteers/farhana/tracks from Manage Track Eligibility')
+    // 21. TRACK ELIGIBILITY FUNCTIONAL FLOWS
+    console.log('\n--- Testing Track Eligibility Functional Flows ---')
+    
+    // Test A: Interactive tracks (Extempore toggle)
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/farhana/tracks` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    async function getTrackCount() {
+      const res = await sendCdp(ws, 'Runtime.evaluate', {
+        expression: `(() => {
+          const el = Array.from(document.querySelectorAll('div')).find(d => d.textContent.includes('selected • minimum 1 required'));
+          if (!el) return -1;
+          const m = el.textContent.match(/(\\d+)\\s+selected/);
+          return m ? parseInt(m[1], 10) : -1;
+        })()`,
+      })
+      return res.result.value
     }
 
-    // 21. EVENT MANAGEMENT FLOWS
+    async function toggleTrackByName(name) {
+      await sendCdp(ws, 'Runtime.evaluate', {
+        expression: `(() => {
+          const btns = Array.from(document.querySelectorAll('button[role="checkbox"]'));
+          const btn = btns.find(b => b.textContent.includes(${JSON.stringify(name)}));
+          if (btn) btn.click();
+        })()`,
+      })
+      await new Promise((r) => setTimeout(r, 200))
+    }
+
+    const initialCount = await getTrackCount()
+    console.log('Initial track count:', initialCount)
+    if (initialCount !== 3) {
+      throw new Error(`Expected initial track count 3, got ${initialCount}`)
+    }
+
+    // Click Extempore -> select
+    await toggleTrackByName('Extempore')
+    const countAfterSelect = await getTrackCount()
+    console.log('Count after selecting Extempore:', countAfterSelect)
+    if (countAfterSelect !== 4) {
+      throw new Error(`Expected count 4 after selecting Extempore, got ${countAfterSelect}`)
+    }
+
+    // Click Extempore again -> unselect
+    await toggleTrackByName('Extempore')
+    const countAfterUnselect = await getTrackCount()
+    console.log('Count after unselecting Extempore:', countAfterUnselect)
+    if (countAfterUnselect !== 3) {
+      throw new Error(`Expected count 3 after unselecting Extempore, got ${countAfterUnselect}`)
+    }
+
+    // Test B: Minimum-one guard
+    // Currently 3 selected: Informative, Persuasive, Business Pitch / Sales Pitch
+    await toggleTrackByName('Informative') // 2
+    await toggleTrackByName('Persuasive')  // 1
+    const countAtOne = await getTrackCount()
+    console.log('Count at one track remaining:', countAtOne)
+    if (countAtOne !== 1) {
+      throw new Error(`Expected count 1, got ${countAtOne}`)
+    }
+
+    // Attempt to deselect the last remaining track (Business Pitch / Sales Pitch)
+    await toggleTrackByName('Business Pitch / Sales Pitch')
+    const countAfterAttempt = await getTrackCount()
+    console.log('Count after attempting to deselect last track:', countAfterAttempt)
+    if (countAfterAttempt !== 1) {
+      throw new Error(`Expected count to remain 1 due to minimum-one guard, got ${countAfterAttempt}`)
+    }
+
+    // Cancel to leave without saving the 1-track state
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+
+    // Reset Farhana tracks to canonical 3
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__resetFarhanaTrackEligibility && window.__resetFarhanaTrackEligibility()`,
+    })
+
+    // Test C: Cancel BACK (from Volunteer Account)
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/farhana` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-btn--primary', 'Manage Track Eligibility')
+    if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
+      throw new Error('Expected /admin/volunteers/farhana/tracks')
+    }
+    // Make unsaved change
+    await toggleTrackByName('Extempore')
+    if (await getTrackCount() !== 4) {
+      throw new Error('Expected count 4 after selecting Extempore')
+    }
+    // Cancel
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/volunteers/farhana') {
+      throw new Error('Expected BACK to /admin/volunteers/farhana after Cancel')
+    }
+    // Verify unsaved change is not committed in Volunteer Account
+    const accountTracksText = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+    })
+    if (accountTracksText.result.value.includes('Extempore')) {
+      throw new Error('Expected Extempore NOT to be saved on Volunteer Account after Cancel')
+    }
+
+    // Test D: Save BACK (from Volunteer Account)
+    await clickByText('button.auratio-admin-btn--primary', 'Manage Track Eligibility')
+    await toggleTrackByName('Extempore')
+    await clickByText('button.auratio-admin-btn--primary', 'Save Eligibility')
+    if (await getPathname() !== '/admin/volunteers/farhana') {
+      throw new Error('Expected BACK to /admin/volunteers/farhana after Save Eligibility')
+    }
+    const accountTracksAfterSave = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+    })
+    if (!accountTracksAfterSave.result.value.includes('Extempore')) {
+      throw new Error('Expected Extempore to be saved and visible on Volunteer Account')
+    }
+    // Restore canonical tracks
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__resetFarhanaTrackEligibility && window.__resetFarhanaTrackEligibility()`,
+    })
+
+    // Test E: Invite Context BACK
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/invite` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-btn--primary', 'Choose / Edit Tracks')
+    if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
+      throw new Error('Expected /admin/volunteers/farhana/tracks from Invite Volunteer')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/volunteers/invite') {
+      throw new Error('Expected BACK to /admin/volunteers/invite after Cancel')
+    }
+
+    await clickByText('button.auratio-admin-btn--primary', 'Choose / Edit Tracks')
+    if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
+      throw new Error('Expected /admin/volunteers/farhana/tracks from Invite Volunteer')
+    }
+    await clickByText('button.auratio-admin-btn--primary', 'Save Eligibility')
+    if (await getPathname() !== '/admin/volunteers/invite') {
+      throw new Error('Expected BACK to /admin/volunteers/invite after Save Eligibility')
+    }
+
+    // 22. EVENT MANAGEMENT FLOWS
     console.log('\n--- Testing Event Management Flows ---')
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events` })
     await new Promise((r) => setTimeout(r, 500))
@@ -952,7 +1088,7 @@ async function run() {
       throw new Error('Expected /admin/events after Save Draft')
     }
 
-    // 22. PRESENTATION-ONLY CONTROLS
+    // 23. PRESENTATION-ONLY CONTROLS
     console.log('\n--- Testing Out-of-Batch & Locked Controls are Presentation-Only ---')
     // Check role auth super admin
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/auth/role-authorization` })
@@ -965,19 +1101,6 @@ async function run() {
     })
     if (!superAdminPres.result.value) {
       throw new Error('Expected Super Admin button to be presentation-only')
-    }
-
-    // Check Track Eligibility Save and Cancel are presentation-only
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/farhana/tracks` })
-    await new Promise((r) => setTimeout(r, 500))
-    const trackEligPres = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `(() => {
-        const pres = Array.from(document.querySelectorAll('.auratio-admin-btn--presentation')).map(e => e.textContent.trim());
-        return pres.includes('Save Eligibility') && pres.includes('Cancel');
-      })()`,
-    })
-    if (!trackEligPres.result.value) {
-      throw new Error('Expected Save Eligibility and Cancel to be presentation-only')
     }
 
     // Check Event Editor Publish Event and Delete Event are presentation-only

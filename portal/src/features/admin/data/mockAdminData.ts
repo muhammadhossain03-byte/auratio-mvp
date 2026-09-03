@@ -368,6 +368,30 @@ export function resetFarhanaAvailabilityOverride() {
   farhanaOverrideReason = 'None'
 }
 
+// In-memory Farhana track eligibility state
+export const INITIAL_FARHANA_TRACKS = [
+  'Informative',
+  'Persuasive',
+  'Business Pitch / Sales Pitch',
+]
+
+let farhanaTracksState: string[] = [...INITIAL_FARHANA_TRACKS]
+
+export function getFarhanaTrackEligibility(): string[] {
+  return [...farhanaTracksState]
+}
+
+export function saveFarhanaTrackEligibility(tracks: string[]): string[] {
+  if (tracks.length > 0) {
+    farhanaTracksState = [...tracks]
+  }
+  return getFarhanaTrackEligibility()
+}
+
+export function resetFarhanaTrackEligibility() {
+  farhanaTracksState = [...INITIAL_FARHANA_TRACKS]
+}
+
 if (typeof window !== 'undefined') {
   ;(window as unknown as { __getHE0142AssignmentState: typeof getHE0142AssignmentState }).__getHE0142AssignmentState = getHE0142AssignmentState
   ;(window as unknown as { __resetHE0142Reassignment: typeof resetHE0142Reassignment }).__resetHE0142Reassignment = resetHE0142Reassignment
@@ -375,5 +399,7 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __resetSub8821Moderation: typeof resetSub8821Moderation }).__resetSub8821Moderation = resetSub8821Moderation
   ;(window as unknown as { __getFarhanaAvailabilityState: typeof getFarhanaAvailabilityState }).__getFarhanaAvailabilityState = getFarhanaAvailabilityState
   ;(window as unknown as { __resetFarhanaAvailabilityOverride: typeof resetFarhanaAvailabilityOverride }).__resetFarhanaAvailabilityOverride = resetFarhanaAvailabilityOverride
+  ;(window as unknown as { __getFarhanaTrackEligibility: typeof getFarhanaTrackEligibility }).__getFarhanaTrackEligibility = getFarhanaTrackEligibility
+  ;(window as unknown as { __resetFarhanaTrackEligibility: typeof resetFarhanaTrackEligibility }).__resetFarhanaTrackEligibility = resetFarhanaTrackEligibility
 }
 

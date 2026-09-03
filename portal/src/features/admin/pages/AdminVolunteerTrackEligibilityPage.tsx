@@ -1,6 +1,105 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
+import { getFarhanaTrackEligibility, saveFarhanaTrackEligibility } from '../data/mockAdminData'
+
+const PUBLIC_SPEAKING_TRACKS = [
+  'Informative',
+  'Extempore',
+  'Persuasive',
+  'Argumentative / Debate',
+  'Explanatory',
+]
+
+const PROFESSIONAL_PRESENTING_TRACKS = [
+  'News Delivery',
+  'Business Pitch / Sales Pitch',
+  'General Presentation / Multimedia',
+  'Academic — Poster / Project / Thesis',
+  'Corporate Report',
+]
+
+const CONTENT_CREATION_TRACKS = [
+  'Infotainment-Oriented',
+  'Academic — Lecture / Course',
+  'Marketing / Promotional',
+]
 
 export function AdminVolunteerTrackEligibilityPage() {
+  const navigate = useNavigate()
+  const [selectedTracks, setSelectedTracks] = useState<string[]>(() => getFarhanaTrackEligibility())
+
+  const handleToggleTrack = (track: string) => {
+    setSelectedTracks((prev) => {
+      if (prev.includes(track)) {
+        // Minimum-one guard: attempting to deselect final remaining track must not reduce count to 0
+        if (prev.length <= 1) {
+          return prev
+        }
+        return prev.filter((t) => t !== track)
+      } else {
+        return [...prev, track]
+      }
+    })
+  }
+
+  const handleSave = () => {
+    saveFarhanaTrackEligibility(selectedTracks)
+    navigate(-1)
+  }
+
+  const handleCancel = () => {
+    navigate(-1)
+  }
+
+  const renderTrackItem = (track: string, isLast: boolean) => {
+    const isChecked = selectedTracks.includes(track)
+    return (
+      <button
+        key={track}
+        type="button"
+        role="checkbox"
+        aria-checked={isChecked}
+        onClick={() => handleToggleTrack(track)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          cursor: 'pointer',
+          textAlign: 'left',
+          width: '100%',
+          marginBottom: isLast ? 0 : '38px',
+          fontFamily: 'inherit',
+        }}
+      >
+        <div
+          style={{
+            width: '22px',
+            height: '22px',
+            backgroundColor: isChecked ? '#041B3B' : '#FFFFFF',
+            border: isChecked ? '1px solid #041B3B' : '1px solid #D1DBEB',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#FFFFFF',
+            fontSize: '14px',
+            fontWeight: 700,
+            flexShrink: 0,
+            boxSizing: 'border-box',
+          }}
+        >
+          {isChecked ? '✓' : ''}
+        </div>
+        <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
+          {track}
+        </span>
+      </button>
+    )
+  }
+
   return (
     <AdminLayout
       ariaLabel="Volunteer Track Eligibility"
@@ -34,7 +133,7 @@ export function AdminVolunteerTrackEligibilityPage() {
           textAlign: 'right',
         }}
       >
-        3 selected • minimum 1 required
+        {`${selectedTracks.length} selected • minimum 1 required`}
       </div>
 
       {/* Column 1: Public Speaking */}
@@ -56,102 +155,9 @@ export function AdminVolunteerTrackEligibilityPage() {
         <div style={{ fontSize: '13px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.02em', marginBottom: '24px' }}>
           PUBLIC SPEAKING
         </div>
-
-        {/* Informative (checked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#041B3B',
-              border: '1px solid #041B3B',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontSize: '14px',
-              fontWeight: 700,
-            }}
-          >
-            ✓
-          </div>
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Informative
-          </span>
-        </div>
-
-        {/* Extempore (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Extempore
-          </span>
-        </div>
-
-        {/* Persuasive (checked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#041B3B',
-              border: '1px solid #041B3B',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontSize: '14px',
-              fontWeight: 700,
-            }}
-          >
-            ✓
-          </div>
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Persuasive
-          </span>
-        </div>
-
-        {/* Argumentative / Debate (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Argumentative / Debate
-          </span>
-        </div>
-
-        {/* Explanatory (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Explanatory
-          </span>
-        </div>
+        {PUBLIC_SPEAKING_TRACKS.map((track, idx) =>
+          renderTrackItem(track, idx === PUBLIC_SPEAKING_TRACKS.length - 1),
+        )}
       </div>
 
       {/* Column 2: Professional Presenting */}
@@ -173,94 +179,9 @@ export function AdminVolunteerTrackEligibilityPage() {
         <div style={{ fontSize: '13px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.02em', marginBottom: '24px' }}>
           PROFESSIONAL PRESENTING
         </div>
-
-        {/* News Delivery (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            News Delivery
-          </span>
-        </div>
-
-        {/* Business Pitch / Sales Pitch (checked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#041B3B',
-              border: '1px solid #041B3B',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontSize: '14px',
-              fontWeight: 700,
-            }}
-          >
-            ✓
-          </div>
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Business Pitch / Sales Pitch
-          </span>
-        </div>
-
-        {/* General Presentation / Multimedia (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            General Presentation / Multimedia
-          </span>
-        </div>
-
-        {/* Academic — Poster / Project / Thesis (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Academic — Poster / Project / Thesis
-          </span>
-        </div>
-
-        {/* Corporate Report (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Corporate Report
-          </span>
-        </div>
+        {PROFESSIONAL_PRESENTING_TRACKS.map((track, idx) =>
+          renderTrackItem(track, idx === PROFESSIONAL_PRESENTING_TRACKS.length - 1),
+        )}
       </div>
 
       {/* Column 3: Content Creation */}
@@ -282,54 +203,9 @@ export function AdminVolunteerTrackEligibilityPage() {
         <div style={{ fontSize: '13px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.02em', marginBottom: '24px' }}>
           CONTENT CREATION
         </div>
-
-        {/* Infotainment-Oriented (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Infotainment-Oriented
-          </span>
-        </div>
-
-        {/* Academic — Lecture / Course (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '38px' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Academic — Lecture / Course
-          </span>
-        </div>
-
-        {/* Marketing / Promotional (unchecked) */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div
-            style={{
-              width: '22px',
-              height: '22px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #D1DBEB',
-              borderRadius: '4px',
-            }}
-          />
-          <span style={{ fontSize: '14px', color: '#111827', marginLeft: '16px' }}>
-            Marketing / Promotional
-          </span>
-        </div>
+        {CONTENT_CREATION_TRACKS.map((track, idx) =>
+          renderTrackItem(track, idx === CONTENT_CREATION_TRACKS.length - 1),
+        )}
       </div>
 
       {/* Bottom Panel */}
@@ -350,24 +226,23 @@ export function AdminVolunteerTrackEligibilityPage() {
           padding: '0 20px',
         }}
       >
-        {/* Presentation-only buttons per live Figma findings */}
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-admin-btn auratio-admin-btn--primary auratio-admin-btn--presentation"
+        <button
+          type="button"
+          onClick={handleSave}
+          className="auratio-admin-btn auratio-admin-btn--primary"
           style={{ width: '190px', height: '44px', fontSize: '14px', fontWeight: 600, borderRadius: '6px' }}
         >
           Save Eligibility
-        </div>
+        </button>
 
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-admin-btn auratio-admin-btn--secondary auratio-admin-btn--presentation"
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="auratio-admin-btn auratio-admin-btn--secondary"
           style={{ width: '120px', height: '44px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', marginLeft: '16px', borderColor: '#D1DBEB' }}
         >
           Cancel
-        </div>
+        </button>
 
         <div
           style={{
