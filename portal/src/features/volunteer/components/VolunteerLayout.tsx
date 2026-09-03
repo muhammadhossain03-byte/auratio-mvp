@@ -7,7 +7,7 @@ import '../styles/volunteer.css'
 interface VolunteerLayoutProps {
   children: ReactNode
   topbarTitle: string
-  activeNav?: 'assignments' | 'availability'
+  activeNav?: 'assignments' | 'availability' | 'completed'
   topbarRightVariant?: 'default' | 'scoring'
   ariaLabel: string
 }
@@ -82,24 +82,38 @@ export function VolunteerLayout({
             type="button"
             onClick={() => navigate(portalRoutePaths.volunteer.assignments)}
             className="auratio-volunteer-nav-item"
-            style={{ top: '174px' }}
+            style={{
+              top: isScoring ? '172px' : '174px',
+              color: isScoring ? 'var(--auratio-neutral-white)' : 'var(--auratio-brand-blue-200)',
+            }}
           >
             Active Assignments
           </button>
         )}
 
-        {/* Completed / History (Presentation-only) */}
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-volunteer-nav-item auratio-volunteer-nav-item--presentation"
-          style={{
-            top: isScoring ? '222px' : '224px',
-            color: isScoring ? 'var(--auratio-neutral-white)' : 'var(--auratio-brand-blue-200)',
-          }}
-        >
-          Completed / History
-        </div>
+        {/* Completed / History */}
+        {activeNav === 'completed' ? (
+          <div
+            className="auratio-volunteer-nav-item--active-box"
+            style={{ top: isScoring ? '212px' : '214px' }}
+          >
+            <span className="auratio-volunteer-nav-item--active">
+              Completed / History
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate(portalRoutePaths.volunteer.completedHistory)}
+            className="auratio-volunteer-nav-item"
+            style={{
+              top: isScoring ? '222px' : '224px',
+              color: isScoring ? 'var(--auratio-neutral-white)' : 'var(--auratio-brand-blue-200)',
+            }}
+          >
+            Completed / History
+          </button>
+        )}
 
         {/* Availability */}
         {activeNav === 'availability' ? (

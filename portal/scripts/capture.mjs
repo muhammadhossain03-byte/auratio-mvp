@@ -68,6 +68,42 @@ const SCREENS = [
     name: 'volunteer_availability_unavailable',
     path: '/volunteer/availability/unavailable',
   },
+  {
+    name: 'volunteer_criterion_feedback_editor',
+    path: '/volunteer/evaluation/sub-8821/criterion',
+  },
+  {
+    name: 'volunteer_final_submission',
+    path: '/volunteer/evaluation/sub-8821/review',
+  },
+  {
+    name: 'volunteer_evaluation_submitted',
+    path: '/volunteer/evaluation/sub-8821/submitted',
+  },
+  {
+    name: 'volunteer_completed_history',
+    path: '/volunteer/completed',
+  },
+  {
+    name: 'volunteer_completed_pending_moderation',
+    path: '/volunteer/completed/sub-8821',
+  },
+  {
+    name: 'volunteer_reopened_evaluation',
+    path: '/volunteer/evaluation/sub-8821/reopened',
+  },
+  {
+    name: 'volunteer_completed_approved',
+    path: '/volunteer/completed/sub-8792',
+  },
+  {
+    name: 'volunteer_completed_rejected',
+    path: '/volunteer/completed/sub-8755',
+  },
+  {
+    name: 'volunteer_completed_processing',
+    path: '/volunteer/completed/sub-8741',
+  },
 ]
 
 const MIME_TYPES = {

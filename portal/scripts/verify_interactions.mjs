@@ -264,7 +264,146 @@ async function run() {
     console.log('Path after clicking Availability in sidebar:', await getPathname())
     if (await getPathname() !== '/volunteer/availability') throw new Error('Expected /volunteer/availability')
 
-    console.log('\nALL 5 INTERACTION FLOWS PASSED PERFECTLY!')
+    // 6. SCORING WORKSPACE -> CRITERION FEEDBACK EDITOR FLOW
+    console.log('\n--- Testing Scoring -> Criterion Feedback Flow ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
+    console.log('Path after Open Universal Delivery:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821/criterion')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--secondary', 'Back to Scores')
+    console.log('Path after Back to Scores:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821 after Back to Scores')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
+    console.log('Path after re-opening criterion feedback:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821/criterion')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
+    console.log('Path after Save Criterion Feedback:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821 after Save Criterion Feedback')
+    }
+
+    // 7. REVIEW & SUBMIT FLOW
+    console.log('\n--- Testing Review & Submit Flow ---')
+    await clickByText('button.auratio-volunteer-btn--primary', 'Review & Submit')
+    console.log('Path after Review & Submit:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/review') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821/review')
+    }
+
+    // Cancel returns to scoring workspace
+    await clickByText('button.auratio-volunteer-btn--secondary', 'Cancel')
+    console.log('Path after Cancel review:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821 after Cancel')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--primary', 'Review & Submit')
+    await clickByText('button.auratio-volunteer-btn--primary', 'Confirm & Submit')
+    console.log('Path after Confirm & Submit:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/submitted') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821/submitted')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--primary', 'Go to Completed / History')
+    console.log('Path after Go to Completed / History:', await getPathname())
+    if (await getPathname() !== '/volunteer/completed') {
+      throw new Error('Expected /volunteer/completed')
+    }
+
+    // 8. COMPLETED HISTORY -> DETAIL PAGES
+    console.log('\n--- Testing Completed History Detail Links ---')
+    // Open SUB-8821 (Pending Moderation)
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/completed` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    const openButtonsCount = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-volunteer-btn--secondary').length`,
+    })
+    console.log('Open buttons count in Completed History:', openButtonsCount.result.value)
+    if (openButtonsCount.result.value !== 4) {
+      throw new Error(`Expected 4 Open buttons, got ${openButtonsCount.result.value}`)
+    }
+
+    // Click row 1 open button (SUB-8821)
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-volunteer-btn--secondary')[0].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after open SUB-8821:', await getPathname())
+    if (await getPathname() !== '/volunteer/completed/sub-8821') {
+      throw new Error('Expected /volunteer/completed/sub-8821')
+    }
+
+    // Click row 2 open button (SUB-8792)
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/completed` })
+    await new Promise((r) => setTimeout(r, 500))
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-volunteer-btn--secondary')[1].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after open SUB-8792:', await getPathname())
+    if (await getPathname() !== '/volunteer/completed/sub-8792') {
+      throw new Error('Expected /volunteer/completed/sub-8792')
+    }
+
+    // Click row 3 open button (SUB-8755)
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/completed` })
+    await new Promise((r) => setTimeout(r, 500))
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-volunteer-btn--secondary')[2].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after open SUB-8755:', await getPathname())
+    if (await getPathname() !== '/volunteer/completed/sub-8755') {
+      throw new Error('Expected /volunteer/completed/sub-8755')
+    }
+
+    // Click row 4 open button (SUB-8741)
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/completed` })
+    await new Promise((r) => setTimeout(r, 500))
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-volunteer-btn--secondary')[3].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after open SUB-8741:', await getPathname())
+    if (await getPathname() !== '/volunteer/completed/sub-8741') {
+      throw new Error('Expected /volunteer/completed/sub-8741')
+    }
+
+    // 9. REOPENED EVALUATION -> CONTINUE CORRECTION
+    console.log('\n--- Testing Reopened Evaluation Flow ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821/reopened` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    await clickByText('button.auratio-volunteer-btn--primary', 'Continue Correction')
+    console.log('Path after Continue Correction:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821 after Continue Correction')
+    }
+
+    // 10. SIDEBAR COMPLETED / HISTORY NAVIGATION
+    console.log('\n--- Testing Sidebar Completed / History Navigation ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/assignments` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    await clickByText('button.auratio-volunteer-nav-item', 'Completed / History')
+    console.log('Path after clicking Completed / History in sidebar:', await getPathname())
+    if (await getPathname() !== '/volunteer/completed') {
+      throw new Error('Expected /volunteer/completed after clicking Completed / History')
+    }
+
+    console.log('\nALL 10 INTERACTION FLOWS PASSED PERFECTLY!')
 
     ws.close()
   } finally {

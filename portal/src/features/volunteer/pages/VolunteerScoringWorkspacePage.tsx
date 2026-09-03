@@ -1,6 +1,10 @@
+import { useNavigate } from 'react-router-dom'
+import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 
 export function VolunteerScoringWorkspacePage() {
+  const navigate = useNavigate()
+
   return (
     <VolunteerLayout
       ariaLabel="Evaluator Scoring Workspace"
@@ -454,11 +458,11 @@ export function VolunteerScoringWorkspacePage() {
           Ready for review
         </span>
 
-        {/* Presentation-only Batch 3 boundary buttons */}
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary auratio-volunteer-btn--presentation"
+        {/* Batch 3 active navigation buttons */}
+        <button
+          type="button"
+          onClick={() => navigate(portalRoutePaths.volunteer.criterionFeedback)}
+          className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
           style={{
             position: 'absolute',
             left: '24px',
@@ -469,12 +473,12 @@ export function VolunteerScoringWorkspacePage() {
           }}
         >
           Open Universal Delivery
-        </div>
+        </button>
 
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-volunteer-btn auratio-volunteer-btn--primary auratio-volunteer-btn--presentation"
+        <button
+          type="button"
+          onClick={() => navigate(portalRoutePaths.volunteer.finalSubmission)}
+          className="auratio-volunteer-btn auratio-volunteer-btn--primary"
           style={{
             position: 'absolute',
             left: '250px',
@@ -484,7 +488,7 @@ export function VolunteerScoringWorkspacePage() {
           }}
         >
           Review & Submit
-        </div>
+        </button>
       </div>
 
       {/* Bottom Panel: Integrity boundary */}

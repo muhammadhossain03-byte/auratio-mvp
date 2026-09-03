@@ -17,7 +17,16 @@ import {
   VolunteerAssignedTaskPage,
   VolunteerAvailabilityPage,
   VolunteerAvailabilityUnavailablePage,
+  VolunteerCompletedApprovedPage,
+  VolunteerCompletedHistoryPage,
+  VolunteerCompletedPendingModerationPage,
+  VolunteerCompletedProcessingPage,
+  VolunteerCompletedRejectedPage,
+  VolunteerCriterionFeedbackEditorPage,
   VolunteerDeclineAssignmentPage,
+  VolunteerEvaluationSubmittedPage,
+  VolunteerFinalSubmissionPage,
+  VolunteerReopenedEvaluationPage,
   VolunteerScoringWorkspacePage,
 } from '../../features/volunteer'
 import { portalRoutePaths } from './routePaths'
@@ -96,6 +105,42 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.volunteer.scoringWorkspace,
     element: <VolunteerScoringWorkspacePage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.criterionFeedback,
+    element: <VolunteerCriterionFeedbackEditorPage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.finalSubmission,
+    element: <VolunteerFinalSubmissionPage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.evaluationSubmitted,
+    element: <VolunteerEvaluationSubmittedPage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.completedHistory,
+    element: <VolunteerCompletedHistoryPage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.completedPendingModeration,
+    element: <VolunteerCompletedPendingModerationPage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.completedApproved,
+    element: <VolunteerCompletedApprovedPage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.completedRejected,
+    element: <VolunteerCompletedRejectedPage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.completedProcessing,
+    element: <VolunteerCompletedProcessingPage />,
+  },
+  {
+    path: portalRoutePaths.volunteer.reopenedEvaluation,
+    element: <VolunteerReopenedEvaluationPage />,
   },
 ])
 
