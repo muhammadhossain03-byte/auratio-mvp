@@ -1,7 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
-import { getFarhanaTrackEligibility, saveFarhanaTrackEligibility } from '../data/mockAdminData'
+import {
+  getFarhanaTrackEligibility,
+  getInviteVolunteerTrackDraft,
+  saveFarhanaTrackEligibility,
+  saveInviteVolunteerTrackDraft,
+} from '../data/mockAdminData'
 
 const PUBLIC_SPEAKING_TRACKS = [
   'Informative',
@@ -27,7 +32,12 @@ const CONTENT_CREATION_TRACKS = [
 
 export function AdminVolunteerTrackEligibilityPage() {
   const navigate = useNavigate()
-  const [selectedTracks, setSelectedTracks] = useState<string[]>(() => getFarhanaTrackEligibility())
+  const location = useLocation()
+  const isInviteMode = (location.state as { mode?: string } | null)?.mode === 'invite'
+
+  const [selectedTracks, setSelectedTracks] = useState<string[]>(() =>
+    isInviteMode ? getInviteVolunteerTrackDraft() : getFarhanaTrackEligibility(),
+  )
 
   const handleToggleTrack = (track: string) => {
     setSelectedTracks((prev) => {
@@ -44,7 +54,11 @@ export function AdminVolunteerTrackEligibilityPage() {
   }
 
   const handleSave = () => {
-    saveFarhanaTrackEligibility(selectedTracks)
+    if (isInviteMode) {
+      saveInviteVolunteerTrackDraft(selectedTracks)
+    } else {
+      saveFarhanaTrackEligibility(selectedTracks)
+    }
     navigate(-1)
   }
 
@@ -111,7 +125,9 @@ export function AdminVolunteerTrackEligibilityPage() {
         className="auratio-admin-page-title"
         style={{ top: '36px', fontSize: '30px', lineHeight: '38px', fontWeight: 700 }}
       >
-        Manage Farhana Islam’s track eligibility
+        {isInviteMode
+          ? 'Choose Volunteer Evaluator track eligibility'
+          : 'Manage Farhana Islam’s track eligibility'}
       </h2>
       <p
         className="auratio-admin-page-subtitle"

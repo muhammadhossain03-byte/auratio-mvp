@@ -914,10 +914,16 @@ async function run() {
       throw new Error('Expected /admin/volunteers/farhana after Apply Override')
     }
 
-    // 21. TRACK ELIGIBILITY FUNCTIONAL FLOWS
-    console.log('\n--- Testing Track Eligibility Functional Flows ---')
+    // 21. TRACK ELIGIBILITY FUNCTIONAL FLOWS & CROSS-STATE ISOLATION
+    console.log('\n--- Testing Track Eligibility Functional Flows & Cross-State Isolation ---')
     
-    // Test A: Interactive tracks (Extempore toggle)
+    // Existing Track Tests: Direct-load Interactive tracks (Extempore toggle)
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        window.__resetFarhanaTrackEligibility && window.__resetFarhanaTrackEligibility();
+        window.__resetInviteVolunteerTrackDraft && window.__resetInviteVolunteerTrackDraft();
+      })()`,
+    })
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/farhana/tracks` })
     await new Promise((r) => setTimeout(r, 500))
 
@@ -966,8 +972,7 @@ async function run() {
       throw new Error(`Expected count 3 after unselecting Extempore, got ${countAfterUnselect}`)
     }
 
-    // Test B: Minimum-one guard
-    // Currently 3 selected: Informative, Persuasive, Business Pitch / Sales Pitch
+    // Existing Track Tests: Minimum-one guard
     await toggleTrackByName('Informative') // 2
     await toggleTrackByName('Persuasive')  // 1
     const countAtOne = await getTrackCount()
@@ -992,24 +997,21 @@ async function run() {
       expression: `window.__resetFarhanaTrackEligibility && window.__resetFarhanaTrackEligibility()`,
     })
 
-    // Test C: Cancel BACK (from Volunteer Account)
+    // Farhana Cancel BACK (from Volunteer Account)
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/farhana` })
     await new Promise((r) => setTimeout(r, 500))
     await clickByText('button.auratio-admin-btn--primary', 'Manage Track Eligibility')
     if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
       throw new Error('Expected /admin/volunteers/farhana/tracks')
     }
-    // Make unsaved change
     await toggleTrackByName('Extempore')
     if (await getTrackCount() !== 4) {
       throw new Error('Expected count 4 after selecting Extempore')
     }
-    // Cancel
     await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
     if (await getPathname() !== '/admin/volunteers/farhana') {
       throw new Error('Expected BACK to /admin/volunteers/farhana after Cancel')
     }
-    // Verify unsaved change is not committed in Volunteer Account
     const accountTracksText = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `document.body.innerText`,
     })
@@ -1017,7 +1019,7 @@ async function run() {
       throw new Error('Expected Extempore NOT to be saved on Volunteer Account after Cancel')
     }
 
-    // Test D: Save BACK (from Volunteer Account)
+    // Farhana Save BACK (from Volunteer Account)
     await clickByText('button.auratio-admin-btn--primary', 'Manage Track Eligibility')
     await toggleTrackByName('Extempore')
     await clickByText('button.auratio-admin-btn--primary', 'Save Eligibility')
@@ -1035,26 +1037,111 @@ async function run() {
       expression: `window.__resetFarhanaTrackEligibility && window.__resetFarhanaTrackEligibility()`,
     })
 
-    // Test E: Invite Context BACK
+    // CASE A — INVITE SAVE IS ISOLATED
+    console.log('\n--- Case A: Invite Save is Isolated ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        window.__resetFarhanaTrackEligibility && window.__resetFarhanaTrackEligibility();
+        window.__resetInviteVolunteerTrackDraft && window.__resetInviteVolunteerTrackDraft();
+      })()`,
+    })
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/invite` })
     await new Promise((r) => setTimeout(r, 500))
     await clickByText('button.auratio-admin-btn--primary', 'Choose / Edit Tracks')
     if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
       throw new Error('Expected /admin/volunteers/farhana/tracks from Invite Volunteer')
     }
+    // Verify title in invite mode is context-appropriate
+    const inviteModeTitle = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('h2.auratio-admin-page-title').textContent`,
+    })
+    console.log('Invite mode Track Eligibility title:', inviteModeTitle.result.value)
+    if (!inviteModeTitle.result.value.includes('Choose Volunteer Evaluator track eligibility')) {
+      throw new Error('Expected context-correct heading in invite mode')
+    }
+
+    await toggleTrackByName('Extempore')
+    await clickByText('button.auratio-admin-btn--primary', 'Save Eligibility')
+    if (await getPathname() !== '/admin/volunteers/invite') {
+      throw new Error('Expected BACK to /admin/volunteers/invite after Save')
+    }
+
+    // Verify Invite screen displays 4 selected and includes Extempore
+    const inviteTextA = await sendCdp(ws, 'Runtime.evaluate', { expression: `document.body.innerText` })
+    if (!inviteTextA.result.value.includes('4 selected • minimum 1')) {
+      throw new Error('Expected 4 selected on Invite Volunteer screen')
+    }
+    if (!inviteTextA.result.value.includes('Extempore')) {
+      throw new Error('Expected Extempore visible on Invite Volunteer screen')
+    }
+
+    // Verify Farhana state remains canonical 3
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/farhana` })
+    await new Promise((r) => setTimeout(r, 500))
+    const farhanaTextA = await sendCdp(ws, 'Runtime.evaluate', { expression: `document.body.innerText` })
+    if (farhanaTextA.result.value.includes('Extempore')) {
+      throw new Error('Expected Farhana account NOT to include Extempore')
+    }
+
+    // CASE B — FARHANA SAVE IS ISOLATED
+    console.log('\n--- Case B: Farhana Save is Isolated ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        window.__resetFarhanaTrackEligibility && window.__resetFarhanaTrackEligibility();
+        window.__resetInviteVolunteerTrackDraft && window.__resetInviteVolunteerTrackDraft();
+      })()`,
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/farhana` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-btn--primary', 'Manage Track Eligibility')
+    await toggleTrackByName('Extempore')
+    await clickByText('button.auratio-admin-btn--primary', 'Save Eligibility')
+    if (await getPathname() !== '/admin/volunteers/farhana') {
+      throw new Error('Expected BACK to /admin/volunteers/farhana')
+    }
+    const farhanaTextB = await sendCdp(ws, 'Runtime.evaluate', { expression: `document.body.innerText` })
+    if (!farhanaTextB.result.value.includes('Extempore')) {
+      throw new Error('Expected Farhana account to include Extempore')
+    }
+    // Verify Invite Volunteer still displays 3 selected and no Extempore
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/invite` })
+    await new Promise((r) => setTimeout(r, 500))
+    const inviteTextB = await sendCdp(ws, 'Runtime.evaluate', { expression: `document.body.innerText` })
+    if (!inviteTextB.result.value.includes('3 selected • minimum 1')) {
+      throw new Error('Expected 3 selected on Invite Volunteer screen')
+    }
+    if (inviteTextB.result.value.includes('Extempore')) {
+      throw new Error('Expected Extempore absent on Invite Volunteer screen')
+    }
+
+    // CASE C — INVITE CANCEL
+    console.log('\n--- Case C: Invite Cancel ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__resetInviteVolunteerTrackDraft && window.__resetInviteVolunteerTrackDraft()`,
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/invite` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-btn--primary', 'Choose / Edit Tracks')
+    await toggleTrackByName('Extempore')
     await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
     if (await getPathname() !== '/admin/volunteers/invite') {
       throw new Error('Expected BACK to /admin/volunteers/invite after Cancel')
     }
+    const inviteTextC = await sendCdp(ws, 'Runtime.evaluate', { expression: `document.body.innerText` })
+    if (!inviteTextC.result.value.includes('3 selected • minimum 1')) {
+      throw new Error('Expected 3 selected on Invite Volunteer after Cancel')
+    }
+    if (inviteTextC.result.value.includes('Extempore')) {
+      throw new Error('Expected Extempore absent after Cancel')
+    }
 
-    await clickByText('button.auratio-admin-btn--primary', 'Choose / Edit Tracks')
-    if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
-      throw new Error('Expected /admin/volunteers/farhana/tracks from Invite Volunteer')
-    }
-    await clickByText('button.auratio-admin-btn--primary', 'Save Eligibility')
-    if (await getPathname() !== '/admin/volunteers/invite') {
-      throw new Error('Expected BACK to /admin/volunteers/invite after Save Eligibility')
-    }
+    // Reset both states before proceeding
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        window.__resetFarhanaTrackEligibility && window.__resetFarhanaTrackEligibility();
+        window.__resetInviteVolunteerTrackDraft && window.__resetInviteVolunteerTrackDraft();
+      })()`,
+    })
 
     // 22. EVENT MANAGEMENT FLOWS
     console.log('\n--- Testing Event Management Flows ---')

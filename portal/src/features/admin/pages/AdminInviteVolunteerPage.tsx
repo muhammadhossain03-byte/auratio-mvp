@@ -2,11 +2,41 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { getInviteVolunteerTrackDraft } from '../data/mockAdminData'
 
 export function AdminInviteVolunteerPage() {
   const navigate = useNavigate()
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
+  const inviteTracks = getInviteVolunteerTrackDraft()
+
+  const publicSpeakingSelected = inviteTracks.filter((t) =>
+    [
+      'Informative',
+      'Extempore',
+      'Persuasive',
+      'Argumentative / Debate',
+      'Explanatory',
+    ].includes(t),
+  )
+
+  const professionalPresentingSelected = inviteTracks.filter((t) =>
+    [
+      'News Delivery',
+      'Business Pitch / Sales Pitch',
+      'General Presentation / Multimedia',
+      'Academic — Poster / Project / Thesis',
+      'Corporate Report',
+    ].includes(t),
+  )
+
+  const contentCreationSelected = inviteTracks.filter((t) =>
+    [
+      'Infotainment-Oriented',
+      'Academic — Lecture / Course',
+      'Marketing / Promotional',
+    ].includes(t),
+  )
 
   return (
     <AdminLayout
@@ -156,30 +186,55 @@ export function AdminInviteVolunteerPage() {
           Track eligibility • required
         </div>
         <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.0167em', marginTop: '10px' }}>
-          3 selected • minimum 1
+          {`${inviteTracks.length} selected • minimum 1`}
         </div>
 
-        <div style={{ marginTop: '26px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.0167em' }}>
-            Public Speaking
+        {publicSpeakingSelected.length > 0 && (
+          <div style={{ marginTop: '26px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.0167em' }}>
+              Public Speaking
+            </div>
+            <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827', marginTop: '8px', lineHeight: '20px' }}>
+              {publicSpeakingSelected.map((t) => (
+                <div key={t}>{t}</div>
+              ))}
+            </div>
           </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827', marginTop: '8px', lineHeight: '20px' }}>
-            Informative<br />Persuasive
-          </div>
-        </div>
+        )}
 
-        <div style={{ marginTop: '24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.0167em' }}>
-            Professional Presenting
+        {professionalPresentingSelected.length > 0 && (
+          <div style={{ marginTop: '24px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.0167em' }}>
+              Professional Presenting
+            </div>
+            <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827', marginTop: '8px', lineHeight: '20px' }}>
+              {professionalPresentingSelected.map((t) => (
+                <div key={t}>{t}</div>
+              ))}
+            </div>
           </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827', marginTop: '8px', lineHeight: '20px' }}>
-            Business Pitch / Sales Pitch
+        )}
+
+        {contentCreationSelected.length > 0 && (
+          <div style={{ marginTop: '24px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.0167em' }}>
+              Content Creation
+            </div>
+            <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827', marginTop: '8px', lineHeight: '20px' }}>
+              {contentCreationSelected.map((t) => (
+                <div key={t}>{t}</div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.volunteerTrackEligibility)}
+          onClick={() =>
+            navigate(portalRoutePaths.admin.volunteerTrackEligibility, {
+              state: { mode: 'invite' },
+            })
+          }
           className="auratio-admin-btn auratio-admin-btn--primary"
           style={{ width: '220px', height: '44px', fontSize: '14px', fontWeight: 600, marginTop: '30px' }}
         >

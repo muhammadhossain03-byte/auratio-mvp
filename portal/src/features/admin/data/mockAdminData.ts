@@ -392,6 +392,30 @@ export function resetFarhanaTrackEligibility() {
   farhanaTracksState = [...INITIAL_FARHANA_TRACKS]
 }
 
+// In-memory Volunteer Invite track draft state (isolated from Farhana)
+export const INITIAL_INVITE_VOLUNTEER_TRACKS = [
+  'Informative',
+  'Persuasive',
+  'Business Pitch / Sales Pitch',
+]
+
+let inviteVolunteerTrackDraftState: string[] = [...INITIAL_INVITE_VOLUNTEER_TRACKS]
+
+export function getInviteVolunteerTrackDraft(): string[] {
+  return [...inviteVolunteerTrackDraftState]
+}
+
+export function saveInviteVolunteerTrackDraft(tracks: string[]): string[] {
+  if (tracks.length > 0) {
+    inviteVolunteerTrackDraftState = [...tracks]
+  }
+  return getInviteVolunteerTrackDraft()
+}
+
+export function resetInviteVolunteerTrackDraft() {
+  inviteVolunteerTrackDraftState = [...INITIAL_INVITE_VOLUNTEER_TRACKS]
+}
+
 if (typeof window !== 'undefined') {
   ;(window as unknown as { __getHE0142AssignmentState: typeof getHE0142AssignmentState }).__getHE0142AssignmentState = getHE0142AssignmentState
   ;(window as unknown as { __resetHE0142Reassignment: typeof resetHE0142Reassignment }).__resetHE0142Reassignment = resetHE0142Reassignment
@@ -401,5 +425,7 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __resetFarhanaAvailabilityOverride: typeof resetFarhanaAvailabilityOverride }).__resetFarhanaAvailabilityOverride = resetFarhanaAvailabilityOverride
   ;(window as unknown as { __getFarhanaTrackEligibility: typeof getFarhanaTrackEligibility }).__getFarhanaTrackEligibility = getFarhanaTrackEligibility
   ;(window as unknown as { __resetFarhanaTrackEligibility: typeof resetFarhanaTrackEligibility }).__resetFarhanaTrackEligibility = resetFarhanaTrackEligibility
+  ;(window as unknown as { __getInviteVolunteerTrackDraft: typeof getInviteVolunteerTrackDraft }).__getInviteVolunteerTrackDraft = getInviteVolunteerTrackDraft
+  ;(window as unknown as { __resetInviteVolunteerTrackDraft: typeof resetInviteVolunteerTrackDraft }).__resetInviteVolunteerTrackDraft = resetInviteVolunteerTrackDraft
 }
 
