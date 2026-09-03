@@ -62,6 +62,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: AppRoutePaths.foundation,
+        redirect: (context, state) => AppRoutePaths.signIn,
+      ),
+      GoRoute(
+        path: '/foundation',
         builder: (context, state) => const FoundationPage(),
       ),
       GoRoute(
@@ -279,10 +283,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.profile,
-        pageBuilder: (context, state) => _dissolvePage(
-          key: state.pageKey,
-          child: const ProfileScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            _dissolvePage(key: state.pageKey, child: const ProfileScreen()),
       ),
       GoRoute(
         path: AppRoutePaths.profileThreePaths,
@@ -293,17 +295,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.profileSettings,
-        pageBuilder: (context, state) => _dissolvePage(
-          key: state.pageKey,
-          child: const SettingsScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            _dissolvePage(key: state.pageKey, child: const SettingsScreen()),
       ),
       GoRoute(
         path: AppRoutePaths.managePaths,
-        pageBuilder: (context, state) => _dissolvePage(
-          key: state.pageKey,
-          child: const ManagePathsScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            _dissolvePage(key: state.pageKey, child: const ManagePathsScreen()),
       ),
       GoRoute(
         path: AppRoutePaths.managePathsContentAdded,

@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { adminVolunteersList } from '../data/mockAdminData'
+import { getAdminVolunteersList } from '../data/mockAdminData'
 
 export function AdminVolunteerEvaluatorsPage() {
   const navigate = useNavigate()
+  const volunteers = getAdminVolunteersList()
 
   return (
     <AdminLayout
@@ -110,7 +111,7 @@ export function AdminVolunteerEvaluatorsPage() {
         </div>
 
         {/* Rows */}
-        {adminVolunteersList.map((vol, idx) => (
+        {volunteers.map((vol, idx) => (
           <div key={vol.name}>
             <div
               style={{
@@ -176,7 +177,7 @@ export function AdminVolunteerEvaluatorsPage() {
               </div>
             </div>
 
-            {idx < adminVolunteersList.length - 1 && (
+            {idx < volunteers.length - 1 && (
               <div
                 style={{
                   width: '1040px',

@@ -10,9 +10,36 @@ export function PortalResetPasswordPage() {
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [confirmPasswordError, setConfirmPasswordError] = useState('')
 
   function handleUpdatePassword(e?: FormEvent) {
     if (e) e.preventDefault()
+    let hasError = false
+
+    const trimmedPassword = password.trim()
+    if (!trimmedPassword) {
+      setPasswordError('New password is required.')
+      hasError = true
+    } else if (trimmedPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters.')
+      hasError = true
+    } else {
+      setPasswordError('')
+    }
+
+    const trimmedConfirm = confirmPassword.trim()
+    if (!trimmedConfirm) {
+      setConfirmPasswordError('Please confirm your new password.')
+      hasError = true
+    } else if (trimmedConfirm !== trimmedPassword) {
+      setConfirmPasswordError('Passwords do not match.')
+      hasError = true
+    } else {
+      setConfirmPasswordError('')
+    }
+
+    if (hasError) return
     navigate(portalRoutePaths.authentication.passwordResetComplete)
   }
 
@@ -35,7 +62,11 @@ export function PortalResetPasswordPage() {
           label="NEW PASSWORD"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value)
+            if (passwordError) setPasswordError('')
+          }}
+          error={passwordError}
           placeholder="Create a new password"
           style={{ marginTop: '72px' }}
         />
@@ -45,7 +76,11 @@ export function PortalResetPasswordPage() {
           label="CONFIRM NEW PASSWORD"
           type="password"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value)
+            if (confirmPasswordError) setConfirmPasswordError('')
+          }}
+          error={confirmPasswordError}
           placeholder="Repeat password"
           style={{ marginTop: '24px' }}
         />

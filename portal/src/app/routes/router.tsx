@@ -68,6 +68,10 @@ import { portalRoutePaths } from './routePaths'
 export const router = createBrowserRouter([
   {
     path: portalRoutePaths.foundation,
+    element: <Navigate to={portalRoutePaths.authentication.signIn} replace />,
+  },
+  {
+    path: '/foundation',
     element: <FoundationPage />,
   },
   {
@@ -207,6 +211,10 @@ export const router = createBrowserRouter([
     element: <AdminRequestRedirectedHumanPage />,
   },
   {
+    path: '/admin/requests/:requestId',
+    element: <AdminRequestDetailsRoutingPage />,
+  },
+  {
     path: portalRoutePaths.admin.evaluations,
     element: <AdminEvaluationRecordsPage />,
   },
@@ -217,6 +225,10 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.admin.evaluationApprovedAi,
     element: <AdminEvaluationApprovedAiPage />,
+  },
+  {
+    path: '/admin/evaluations/:submissionId',
+    element: <AdminEvaluationProcessingHumanPage />,
   },
   {
     path: portalRoutePaths.admin.moderation,
@@ -239,6 +251,10 @@ export const router = createBrowserRouter([
     element: <AdminRequestReReviewPage />,
   },
   {
+    path: '/admin/moderation/:submissionId',
+    element: <AdminModerationReviewPage />,
+  },
+  {
     path: portalRoutePaths.admin.volunteers,
     element: <AdminVolunteerEvaluatorsPage />,
   },
@@ -259,11 +275,19 @@ export const router = createBrowserRouter([
     element: <AdminVolunteerTrackEligibilityPage />,
   },
   {
+    path: '/admin/volunteers/:volunteerId',
+    element: <AdminVolunteerAccountPage />,
+  },
+  {
     path: portalRoutePaths.admin.events,
     element: <AdminEventManagementPage />,
   },
   {
     path: portalRoutePaths.admin.eventEditor,
+    element: <AdminEventEditorPage />,
+  },
+  {
+    path: '/admin/events/:eventId',
     element: <AdminEventEditorPage />,
   },
   {
@@ -284,6 +308,10 @@ export const router = createBrowserRouter([
   },
   {
     path: portalRoutePaths.superAdmin.adminAccount,
+    element: <SuperAdminAccountPage />,
+  },
+  {
+    path: '/super-admin/admin-accounts/:adminId',
     element: <SuperAdminAccountPage />,
   },
   {

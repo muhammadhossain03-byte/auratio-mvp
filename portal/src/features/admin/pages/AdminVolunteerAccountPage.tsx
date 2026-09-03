@@ -1,12 +1,21 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getFarhanaAvailabilityState, getFarhanaTrackEligibility } from '../data/mockAdminData'
+import { getFarhanaAvailabilityState, getFarhanaTrackEligibility, getAdminVolunteerById } from '../data/mockAdminData'
 
 export function AdminVolunteerAccountPage() {
   const navigate = useNavigate()
+  const { volunteerId } = useParams<{ volunteerId?: string }>()
+  const volunteer = getAdminVolunteerById(volunteerId || 'farhana')
+  const isFarhana = !volunteerId || volunteerId === 'farhana'
   const farhanaState = getFarhanaAvailabilityState()
   const farhanaTracks = getFarhanaTrackEligibility()
+
+  const displayName = isFarhana ? 'Farhana Islam' : (volunteer?.name || 'Volunteer Evaluator')
+  const lifecycle = isFarhana ? 'Active' : (volunteer?.lifecycle || 'Invited')
+  const effectiveAvailability = isFarhana ? farhanaState.effectiveAvailability : (volunteer?.effectiveAvailability || 'Available')
+  const overrideReason = isFarhana ? farhanaState.overrideReason : 'None'
+  const tracksDisplay = isFarhana ? farhanaTracks.join(' • ') : (volunteer?.tracks || '0 tracks')
 
   return (
     <AdminLayout
@@ -19,18 +28,18 @@ export function AdminVolunteerAccountPage() {
         className="auratio-admin-page-title"
         style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
       >
-        Farhana Islam
+        {displayName}
       </h2>
       <p
         className="auratio-admin-page-subtitle"
         style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
       >
-        Active Volunteer Evaluator account
+        {`${lifecycle} Volunteer Evaluator account`}
       </p>
 
       {/* Top right pill */}
       <div
-        className="auratio-admin-status-pill auratio-admin-status-pill--active"
+        className={`auratio-admin-status-pill auratio-admin-status-pill--${lifecycle.toLowerCase()}`}
         style={{
           position: 'absolute',
           left: '940px',
@@ -42,7 +51,7 @@ export function AdminVolunteerAccountPage() {
           fontWeight: 600,
         }}
       >
-        Active
+        {lifecycle}
       </div>
 
       {/* Left Card: Account & authorization */}
@@ -83,7 +92,7 @@ export function AdminVolunteerAccountPage() {
               color: '#111827',
             }}
           >
-            Farhana Islam
+            {displayName}
           </div>
         </div>
 
@@ -115,7 +124,7 @@ export function AdminVolunteerAccountPage() {
             Authorized tracks
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            {farhanaTracks.join(' • ')}
+            {tracksDisplay}
           </div>
         </div>
 
@@ -167,13 +176,13 @@ export function AdminVolunteerAccountPage() {
           </div>
           <div
             className={`auratio-admin-status-pill ${
-              farhanaState.effectiveAvailability === 'Unavailable'
+              effectiveAvailability === 'Unavailable'
                 ? 'auratio-admin-status-pill--disabled'
                 : 'auratio-admin-status-pill--active'
             }`}
             style={{ width: '150px', height: '34px' }}
           >
-            {farhanaState.effectiveAvailability}
+            {effectiveAvailability}
           </div>
         </div>
 
@@ -182,7 +191,7 @@ export function AdminVolunteerAccountPage() {
             Admin override
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            {farhanaState.overrideReason}
+            {overrideReason}
           </div>
         </div>
 
@@ -192,7 +201,7 @@ export function AdminVolunteerAccountPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: '32px', color: '#111827' }}>
-              2
+              {isFarhana ? '2' : (volunteer?.activeAssignments || '0')}
             </div>
             <div style={{ fontSize: '11px', lineHeight: '16px', color: '#6B788A', marginLeft: '16px' }}>
               Informational workload only — no automatic cap.

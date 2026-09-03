@@ -2,13 +2,59 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getInviteVolunteerTrackDraft } from '../data/mockAdminData'
+import { getInviteVolunteerTrackDraft, addAdminVolunteer } from '../data/mockAdminData'
 
 export function AdminInviteVolunteerPage() {
   const navigate = useNavigate()
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
+  const [nameError, setNameError] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [trackError, setTrackError] = useState('')
   const inviteTracks = getInviteVolunteerTrackDraft()
+
+  function handleSendInvite() {
+    let hasError = false
+    const trimmedName = displayName.trim()
+    if (!trimmedName) {
+      setNameError('Display name is required.')
+      hasError = true
+    } else {
+      setNameError('')
+    }
+
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setEmailError('Email is required.')
+      hasError = true
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setEmailError('Please enter a valid email address.')
+      hasError = true
+    } else {
+      setEmailError('')
+    }
+
+    if (inviteTracks.length < 1) {
+      setTrackError('Send Invite is unavailable if zero tracks are selected.')
+      hasError = true
+    } else {
+      setTrackError('')
+    }
+
+    if (hasError) return
+
+    addAdminVolunteer({
+      name: trimmedName,
+      email: trimmedEmail,
+      trackCount: inviteTracks.length,
+    })
+
+    navigate(portalRoutePaths.admin.volunteers)
+  }
+
+  function handleCancel() {
+    navigate(portalRoutePaths.admin.volunteers)
+  }
 
   const publicSpeakingSelected = inviteTracks.filter((t) =>
     [
@@ -89,11 +135,19 @@ export function AdminInviteVolunteerPage() {
             id="invite-display-name"
             type="text"
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={(e) => {
+              setDisplayName(e.target.value)
+              if (nameError) setNameError('')
+            }}
             placeholder="Volunteer full name"
             className="auratio-admin-input"
             style={{ width: '614px', height: '48px' }}
           />
+          {nameError && (
+            <div style={{ color: '#B42318', fontSize: '11px', marginTop: '4px' }}>
+              {nameError}
+            </div>
+          )}
         </div>
 
         <div style={{ marginTop: '18px' }}>
@@ -107,11 +161,19 @@ export function AdminInviteVolunteerPage() {
             id="invite-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              if (emailError) setEmailError('')
+            }}
             placeholder="volunteer@example.com"
             className="auratio-admin-input"
             style={{ width: '614px', height: '48px' }}
           />
+          {emailError && (
+            <div style={{ color: '#B42318', fontSize: '11px', marginTop: '4px' }}>
+              {emailError}
+            </div>
+          )}
         </div>
 
         <div style={{ marginTop: '18px' }}>
@@ -265,7 +327,11 @@ export function AdminInviteVolunteerPage() {
               marginTop: '12px',
             }}
           >
-            Send Invite is unavailable if zero tracks are selected.
+            {trackError ? (
+              <span style={{ color: '#B42318', fontWeight: 600 }}>{trackError}</span>
+            ) : (
+              'Send Invite is unavailable if zero tracks are selected.'
+            )}
           </div>
         </div>
       </div>
@@ -282,7 +348,7 @@ export function AdminInviteVolunteerPage() {
       >
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.volunteers)}
+          onClick={handleSendInvite}
           className="auratio-admin-btn auratio-admin-btn--primary"
           style={{ width: '220px', height: '44px', fontSize: '14px', fontWeight: 600 }}
         >
@@ -290,7 +356,7 @@ export function AdminInviteVolunteerPage() {
         </button>
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.volunteers)}
+          onClick={handleCancel}
           className="auratio-admin-btn auratio-admin-btn--secondary"
           style={{ width: '120px', height: '44px', fontSize: '14px', fontWeight: 600, marginLeft: '16px' }}
         >

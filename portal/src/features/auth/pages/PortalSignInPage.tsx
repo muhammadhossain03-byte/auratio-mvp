@@ -10,9 +10,33 @@ export function PortalSignInPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('name@example.com')
   const [password, setPassword] = useState('••••••••')
+  const [emailError, setEmailError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
 
   function handleSignIn(e?: FormEvent) {
     if (e) e.preventDefault()
+    let hasError = false
+
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setEmailError('Email is required.')
+      hasError = true
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setEmailError('Please enter a valid email address.')
+      hasError = true
+    } else {
+      setEmailError('')
+    }
+
+    const trimmedPassword = password.trim()
+    if (!trimmedPassword) {
+      setPasswordError('Password is required.')
+      hasError = true
+    } else {
+      setPasswordError('')
+    }
+
+    if (hasError) return
     navigate(portalRoutePaths.authentication.roleAuthorization)
   }
 
@@ -35,7 +59,11 @@ export function PortalSignInPage() {
           label="EMAIL"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (emailError) setEmailError('')
+          }}
+          error={emailError}
           placeholder="name@example.com"
           style={{ marginTop: '96px' }}
         />
@@ -45,7 +73,11 @@ export function PortalSignInPage() {
           label="PASSWORD"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value)
+            if (passwordError) setPasswordError('')
+          }}
+          error={passwordError}
           placeholder="••••••••"
           style={{ marginTop: '30px' }}
         />

@@ -24,4 +24,10 @@ class SelectedPathsController extends Notifier<Set<AuratioPath>> {
     }
     state = Set.unmodifiable(next);
   }
+
+  void setPaths(Set<AuratioPath> paths) {
+    if (paths.isNotEmpty) {
+      state = Set.unmodifiable(paths);
+    }
+  }
 }

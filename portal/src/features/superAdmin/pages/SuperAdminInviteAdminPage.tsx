@@ -2,13 +2,43 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { inviteAdminAccount } from '../data/mockSuperAdminData'
 
 export function SuperAdminInviteAdminPage() {
   const navigate = useNavigate()
   const [fullName, setFullName] = useState('Admin full name')
   const [email, setEmail] = useState('admin@example.com')
+  const [nameError, setNameError] = useState('')
+  const [emailError, setEmailError] = useState('')
 
   function handleSendInvite() {
+    let hasError = false
+    const trimmedName = fullName.trim()
+    if (!trimmedName) {
+      setNameError('Full name is required.')
+      hasError = true
+    } else {
+      setNameError('')
+    }
+
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setEmailError('Email is required.')
+      hasError = true
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setEmailError('Please enter a valid email address.')
+      hasError = true
+    } else {
+      setEmailError('')
+    }
+
+    if (hasError) return
+
+    inviteAdminAccount({
+      fullName: trimmedName,
+      email: trimmedEmail,
+    })
+
     navigate(portalRoutePaths.superAdmin.adminAccounts)
   }
 
@@ -70,7 +100,10 @@ export function SuperAdminInviteAdminPage() {
         <input
           type="text"
           value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
+          onChange={(e) => {
+            setFullName(e.target.value)
+            if (nameError) setNameError('')
+          }}
           aria-label="Full name"
           style={{
             marginTop: '8px',
@@ -89,6 +122,11 @@ export function SuperAdminInviteAdminPage() {
             outline: 'none',
           }}
         />
+        {nameError && (
+          <div style={{ color: '#B42318', fontSize: '11px', marginTop: '4px' }}>
+            {nameError}
+          </div>
+        )}
 
         {/* Email */}
         <div
@@ -106,7 +144,10 @@ export function SuperAdminInviteAdminPage() {
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (emailError) setEmailError('')
+          }}
           aria-label="Email"
           style={{
             marginTop: '8px',
@@ -125,6 +166,11 @@ export function SuperAdminInviteAdminPage() {
             outline: 'none',
           }}
         />
+        {emailError && (
+          <div style={{ color: '#B42318', fontSize: '11px', marginTop: '4px' }}>
+            {emailError}
+          </div>
+        )}
 
         {/* Assigned Role */}
         <div

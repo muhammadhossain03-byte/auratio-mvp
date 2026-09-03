@@ -9,9 +9,20 @@ import { AuthLayout } from '../components/AuthLayout'
 export function PortalForgotPasswordPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('name@example.com')
+  const [emailError, setEmailError] = useState('')
 
   function handleSendResetLink(e?: FormEvent) {
     if (e) e.preventDefault()
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setEmailError('Email is required.')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setEmailError('Please enter a valid email address.')
+      return
+    }
+    setEmailError('')
     navigate(portalRoutePaths.authentication.resetLinkSent)
   }
 
@@ -34,7 +45,11 @@ export function PortalForgotPasswordPage() {
           label="EMAIL"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (emailError) setEmailError('')
+          }}
+          error={emailError}
           placeholder="name@example.com"
           style={{ marginTop: '84px' }}
         />

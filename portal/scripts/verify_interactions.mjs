@@ -153,6 +153,13 @@ async function run() {
       await new Promise((r) => setTimeout(r, 200))
     }
 
+    // 0. ROOT REDIRECT
+    console.log('--- Testing Portal Root Redirect ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/` })
+    await new Promise((r) => setTimeout(r, 500))
+    console.log('Path after visiting root /:', await getPathname())
+    if (await getPathname() !== '/auth/sign-in') throw new Error('Expected / to redirect to /auth/sign-in')
+
     // 1. AUTH FLOW
     console.log('--- Testing Auth Flow ---')
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/auth/sign-in` })
@@ -170,6 +177,15 @@ async function run() {
     console.log('Path after Open Reset Link:', await getPathname())
     if (await getPathname() !== '/auth/reset-password') throw new Error('Expected /auth/reset-password')
 
+    // Verify empty password blocks navigation
+    await clickByText('button[type="submit"]', 'Update Password')
+    if (await getPathname() !== '/auth/reset-password') {
+      throw new Error('Expected /auth/reset-password when submitting empty passwords')
+    }
+
+    // Enter valid passwords and submit
+    await setInputValue('#portal-reset-password-new', 'Password123!')
+    await setInputValue('#portal-reset-password-confirm', 'Password123!')
     await clickByText('button[type="submit"]', 'Update Password')
     console.log('Path after Update Password:', await getPathname())
     if (await getPathname() !== '/auth/password-reset-complete') throw new Error('Expected /auth/password-reset-complete')
@@ -879,6 +895,16 @@ async function run() {
     // Invite -> Send Volunteer Invite -> Directory
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/invite` })
     await new Promise((r) => setTimeout(r, 500))
+
+    // Verify empty fields block submit
+    await clickByText('button.auratio-admin-btn--primary', 'Send Volunteer Invite')
+    if (await getPathname() !== '/admin/volunteers/invite') {
+      throw new Error('Expected /admin/volunteers/invite when fields are empty')
+    }
+
+    // Enter name and email and send invite
+    await setInputValue('#invite-display-name', 'Tariq Rahman')
+    await setInputValue('#invite-email', 'tariq@example.com')
     await clickByText('button.auratio-admin-btn--primary', 'Send Volunteer Invite')
     if (await getPathname() !== '/admin/volunteers') {
       throw new Error('Expected /admin/volunteers after Send Volunteer Invite')

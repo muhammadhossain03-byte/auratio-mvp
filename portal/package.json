@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "test": "node scripts/verify_step_iv_hardening.mjs && node scripts/verify_interactions.mjs",
     "capture": "node scripts/capture.mjs"
   },
   "dependencies": {

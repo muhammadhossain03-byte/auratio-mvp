@@ -47,8 +47,28 @@ export function deactivateNadia(): void {
   nadiaProfile.status = 'Deactivated'
 }
 
+let extraAdminAccounts: SuperAdminAccountItem[] = []
+
+export function inviteAdminAccount(params: { fullName: string; email: string }): SuperAdminAccountItem {
+  const slug = params.fullName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `admin-${Date.now()}`
+  const newAccount: SuperAdminAccountItem = {
+    id: slug,
+    name: params.fullName,
+    email: params.email,
+    accountType: 'Admin', // STRICTLY Admin, cannot be Super Admin
+    status: 'Active',
+    protection: '—',
+    isRoot: false,
+    actionLabel: 'Open',
+    destinationPath: `/super-admin/admin-accounts/${slug}`,
+  }
+  extraAdminAccounts = [...extraAdminAccounts, newAccount]
+  return newAccount
+}
+
 export function resetSuperAdminState(): void {
   nadiaProfile = { ...CANONICAL_NADIA_PROFILE }
+  extraAdminAccounts = []
 }
 
 if (typeof window !== 'undefined') {
@@ -56,10 +76,14 @@ if (typeof window !== 'undefined') {
     __auratioResetSuperAdmin?: () => void
     __getNadiaAdminAccount?: () => NadiaProfileState
     __updateNadiaAdminAccount?: (updates: { displayName?: string; email?: string }) => void
+    __inviteAdminAccount?: (params: { fullName: string; email: string }) => SuperAdminAccountItem
+    __getAdminAccountsList?: () => SuperAdminAccountItem[]
   }
   win.__auratioResetSuperAdmin = resetSuperAdminState
   win.__getNadiaAdminAccount = getNadiaAdminAccount
   win.__updateNadiaAdminAccount = updateNadiaAdminAccount
+  win.__inviteAdminAccount = inviteAdminAccount
+  win.__getAdminAccountsList = getAdminAccountsList
 }
 
 export function getAdminAccountsList(): SuperAdminAccountItem[] {
@@ -97,5 +121,6 @@ export function getAdminAccountsList(): SuperAdminAccountItem[] {
       actionLabel: 'Open',
       destinationPath: portalRoutePaths.superAdmin.adminAccount,
     },
+    ...extraAdminAccounts,
   ]
 }

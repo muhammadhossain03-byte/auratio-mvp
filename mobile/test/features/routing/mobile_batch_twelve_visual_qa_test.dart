@@ -35,10 +35,7 @@ void main() {
         );
 
         // Filters Card
-        expect(
-          find.byKey(EventsDiscoveryScreen.filterCardKey),
-          findsOneWidget,
-        );
+        expect(find.byKey(EventsDiscoveryScreen.filterCardKey), findsOneWidget);
         expect(find.text('Filters'), findsOneWidget);
         expect(
           find.text('Bangladesh-only MVP • refine your results'),
@@ -110,10 +107,7 @@ void main() {
         expect(find.text('Admin-curated event information'), findsOneWidget);
 
         // Event Information card
-        expect(
-          find.byKey(EventDetailsScreen.eventInfoCardKey),
-          findsOneWidget,
-        );
+        expect(find.byKey(EventDetailsScreen.eventInfoCardKey), findsOneWidget);
         expect(find.text('Event information'), findsOneWidget);
         expect(find.text('Date'), findsOneWidget);
         expect(find.text('Upcoming date'), findsOneWidget);

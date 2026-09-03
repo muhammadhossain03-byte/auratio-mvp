@@ -1,23 +1,46 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { getAdminEventById, saveAdminEvent } from '../data/mockAdminData'
 
 export function AdminEventEditorPage() {
   const navigate = useNavigate()
-  const [title, setTitle] = useState('')
-  const [dateTime, setDateTime] = useState('')
-  const [division, setDivision] = useState('')
-  const [organizer, setOrganizer] = useState('')
-  const [description, setDescription] = useState('')
-  const [paths, setPaths] = useState<{ [k: string]: boolean }>({
-    publicSpeaking: false,
-    professionalPresenting: false,
-    contentCreation: false,
-  })
+  const { eventId: paramEventId } = useParams<{ eventId?: string }>()
+  const [searchParams] = useSearchParams()
+  const eventId = paramEventId || searchParams.get('id') || undefined
+  const existing = eventId ? getAdminEventById(eventId) : undefined
 
-  const togglePath = (key: string) => {
+  const [title, setTitle] = useState(() => existing?.title || '')
+  const [dateTime, setDateTime] = useState(() => existing?.date || '')
+  const [division, setDivision] = useState(() => existing?.location || '')
+  const [organizer, setOrganizer] = useState(() => existing?.organizer || '')
+  const [description, setDescription] = useState(() => existing?.description || '')
+  const [paths, setPaths] = useState<{
+    publicSpeaking: boolean
+    professionalPresenting: boolean
+    contentCreation: boolean
+  }>(() => ({
+    publicSpeaking: Boolean(existing?.paths?.publicSpeaking),
+    professionalPresenting: Boolean(existing?.paths?.professionalPresenting),
+    contentCreation: Boolean(existing?.paths?.contentCreation),
+  }))
+
+  const togglePath = (key: 'publicSpeaking' | 'professionalPresenting' | 'contentCreation') => {
     setPaths((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  function handleSaveDraft() {
+    saveAdminEvent({
+      id: eventId,
+      title: title.trim(),
+      dateTime: dateTime.trim(),
+      division: division.trim(),
+      organizer: organizer.trim(),
+      description: description.trim(),
+      paths,
+    })
+    navigate(portalRoutePaths.admin.events)
   }
 
   return (
@@ -266,7 +289,7 @@ export function AdminEventEditorPage() {
       >
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.events)}
+          onClick={handleSaveDraft}
           className="auratio-admin-btn auratio-admin-btn--secondary"
           style={{ width: '140px', height: '42px', fontSize: '13px', fontWeight: 600 }}
         >

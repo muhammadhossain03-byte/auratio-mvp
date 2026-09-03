@@ -37,33 +37,24 @@ void main() {
   }
 
   group('Upstream Home Leaderboard Navigation', () {
-    testWidgets(
-      'Home Leaderboards button navigates to AI Leaderboard',
-      (tester) async {
-        final router = await pumpAuratioApp(tester);
-        await openAuratioRoute(
-          tester,
-          router,
-          AppRoutePaths.home,
-          settle: false,
-        );
-        await tester.pumpAndSettle();
+    testWidgets('Home Leaderboards button navigates to AI Leaderboard', (
+      tester,
+    ) async {
+      final router = await pumpAuratioApp(tester);
+      await openAuratioRoute(tester, router, AppRoutePaths.home, settle: false);
+      await tester.pumpAndSettle();
 
-        expect(router.state.uri.path, AppRoutePaths.home);
+      expect(router.state.uri.path, AppRoutePaths.home);
 
-        // Tap Leaderboards button -> navigates to AI Leaderboard
-        final leaderboardsBtn = find.byKey(HomeScreen.leaderboardsButtonKey);
-        expect(leaderboardsBtn, findsOneWidget);
-        await tester.tap(leaderboardsBtn);
-        await tester.pumpAndSettle();
+      // Tap Leaderboards button -> navigates to AI Leaderboard
+      final leaderboardsBtn = find.byKey(HomeScreen.leaderboardsButtonKey);
+      expect(leaderboardsBtn, findsOneWidget);
+      await tester.tap(leaderboardsBtn);
+      await tester.pumpAndSettle();
 
-        expect(router.state.uri.path, AppRoutePaths.leaderboard);
-        expect(
-          find.byKey(LeaderboardAiAllTimeScreen.screenKey),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(router.state.uri.path, AppRoutePaths.leaderboard);
+      expect(find.byKey(LeaderboardAiAllTimeScreen.screenKey), findsOneWidget);
+    });
   });
 
   group('Leaderboard AI All-Time (282:509)', () {

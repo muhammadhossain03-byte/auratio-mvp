@@ -3,6 +3,7 @@ import type { InputHTMLAttributes } from 'react'
 interface AuthInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
   id: string
+  error?: string
 }
 
 export function AuthInput({
@@ -10,6 +11,7 @@ export function AuthInput({
   id,
   className = '',
   style,
+  error,
   ...props
 }: AuthInputProps) {
   return (
@@ -20,8 +22,25 @@ export function AuthInput({
       <input
         id={id}
         className={`auratio-auth-input ${className}`.trim()}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
         {...props}
       />
+      {error && (
+        <span
+          id={`${id}-error`}
+          role="alert"
+          style={{
+            display: 'block',
+            color: '#B42318',
+            fontSize: '11px',
+            lineHeight: '16px',
+            marginTop: '4px',
+          }}
+        >
+          {error}
+        </span>
+      )}
     </div>
   )
 }

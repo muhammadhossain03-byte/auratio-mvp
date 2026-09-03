@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../../foundation/navigation/auratio_navigation.dart';
+import '../../../onboarding/application/path_selection_controller.dart';
+import '../../../onboarding/domain/auratio_path.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({
-    this.showThreePaths = false,
-    super.key,
-  });
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({this.showThreePaths = false, super.key});
 
   final bool showThreePaths;
 
@@ -20,15 +20,22 @@ class ProfileScreen extends StatelessWidget {
   static const selectedPathsCardKey = ValueKey('profile-selected-paths-card');
   static const managePathsLinkKey = ValueKey('profile-manage-paths-link');
   static const activityCardKey = ValueKey('profile-activity-card');
-  static const privateProgressLinkKey = ValueKey('profile-private-progress-link');
-  static const approvedHistoryLinkKey = ValueKey('profile-approved-history-link');
+  static const privateProgressLinkKey = ValueKey(
+    'profile-private-progress-link',
+  );
+  static const approvedHistoryLinkKey = ValueKey(
+    'profile-approved-history-link',
+  );
   static const leaderboardsLinkKey = ValueKey('profile-leaderboards-link');
   static const eventsLinkKey = ValueKey('profile-events-link');
   static const settingsButtonKey = ValueKey('profile-settings-button');
   static const bottomNavKey = ValueKey('profile-bottom-nav');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final savedPaths = ref.watch(selectedPathsProvider);
+    final isThreePaths = showThreePaths || savedPaths.length >= 3;
+    final orderedPaths = AuratioPath.values.where(savedPaths.contains).toList();
     return Scaffold(
       key: screenKey,
       backgroundColor: AuratioColors.backgroundApp,
@@ -36,10 +43,7 @@ class ProfileScreen extends StatelessWidget {
         top: false,
         child: Column(
           children: [
-            const AuratioScreenHeader(
-              title: 'Profile',
-              showBack: false,
-            ),
+            const AuratioScreenHeader(title: 'Profile', showBack: false),
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
@@ -185,49 +189,78 @@ class ProfileScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              Text(
-                                'Public Speaking',
-                                style: AuratioTypography.bodySmall.copyWith(
-                                  color: const Color(0xFF111827),
-                                  fontSize: 12,
-                                  height: 18 / 12,
-                                  fontWeight: FontWeight.w500,
+                              if (isThreePaths) ...[
+                                Text(
+                                  'Public Speaking',
+                                  style: AuratioTypography.bodySmall.copyWith(
+                                    color: const Color(0xFF111827),
+                                    fontSize: 12,
+                                    height: 18 / 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Professional Presenting',
-                                style: AuratioTypography.bodySmall.copyWith(
-                                  color: const Color(0xFF111827),
-                                  fontSize: 12,
-                                  height: 18 / 12,
-                                  fontWeight: FontWeight.w500,
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Professional Presenting',
+                                  style: AuratioTypography.bodySmall.copyWith(
+                                    color: const Color(0xFF111827),
+                                    fontSize: 12,
+                                    height: 18 / 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              GestureDetector(
-                                key: managePathsLinkKey,
-                                onTap: () {
-                                  if (showThreePaths) {
+                                const SizedBox(height: 4),
+                                GestureDetector(
+                                  key: managePathsLinkKey,
+                                  onTap: () {
                                     context.push(
                                       AppRoutePaths.managePathsContentAdded,
                                     );
-                                  } else {
-                                    context.push(AppRoutePaths.managePaths);
-                                  }
-                                },
-                                child: Text(
-                                  showThreePaths
-                                      ? 'Content Creation  •  Manage Paths  →'
-                                      : 'Manage Paths  →',
-                                  style: AuratioTypography.caption.copyWith(
-                                    color: const Color(0xFF6B788A),
-                                    fontSize: 11,
-                                    height: 16 / 11,
-                                    fontWeight: FontWeight.w400,
+                                  },
+                                  child: Text(
+                                    'Content Creation  •  Manage Paths  →',
+                                    style: AuratioTypography.caption.copyWith(
+                                      color: const Color(0xFF6B788A),
+                                      fontSize: 11,
+                                      height: 16 / 11,
+                                      fontWeight: FontWeight.w400,
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ] else ...[
+                                for (
+                                  var i = 0;
+                                  i < orderedPaths.length;
+                                  i++
+                                ) ...[
+                                  if (i > 0) const SizedBox(height: 6),
+                                  Text(
+                                    orderedPaths[i].label,
+                                    style: AuratioTypography.bodySmall.copyWith(
+                                      color: const Color(0xFF111827),
+                                      fontSize: 12,
+                                      height: 18 / 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 4),
+                                GestureDetector(
+                                  key: managePathsLinkKey,
+                                  onTap: () {
+                                    context.push(AppRoutePaths.managePaths);
+                                  },
+                                  child: Text(
+                                    'Manage Paths  →',
+                                    style: AuratioTypography.caption.copyWith(
+                                      color: const Color(0xFF6B788A),
+                                      fontSize: 11,
+                                      height: 16 / 11,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -310,8 +343,7 @@ class ProfileScreen extends StatelessWidget {
                               const SizedBox(height: 6),
                               GestureDetector(
                                 key: eventsLinkKey,
-                                onTap: () =>
-                                    context.push(AppRoutePaths.events),
+                                onTap: () => context.push(AppRoutePaths.events),
                                 child: Text(
                                   'Events  →',
                                   style: AuratioTypography.bodySmall.copyWith(
@@ -339,9 +371,7 @@ class ProfileScreen extends StatelessWidget {
                               context.push(AppRoutePaths.profileSettings),
                           style: OutlinedButton.styleFrom(
                             backgroundColor: AuratioColors.surfaceDefault,
-                            side: const BorderSide(
-                              color: Color(0xFFC8D2E0),
-                            ),
+                            side: const BorderSide(color: Color(0xFFC8D2E0)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

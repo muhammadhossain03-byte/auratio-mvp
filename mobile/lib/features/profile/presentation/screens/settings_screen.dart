@@ -10,13 +10,15 @@ class SettingsScreen extends StatelessWidget {
 
   static const screenKey = ValueKey('settings-screen');
   static const accountCardKey = ValueKey('settings-account-card');
-  static const eventPreferencesCardKey =
-      ValueKey('settings-event-preferences-card');
+  static const eventPreferencesCardKey = ValueKey(
+    'settings-event-preferences-card',
+  );
   static const managePathsLinkKey = ValueKey('settings-manage-paths-link');
   static const privacyCardKey = ValueKey('settings-privacy-card');
   static const signOutVisualKey = ValueKey('settings-sign-out-visual');
-  static const backToProfileButtonKey =
-      ValueKey('settings-back-to-profile-button');
+  static const backToProfileButtonKey = ValueKey(
+    'settings-back-to-profile-button',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -246,9 +248,7 @@ class SettingsScreen extends StatelessWidget {
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: AuratioColors.surfaceDefault,
-                          border: Border.all(
-                            color: const Color(0xFFC8D2E0),
-                          ),
+                          border: Border.all(color: const Color(0xFFC8D2E0)),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

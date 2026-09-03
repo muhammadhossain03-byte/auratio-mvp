@@ -264,10 +264,7 @@ class EventsDiscoveryScreen extends StatelessWidget {
 }
 
 class _FilterPill extends StatelessWidget {
-  const _FilterPill({
-    required this.label,
-    super.key,
-  });
+  const _FilterPill({required this.label, super.key});
 
   final String label;
 
@@ -280,9 +277,7 @@ class _FilterPill extends StatelessWidget {
       alignment: Alignment.centerLeft,
       decoration: BoxDecoration(
         color: AuratioColors.surfaceDefault,
-        border: Border.all(
-          color: const Color(0xFFC9D6E7),
-        ),
+        border: Border.all(color: const Color(0xFFC9D6E7)),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -338,4 +333,3 @@ class _TrianglePainter extends CustomPainter {
   bool shouldRepaint(covariant _TrianglePainter oldDelegate) =>
       oldDelegate.color != color;
 }
-

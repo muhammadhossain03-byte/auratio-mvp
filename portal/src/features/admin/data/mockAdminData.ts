@@ -151,7 +151,9 @@ export const adminModerationQueueItems: AdminModerationQueueItem[] = [
 ]
 
 export interface AdminVolunteerItem {
+  id: string
   name: string
+  email?: string
   tracks: string
   effectiveAvailability: string
   activeAssignments: string
@@ -160,9 +162,11 @@ export interface AdminVolunteerItem {
   destinationPath: string
 }
 
-export const adminVolunteersList: AdminVolunteerItem[] = [
+export const CANONICAL_VOLUNTEERS: AdminVolunteerItem[] = [
   {
+    id: 'farhana',
     name: 'Farhana Islam',
+    email: 'farhana@auratio.org',
     tracks: '3 tracks',
     effectiveAvailability: 'Available',
     activeAssignments: '2',
@@ -171,7 +175,9 @@ export const adminVolunteersList: AdminVolunteerItem[] = [
     destinationPath: '/admin/volunteers/farhana',
   },
   {
+    id: 'rakib',
     name: 'Rakib Hasan',
+    email: 'rakib@auratio.org',
     tracks: '5 tracks',
     effectiveAvailability: 'Available',
     activeAssignments: '0',
@@ -180,7 +186,9 @@ export const adminVolunteersList: AdminVolunteerItem[] = [
     destinationPath: '/admin/volunteers/farhana',
   },
   {
+    id: 'mehnaz',
     name: 'Mehnaz Karim',
+    email: 'mehnaz@auratio.org',
     tracks: '2 tracks',
     effectiveAvailability: 'Unavailable',
     activeAssignments: '4',
@@ -189,7 +197,9 @@ export const adminVolunteersList: AdminVolunteerItem[] = [
     destinationPath: '/admin/volunteers/farhana',
   },
   {
+    id: 'nusrat',
     name: 'Nusrat Jahan',
+    email: 'nusrat@auratio.org',
     tracks: 'History retained',
     effectiveAvailability: '—',
     activeAssignments: '—',
@@ -199,7 +209,45 @@ export const adminVolunteersList: AdminVolunteerItem[] = [
   },
 ]
 
+let adminVolunteers: AdminVolunteerItem[] = [...CANONICAL_VOLUNTEERS]
+
+export function getAdminVolunteersList(): AdminVolunteerItem[] {
+  return [...adminVolunteers]
+}
+
+export function resetAdminVolunteers(): void {
+  adminVolunteers = [...CANONICAL_VOLUNTEERS]
+}
+
+export function addAdminVolunteer(params: {
+  name: string
+  email: string
+  trackCount: number
+}): AdminVolunteerItem {
+  const slug = params.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `vol-${Date.now()}`
+  const newItem: AdminVolunteerItem = {
+    id: slug,
+    name: params.name,
+    email: params.email,
+    tracks: `${params.trackCount} track${params.trackCount === 1 ? '' : 's'}`,
+    effectiveAvailability: 'Available',
+    activeAssignments: '0',
+    lifecycle: 'Invited',
+    actionLabel: 'Open',
+    destinationPath: `/admin/volunteers/${slug}`,
+  }
+  adminVolunteers = [...adminVolunteers, newItem]
+  return newItem
+}
+
+export function getAdminVolunteerById(id: string): AdminVolunteerItem | undefined {
+  return adminVolunteers.find((v) => v.id === id) || (id === 'farhana' ? adminVolunteers.find((v) => v.id === 'farhana') : undefined)
+}
+
+export const adminVolunteersList: AdminVolunteerItem[] = adminVolunteers
+
 export interface AdminEventItem {
+  id: string
   title: string
   date: string
   location: string
@@ -207,37 +255,129 @@ export interface AdminEventItem {
   status: 'Published' | 'Draft'
   actionLabel: string
   destinationPath: string
+  organizer?: string
+  description?: string
+  paths?: {
+    publicSpeaking: boolean
+    professionalPresenting: boolean
+    contentCreation: boolean
+  }
 }
 
-export const adminEventsList: AdminEventItem[] = [
+export const CANONICAL_EVENTS: AdminEventItem[] = [
   {
+    id: 'summit',
     title: 'Public Speaking Summit',
     date: 'Upcoming date',
     location: 'Dhaka Division',
     relevantPaths: 'Public Speaking',
     status: 'Published',
     actionLabel: 'Edit',
-    destinationPath: '/admin/events/editor',
+    destinationPath: '/admin/events/editor?id=summit',
+    organizer: 'National Debate Federation Bangladesh',
+    description: 'National public speaking championship and workshop series for university and college speakers.',
+    paths: {
+      publicSpeaking: true,
+      professionalPresenting: false,
+      contentCreation: false,
+    },
   },
   {
+    id: 'meetup',
     title: 'Presentation Practice Meetup',
     date: 'Upcoming date',
     location: 'Dhaka Division',
     relevantPaths: 'Professional Presenting',
     status: 'Published',
     actionLabel: 'Edit',
-    destinationPath: '/admin/events/editor',
+    destinationPath: '/admin/events/editor?id=meetup',
+    organizer: 'Dhaka Professional Communicators Club',
+    description: 'Bi-weekly practice session for workplace presentations, pitch reviews, and executive communication feedback.',
+    paths: {
+      publicSpeaking: false,
+      professionalPresenting: true,
+      contentCreation: false,
+    },
   },
   {
+    id: 'draft',
     title: 'Draft Event',
     date: 'Date TBD',
     location: 'Division not set',
     relevantPaths: 'Content Creation',
     status: 'Draft',
     actionLabel: 'Edit',
-    destinationPath: '/admin/events/editor',
+    destinationPath: '/admin/events/editor?id=draft',
+    organizer: '',
+    description: '',
+    paths: {
+      publicSpeaking: false,
+      professionalPresenting: false,
+      contentCreation: true,
+    },
   },
 ]
+
+let adminEvents: AdminEventItem[] = [...CANONICAL_EVENTS]
+
+export function getAdminEventsList(): AdminEventItem[] {
+  return [...adminEvents]
+}
+
+export function resetAdminEvents(): void {
+  adminEvents = [...CANONICAL_EVENTS]
+}
+
+export function getAdminEventById(id: string): AdminEventItem | undefined {
+  return adminEvents.find((e) => e.id === id) || (id === 'draft' ? adminEvents[2] : undefined)
+}
+
+export function saveAdminEvent(event: {
+  id?: string
+  title: string
+  dateTime: string
+  division: string
+  organizer: string
+  description: string
+  paths: {
+    publicSpeaking: boolean
+    professionalPresenting: boolean
+    contentCreation: boolean
+  }
+}): AdminEventItem {
+  const pathLabels: string[] = []
+  if (event.paths.publicSpeaking) pathLabels.push('Public Speaking')
+  if (event.paths.professionalPresenting) pathLabels.push('Professional Presenting')
+  if (event.paths.contentCreation) pathLabels.push('Content Creation')
+  const relevantPaths = pathLabels.join(', ') || 'None selected'
+
+  const eventId = event.id || `event-${Date.now()}`
+  const existingIdx = adminEvents.findIndex((e) => e.id === eventId)
+
+  const savedItem: AdminEventItem = {
+    id: eventId,
+    title: event.title || 'Untitled Draft Event',
+    date: event.dateTime || 'Date TBD',
+    location: event.division || 'Division not set',
+    relevantPaths,
+    status: 'Draft',
+    actionLabel: 'Edit',
+    destinationPath: `/admin/events/editor?id=${eventId}`,
+    organizer: event.organizer,
+    description: event.description,
+    paths: event.paths,
+  }
+
+  if (existingIdx >= 0) {
+    adminEvents[existingIdx] = savedItem
+  } else {
+    adminEvents = [savedItem, ...adminEvents]
+  }
+
+  return savedItem
+}
+
+export const adminEventsList: AdminEventItem[] = adminEvents
 
 export interface AdminAuditLogItem {
   timestamp: string
@@ -427,5 +567,11 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __resetFarhanaTrackEligibility: typeof resetFarhanaTrackEligibility }).__resetFarhanaTrackEligibility = resetFarhanaTrackEligibility
   ;(window as unknown as { __getInviteVolunteerTrackDraft: typeof getInviteVolunteerTrackDraft }).__getInviteVolunteerTrackDraft = getInviteVolunteerTrackDraft
   ;(window as unknown as { __resetInviteVolunteerTrackDraft: typeof resetInviteVolunteerTrackDraft }).__resetInviteVolunteerTrackDraft = resetInviteVolunteerTrackDraft
+  ;(window as unknown as { __resetAdminVolunteers: typeof resetAdminVolunteers }).__resetAdminVolunteers = resetAdminVolunteers
+  ;(window as unknown as { __resetAdminEvents: typeof resetAdminEvents }).__resetAdminEvents = resetAdminEvents
+  ;(window as unknown as { __getAdminVolunteersList: typeof getAdminVolunteersList }).__getAdminVolunteersList = getAdminVolunteersList
+  ;(window as unknown as { __getAdminEventsList: typeof getAdminEventsList }).__getAdminEventsList = getAdminEventsList
+  ;(window as unknown as { __saveAdminEvent: typeof saveAdminEvent }).__saveAdminEvent = saveAdminEvent
+  ;(window as unknown as { __addAdminVolunteer: typeof addAdminVolunteer }).__addAdminVolunteer = addAdminVolunteer
 }
 

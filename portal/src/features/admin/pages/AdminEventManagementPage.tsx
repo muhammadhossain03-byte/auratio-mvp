@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { adminEventsList } from '../data/mockAdminData'
+import { getAdminEventsList } from '../data/mockAdminData'
 
 export function AdminEventManagementPage() {
   const navigate = useNavigate()
+  const events = getAdminEventsList()
 
   return (
     <AdminLayout
@@ -99,7 +100,7 @@ export function AdminEventManagementPage() {
         </div>
 
         {/* Rows */}
-        {adminEventsList.map((ev, idx) => (
+        {events.map((ev, idx) => (
           <div key={ev.title}>
             <div
               style={{
@@ -153,7 +154,7 @@ export function AdminEventManagementPage() {
               </div>
             </div>
 
-            {idx < adminEventsList.length - 1 && (
+            {idx < events.length - 1 && (
               <div
                 style={{
                   width: '1020px',

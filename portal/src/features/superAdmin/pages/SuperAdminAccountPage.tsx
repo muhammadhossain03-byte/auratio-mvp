@@ -1,18 +1,28 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getNadiaAdminAccount, updateNadiaAdminAccount } from '../data/mockSuperAdminData'
+import { getNadiaAdminAccount, updateNadiaAdminAccount, getAdminAccountsList } from '../data/mockSuperAdminData'
 
 export function SuperAdminAccountPage() {
   const navigate = useNavigate()
+  const { adminId } = useParams<{ adminId?: string }>()
+  const isNadia = !adminId || adminId === 'nadia'
   const nadiaAccount = getNadiaAdminAccount()
-  const [displayName, setDisplayName] = useState(nadiaAccount.displayName)
-  const [email, setEmail] = useState(nadiaAccount.email)
-  const deactivated = nadiaAccount.status === 'Deactivated'
+  const customAccount = !isNadia ? getAdminAccountsList().find((a) => a.id === adminId) : undefined
+
+  const [displayName, setDisplayName] = useState(
+    isNadia ? nadiaAccount.displayName : (customAccount?.name || 'Admin User'),
+  )
+  const [email, setEmail] = useState(
+    isNadia ? nadiaAccount.email : (customAccount?.email || 'admin@auratio.org'),
+  )
+  const deactivated = isNadia ? nadiaAccount.status === 'Deactivated' : (customAccount?.status === 'Deactivated')
 
   function handleSave() {
-    updateNadiaAdminAccount({ displayName, email })
+    if (isNadia) {
+      updateNadiaAdminAccount({ displayName, email })
+    }
     navigate(portalRoutePaths.superAdmin.adminAccounts)
   }
 
@@ -33,7 +43,7 @@ export function SuperAdminAccountPage() {
         className="auratio-admin-page-title"
         style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
       >
-        {nadiaAccount.displayName}
+        {isNadia ? nadiaAccount.displayName : (customAccount?.name || 'Admin Account')}
       </h2>
       <p
         className="auratio-admin-page-subtitle"

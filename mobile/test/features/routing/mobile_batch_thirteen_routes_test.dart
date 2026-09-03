@@ -54,12 +54,7 @@ void main() {
   group('Upstream Profile Navigation', () {
     testWidgets('Home Profile bottom nav routes to /profile', (tester) async {
       final router = await pumpAuratioApp(tester);
-      await openAuratioRoute(
-        tester,
-        router,
-        AppRoutePaths.home,
-        settle: false,
-      );
+      await openAuratioRoute(tester, router, AppRoutePaths.home, settle: false);
       await tester.pumpAndSettle();
 
       // Tap Profile in bottom nav (index 3)
@@ -70,8 +65,9 @@ void main() {
       expect(find.byKey(ProfileScreen.screenKey), findsOneWidget);
     });
 
-    testWidgets('Tracks Profile bottom nav routes to /profile, Home is no-op',
-        (tester) async {
+    testWidgets('Tracks Profile bottom nav routes to /profile, Home is no-op', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
         tester,
@@ -93,30 +89,32 @@ void main() {
     });
 
     testWidgets(
-        'Private Progress Profile bottom nav routes to /profile, Home is no-op',
-        (tester) async {
-      final router = await pumpAuratioApp(tester);
-      await openAuratioRoute(
-        tester,
-        router,
-        AppRoutePaths.progress,
-        settle: false,
-      );
-      await tester.pumpAndSettle();
+      'Private Progress Profile bottom nav routes to /profile, Home is no-op',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.progress,
+          settle: false,
+        );
+        await tester.pumpAndSettle();
 
-      // Tap Home in bottom nav -> remains on Progress
-      await tester.tap(find.text('Home'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.progress);
+        // Tap Home in bottom nav -> remains on Progress
+        await tester.tap(find.text('Home'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.progress);
 
-      // Tap Profile in bottom nav -> routes to /profile
-      await tester.tap(find.text('Profile'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.profile);
-    });
+        // Tap Profile in bottom nav -> routes to /profile
+        await tester.tap(find.text('Profile'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.profile);
+      },
+    );
 
-    testWidgets('Events Discovery Profile bottom nav routes to /profile',
-        (tester) async {
+    testWidgets('Events Discovery Profile bottom nav routes to /profile', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
         tester,
@@ -134,8 +132,9 @@ void main() {
   });
 
   group('Base Profile (295:179)', () {
-    testWidgets('Renders base two-path state and navigates to Manage Paths',
-        (tester) async {
+    testWidgets('Renders base two-path state and navigates to Manage Paths', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
         tester,
@@ -174,8 +173,9 @@ void main() {
       expect(find.byKey(SettingsScreen.screenKey), findsOneWidget);
     });
 
-    testWidgets('Activity links navigate to their destinations',
-        (tester) async {
+    testWidgets('Activity links navigate to their destinations', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
 
       // 1. Private Progress
@@ -227,8 +227,9 @@ void main() {
       expect(router.state.uri.path, AppRoutePaths.events);
     });
 
-    testWidgets('Bottom nav on Profile works for Tracks and Progress',
-        (tester) async {
+    testWidgets('Bottom nav on Profile works for Tracks and Progress', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
         tester,
@@ -260,8 +261,9 @@ void main() {
   });
 
   group('Settings (295:214)', () {
-    testWidgets('Header back and Back to Profile CTA route to /profile',
-        (tester) async {
+    testWidgets('Header back and Back to Profile CTA route to /profile', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
         tester,
@@ -291,8 +293,9 @@ void main() {
       expect(router.state.uri.path, AppRoutePaths.profile);
     });
 
-    testWidgets('Manage selected Paths link routes to /profile/manage-paths',
-        (tester) async {
+    testWidgets('Manage selected Paths link routes to /profile/manage-paths', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
         tester,
@@ -310,62 +313,65 @@ void main() {
 
   group('Manage Paths (295:239) & Content Added (300:65)', () {
     testWidgets(
-        'Base Manage Paths (295:239): Content Creation title is interactive, but checkbox, subtitle, background, and other cards are non-interactive',
-        (tester) async {
-      final router = await pumpAuratioApp(tester);
-      await openAuratioRoute(
-        tester,
-        router,
-        AppRoutePaths.managePaths,
-        settle: false,
-      );
-      await tester.pumpAndSettle();
+      'Base Manage Paths (295:239): Content Creation title is interactive, but checkbox, subtitle, background, and other cards are non-interactive',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.managePaths,
+          settle: false,
+        );
+        await tester.pumpAndSettle();
 
-      // 1. Tapping Public Speaking title / subtitle / card does NOT navigate
-      await tester.tap(find.text('Public Speaking'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePaths);
+        // 1. Tapping Public Speaking title / subtitle / card does NOT navigate
+        await tester.tap(find.text('Public Speaking'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-      await tester.tap(find.text('Five speaking formats'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePaths);
+        await tester.tap(find.text('Five speaking formats'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-      // 2. Tapping Professional Presenting title / subtitle / card does NOT navigate
-      await tester.tap(find.text('Professional Presenting'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePaths);
+        // 2. Tapping Professional Presenting title / subtitle / card does NOT navigate
+        await tester.tap(find.text('Professional Presenting'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-      await tester.tap(find.text('Five professional presentation modes'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePaths);
+        await tester.tap(find.text('Five professional presentation modes'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-      // 3. Tapping Content Creation checkbox does NOT navigate
-      final cardRect =
-          tester.getRect(find.byKey(ManagePathsScreen.contentCreationCardKey));
-      final checkboxCenter = cardRect.topLeft + const Offset(28, 52);
-      await tester.tapAt(checkboxCenter);
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePaths);
+        // 3. Tapping Content Creation checkbox does NOT navigate
+        final cardRect = tester.getRect(
+          find.byKey(ManagePathsScreen.contentCreationCardKey),
+        );
+        final checkboxCenter = cardRect.topLeft + const Offset(28, 52);
+        await tester.tapAt(checkboxCenter);
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-      // 4. Tapping Content Creation subtitle does NOT navigate
-      await tester.tap(find.text('Three speaker-led content niches'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePaths);
+        // 4. Tapping Content Creation subtitle does NOT navigate
+        await tester.tap(find.text('Three speaker-led content niches'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-      // 5. Tapping empty/background card space does NOT navigate
-      final cardBackground = cardRect.topRight + const Offset(-20, 20);
-      await tester.tapAt(cardBackground);
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePaths);
+        // 5. Tapping empty/background card space does NOT navigate
+        final cardBackground = cardRect.topRight + const Offset(-20, 20);
+        await tester.tapAt(cardBackground);
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
 
-      // 6. ONLY tapping the "Content Creation" text affordance routes to content-added
-      await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
-    });
+        // 6. ONLY tapping the "Content Creation" text affordance routes to content-added
+        await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+      },
+    );
 
-    testWidgets('Base Manage Paths: Save Changes routes to /profile',
-        (tester) async {
+    testWidgets('Base Manage Paths: Save Changes routes to /profile', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
         tester,
@@ -381,54 +387,57 @@ void main() {
     });
 
     testWidgets(
-        'Content Added (300:65): Content Creation title is interactive, but checkbox, subtitle, background, and other cards are non-interactive',
-        (tester) async {
-      final router = await pumpAuratioApp(tester);
-      await openAuratioRoute(
-        tester,
-        router,
-        AppRoutePaths.managePathsContentAdded,
-        settle: false,
-      );
-      await tester.pumpAndSettle();
+      'Content Added (300:65): Content Creation title is interactive, but checkbox, subtitle, background, and other cards are non-interactive',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.managePathsContentAdded,
+          settle: false,
+        );
+        await tester.pumpAndSettle();
 
-      // 1. Tapping Public Speaking does NOT navigate
-      await tester.tap(find.text('Public Speaking'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        // 1. Tapping Public Speaking does NOT navigate
+        await tester.tap(find.text('Public Speaking'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
 
-      // 2. Tapping Professional Presenting does NOT navigate
-      await tester.tap(find.text('Professional Presenting'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        // 2. Tapping Professional Presenting does NOT navigate
+        await tester.tap(find.text('Professional Presenting'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
 
-      // 3. Tapping Content Creation checkbox does NOT navigate
-      final cardRect =
-          tester.getRect(find.byKey(ManagePathsScreen.contentCreationCardKey));
-      final checkboxCenter = cardRect.topLeft + const Offset(28, 52);
-      await tester.tapAt(checkboxCenter);
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        // 3. Tapping Content Creation checkbox does NOT navigate
+        final cardRect = tester.getRect(
+          find.byKey(ManagePathsScreen.contentCreationCardKey),
+        );
+        final checkboxCenter = cardRect.topLeft + const Offset(28, 52);
+        await tester.tapAt(checkboxCenter);
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
 
-      // 4. Tapping Content Creation subtitle does NOT navigate
-      await tester.tap(find.text('Three speaker-led content niches'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        // 4. Tapping Content Creation subtitle does NOT navigate
+        await tester.tap(find.text('Three speaker-led content niches'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
 
-      // 5. Tapping empty/background card space does NOT navigate
-      final cardBackground = cardRect.topRight + const Offset(-20, 20);
-      await tester.tapAt(cardBackground);
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+        // 5. Tapping empty/background card space does NOT navigate
+        final cardBackground = cardRect.topRight + const Offset(-20, 20);
+        await tester.tapAt(cardBackground);
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
 
-      // 6. ONLY tapping the "Content Creation" text affordance routes back to base manage-paths
-      await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePaths);
-    });
+        // 6. ONLY tapping the "Content Creation" text affordance routes back to base manage-paths
+        await tester.tap(find.byKey(ManagePathsScreen.contentCreationTitleKey));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePaths);
+      },
+    );
 
-    testWidgets('Content Added: Save Changes routes to /profile/three-paths',
-        (tester) async {
+    testWidgets('Content Added: Save Changes routes to /profile/three-paths', (
+      tester,
+    ) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
         tester,
@@ -447,27 +456,28 @@ void main() {
 
   group('Profile • 3 Paths (300:92)', () {
     testWidgets(
-        'Manage Paths affordance routes to /profile/manage-paths/content-added',
-        (tester) async {
-      final router = await pumpAuratioApp(tester);
-      await openAuratioRoute(
-        tester,
-        router,
-        AppRoutePaths.profileThreePaths,
-        settle: false,
-      );
-      await tester.pumpAndSettle();
+      'Manage Paths affordance routes to /profile/manage-paths/content-added',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.profileThreePaths,
+          settle: false,
+        );
+        await tester.pumpAndSettle();
 
-      expect(
-        find.text('Content Creation  •  Manage Paths  →'),
-        findsOneWidget,
-      );
+        expect(
+          find.text('Content Creation  •  Manage Paths  →'),
+          findsOneWidget,
+        );
 
-      // Tap Manage Paths -> /profile/manage-paths/content-added
-      await tester.tap(find.byKey(ProfileScreen.managePathsLinkKey));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
-    });
+        // Tap Manage Paths -> /profile/manage-paths/content-added
+        await tester.tap(find.byKey(ProfileScreen.managePathsLinkKey));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.managePathsContentAdded);
+      },
+    );
   });
 }
 

@@ -15,7 +15,9 @@ class EventDetailsScreen extends StatelessWidget {
   static const eventInfoCardKey = Key('event-details-info-card');
   static const aboutCardKey = Key('event-details-about-card');
   static const whyShownCardKey = Key('event-details-why-shown-card');
-  static const backToEventsButtonKey = Key('event-details-back-to-events-button');
+  static const backToEventsButtonKey = Key(
+    'event-details-back-to-events-button',
+  );
 
   static const _overlayStyle = SystemUiOverlayStyle(
     statusBarColor: AuratioColors.backgroundBrand,
