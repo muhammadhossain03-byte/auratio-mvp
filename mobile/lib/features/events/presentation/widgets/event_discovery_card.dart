@@ -21,63 +21,67 @@ class EventDiscoveryCard extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 112,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-        decoration: BoxDecoration(
-          color: AuratioColors.surfaceDefault,
-          border: Border.all(color: AuratioColors.borderDefault),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: AuratioTypography.headingSmall.copyWith(
-                color: AuratioColors.textPrimary,
-                fontSize: 14,
-                height: 20 / 14,
-                fontWeight: FontWeight.w600,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+          decoration: BoxDecoration(
+            color: AuratioColors.surfaceDefault,
+            border: Border.all(color: AuratioColors.borderDefault),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: AuratioTypography.headingSmall.copyWith(
+                  color: AuratioColors.textPrimary,
+                  fontSize: 14,
+                  height: 20 / 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            Text(
-              divisionAndDate,
-              style: AuratioTypography.caption.copyWith(
-                color: AuratioColors.neutral500,
-                fontSize: 11,
-                height: 16 / 11,
-                fontWeight: FontWeight.w400,
+              Text(
+                divisionAndDate,
+                style: AuratioTypography.caption.copyWith(
+                  color: AuratioColors.neutral500,
+                  fontSize: 11,
+                  height: 16 / 11,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-            ),
-            Text(
-              relevantPath,
-              style: AuratioTypography.caption.copyWith(
-                color: AuratioColors.textSecondary,
-                fontSize: 11,
-                height: 16 / 11,
-                fontWeight: FontWeight.w500,
+              Text(
+                relevantPath,
+                style: AuratioTypography.caption.copyWith(
+                  color: AuratioColors.textSecondary,
+                  fontSize: 11,
+                  height: 16 / 11,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            Semantics(
-              button: true,
-              enabled: true,
-              label: 'View event details for $title',
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onTap,
-                child: Text(
-                  'View event details  →',
-                  style: AuratioTypography.caption.copyWith(
-                    color: AuratioColors.backgroundBrand,
-                    fontSize: 11,
-                    height: 16 / 11,
-                    fontWeight: FontWeight.w600,
+              Semantics(
+                button: true,
+                enabled: true,
+                label: 'View event details for $title',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onTap,
+                  child: Text(
+                    'View event details  →',
+                    style: AuratioTypography.caption.copyWith(
+                      color: AuratioColors.backgroundBrand,
+                      fontSize: 11,
+                      height: 16 / 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -45,36 +45,32 @@ void main() {
   }
 
   group('Pending Moderation (282:568)', () {
-    testWidgets(
-      'Header back chevron is non-interactive in Pending Moderation',
-      (tester) async {
-        final router = await pumpAuratioApp(tester);
-        await openAuratioRoute(
-          tester,
-          router,
-          AppRoutePaths.evaluationStatusPendingModeration,
-          settle: false,
-        );
-        await tester.pump();
+    testWidgets('Header back chevron in Pending Moderation navigates to Home', (
+      tester,
+    ) async {
+      final router = await pumpAuratioApp(tester);
+      await openAuratioRoute(
+        tester,
+        router,
+        AppRoutePaths.evaluationStatusPendingModeration,
+        settle: false,
+      );
+      await tester.pump();
 
-        expect(
-          router.state.uri.path,
-          AppRoutePaths.evaluationStatusPendingModeration,
-        );
+      expect(
+        router.state.uri.path,
+        AppRoutePaths.evaluationStatusPendingModeration,
+      );
 
-        // Back chevron is displayed
-        final backAffordance = find.text('‹');
-        expect(backAffordance, findsOneWidget);
+      // Back chevron is displayed
+      final backAffordance = find.text('‹');
+      expect(backAffordance, findsOneWidget);
 
-        // Tapping back chevron does NOT navigate away
-        await tester.tap(backAffordance);
-        await tester.pump();
-        expect(
-          router.state.uri.path,
-          AppRoutePaths.evaluationStatusPendingModeration,
-        );
-      },
-    );
+      // Tapping back chevron navigates to Home
+      await tester.tap(backAffordance);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.home);
+    });
 
     testWidgets('Pending Moderation remains on hold without auto-transition', (
       tester,

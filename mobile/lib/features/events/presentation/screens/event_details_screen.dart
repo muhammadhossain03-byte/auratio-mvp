@@ -5,9 +5,20 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../domain/event_catalog.dart';
+import '../../domain/event_item.dart';
 
 class EventDetailsScreen extends StatelessWidget {
-  const EventDetailsScreen({super.key});
+  const EventDetailsScreen({this.slug, super.key});
+
+  final String? slug;
+
+  EventItem get event {
+    if (slug == null) {
+      return AuratioEventCatalog.summit;
+    }
+    return AuratioEventCatalog.findBySlug(slug!) ?? AuratioEventCatalog.summit;
+  }
 
   static const screenKey = Key('event-details-screen');
   static const titleKey = Key('event-details-title');
@@ -55,7 +66,7 @@ class EventDetailsScreen extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: Text(
-                          'Public Speaking Summit',
+                          event.title,
                           key: titleKey,
                           style: AuratioTypography.headingLarge.copyWith(
                             color: AuratioColors.textPrimary,
@@ -70,7 +81,7 @@ class EventDetailsScreen extends StatelessWidget {
 
                       // Supporting text (y=158, w=350, h=18)
                       Text(
-                        'Admin-curated event information',
+                        event.supportingText,
                         key: supportingTextKey,
                         style: AuratioTypography.bodySmall.copyWith(
                           color: AuratioColors.neutral500,
@@ -109,16 +120,13 @@ class EventDetailsScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              _buildInfoRow('Date', 'Upcoming date'),
+                              _buildInfoRow('Date', event.date),
+                              _buildInfoRow('Location', event.location),
                               _buildInfoRow(
-                                'Location',
-                                'Dhaka Division, Bangladesh',
+                                'Relevant path',
+                                event.relevantPath.label,
                               ),
-                              _buildInfoRow('Relevant path', 'Public Speaking'),
-                              _buildInfoRow(
-                                'Source',
-                                'Published by Auratio admin',
-                              ),
+                              _buildInfoRow('Source', event.source),
                             ],
                           ),
                         ),
@@ -154,7 +162,7 @@ class EventDetailsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                'Event description and organizer-provided information appear here. End users do not manage the event through Auratio.',
+                                event.aboutText,
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 12,
@@ -197,7 +205,7 @@ class EventDetailsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 9),
                               Text(
-                                'Shown because your saved Division and selected Public Speaking path match this event.',
+                                event.whyShownText,
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 12,

@@ -7,9 +7,12 @@ import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 import '../../../tracks/application/selected_track_provider.dart';
+import '../../../tracks/domain/track_catalog.dart';
 
 class EvaluationResultHumanScreen extends ConsumerWidget {
-  const EvaluationResultHumanScreen({super.key});
+  const EvaluationResultHumanScreen({this.trackSlug, super.key});
+
+  final String? trackSlug;
 
   static const screenKey = Key('evaluation-result-human-screen');
   static const badgeKey = Key('evaluation-result-human-badge');
@@ -42,7 +45,12 @@ class EvaluationResultHumanScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final track = ref.watch(selectedTrackProvider);
+    final activeTrack = ref.watch(selectedTrackProvider);
+    final track =
+        (trackSlug != null
+            ? AuratioTrackCatalog.findBySlug(trackSlug!)
+            : null) ??
+        activeTrack;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: screenKey,

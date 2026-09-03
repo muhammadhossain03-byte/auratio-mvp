@@ -274,7 +274,12 @@ class ApprovedEvaluationHistoryScreen extends StatelessWidget {
                                     key: aiViewResultLinkKey,
                                     behavior: HitTestBehavior.opaque,
                                     onTap: () => context.push(
-                                      AppRoutePaths.evaluationResultAi,
+                                      Uri(
+                                        path: AppRoutePaths.evaluationResultAi,
+                                        queryParameters: {
+                                          'track': 'business-pitch-sales-pitch',
+                                        },
+                                      ).toString(),
                                     ),
                                     child: Text(
                                       'View Result',
@@ -415,7 +420,13 @@ class ApprovedEvaluationHistoryScreen extends StatelessWidget {
                                     key: humanViewResultLinkKey,
                                     behavior: HitTestBehavior.opaque,
                                     onTap: () => context.push(
-                                      AppRoutePaths.evaluationResultHuman,
+                                      Uri(
+                                        path:
+                                            AppRoutePaths.evaluationResultHuman,
+                                        queryParameters: {
+                                          'track': 'business-pitch-sales-pitch',
+                                        },
+                                      ).toString(),
                                     ),
                                     child: Text(
                                       'View Result',

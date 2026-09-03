@@ -178,7 +178,8 @@ class EventsDiscoveryScreen extends StatelessWidget {
                         title: 'Public Speaking Summit',
                         divisionAndDate: 'Dhaka Division • Upcoming date',
                         relevantPath: 'Relevant path: Public Speaking',
-                        onTap: () => context.push(AppRoutePaths.eventDetails),
+                        onTap: () =>
+                            context.push('/events/public-speaking-summit'),
                       ),
 
                       const SizedBox(height: 18),
@@ -189,7 +190,9 @@ class EventsDiscoveryScreen extends StatelessWidget {
                         title: 'Presentation Practice Meetup',
                         divisionAndDate: 'Dhaka Division • Upcoming date',
                         relevantPath: 'Relevant path: Professional Presenting',
-                        onTap: () => context.push(AppRoutePaths.eventDetails),
+                        onTap: () => context.push(
+                          '/events/presentation-practice-meetup',
+                        ),
                       ),
 
                       const SizedBox(height: 18),
@@ -244,9 +247,11 @@ class EventsDiscoveryScreen extends StatelessWidget {
                 key: bottomNavKey,
                 destinations: canonicalMobileDestinations,
                 currentIndex: 0,
-                interactiveIndices: const {1, 2, 3},
+                interactiveIndices: const {0, 1, 2, 3},
                 onDestinationSelected: (index) {
-                  if (index == 1) {
+                  if (index == 0) {
+                    context.go(AppRoutePaths.home);
+                  } else if (index == 1) {
                     context.go(AppRoutePaths.tracks);
                   } else if (index == 2) {
                     context.go(AppRoutePaths.progress);

@@ -40,10 +40,10 @@ class EvaluationPendingModerationScreen extends StatelessWidget {
           top: false,
           child: Column(
             children: [
-              const AuratioScreenHeader(
+              AuratioScreenHeader(
                 title: 'Evaluation Status',
                 showBack: true,
-                onBack: null,
+                onBack: () => context.go(AppRoutePaths.home),
               ),
               Expanded(
                 child: SingleChildScrollView(

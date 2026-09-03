@@ -240,25 +240,17 @@ class SettingsScreen extends StatelessWidget {
 
                       const SizedBox(height: 42),
 
-                      // Sign Out Visual (y=670, w=350, h=48) — PRESENTATION ONLY
-                      Container(
+                      // Sign Out Button (y=670, w=350, h=48)
+                      SizedBox(
                         key: signOutVisualKey,
                         width: double.infinity,
                         height: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: AuratioColors.surfaceDefault,
-                          border: Border.all(color: const Color(0xFFC8D2E0)),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Sign Out',
-                          style: AuratioTypography.labelLarge.copyWith(
-                            color: AuratioColors.backgroundBrand,
-                            fontSize: 14,
-                            height: 20 / 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: AuratioButton(
+                          label: 'Sign Out',
+                          variant: AuratioButtonVariant.secondary,
+                          size: AuratioButtonSize.medium,
+                          expand: true,
+                          onPressed: () => context.go(AppRoutePaths.signIn),
                         ),
                       ),
 

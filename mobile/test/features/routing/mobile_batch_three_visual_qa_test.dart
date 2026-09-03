@@ -254,15 +254,23 @@ void main() {
   // ─── QA item 1: Home controls are NOT rendered as disabled ───
 
   testWidgets(
-    'Home controls visually match Figma enabled states without later navigation',
+    'Home controls visually match Figma enabled states and navigate to valid routes',
     (tester) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(tester, router, AppRoutePaths.home, settle: false);
       await tester.pumpAndSettle();
 
-      // Tap View Active Evaluation — stays on Home.
+      // Tap View Active Evaluation — navigates to Pending Moderation.
       await tester.tap(find.byKey(HomeScreen.viewActiveEvaluationKey));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(
+        router.state.uri.path,
+        AppRoutePaths.evaluationStatusPendingModeration,
+      );
+
+      // Return to Home
+      await tester.tap(find.text('‹'));
+      await tester.pumpAndSettle();
       expect(router.state.uri.path, AppRoutePaths.home);
 
       // Tap Leaderboards — navigates to Leaderboard in Batch 11+.

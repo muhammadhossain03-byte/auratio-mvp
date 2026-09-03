@@ -20,11 +20,6 @@ class HomeScreen extends ConsumerWidget {
   static const leaderboardsButtonKey = Key('home-leaderboards-button');
   static const eventsButtonKey = Key('home-events-button');
 
-  /// Presentation-only callback for controls that remain non-interactive
-  /// per authoritative live Figma prototype specifications (node #282:142 has no reaction).
-  /// Keeps the control visually enabled with canonical resting styling.
-  static void _presentationOnly() {}
-
   static const _overlayStyle = SystemUiOverlayStyle(
     statusBarColor: AuratioColors.backgroundBrand,
     statusBarIconBrightness: Brightness.light,
@@ -109,7 +104,9 @@ class HomeScreen extends ConsumerWidget {
                           variant: AuratioButtonVariant.accent,
                           size: AuratioButtonSize.medium,
                           expand: true,
-                          onPressed: _presentationOnly,
+                          onPressed: () => context.go(
+                            AppRoutePaths.evaluationStatusPendingModeration,
+                          ),
                         ),
                       ],
                     ),

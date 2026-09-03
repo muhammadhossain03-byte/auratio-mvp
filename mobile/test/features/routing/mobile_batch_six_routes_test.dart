@@ -73,10 +73,15 @@ void main() {
       );
       expect(find.text('Method: AI Evaluation'), findsOneWidget);
 
-      // Tapping back chevron does not perform unexpected navigation
+      // Tapping back chevron navigates back to Routing Assigned AI
       final backAffordance = find.text('‹');
       expect(backAffordance, findsOneWidget);
       await tester.tap(backAffordance);
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.routingAssignedAi);
+
+      // Re-enter Evaluation Processing (AI)
+      await tester.tap(continueBtn);
       await tester.pumpAndSettle();
       expect(router.state.uri.path, AppRoutePaths.evaluationProcessingAi);
 

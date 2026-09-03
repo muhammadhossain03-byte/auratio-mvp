@@ -82,7 +82,7 @@ void main() {
 
   group('Events Discovery (282:650)', () {
     testWidgets(
-      'Both event card details links navigate to the same Event Details route',
+      'Event card details links navigate to parameterized Event Details routes',
       (tester) async {
         final router = await pumpAuratioApp(tester);
         await openAuratioRoute(
@@ -95,7 +95,7 @@ void main() {
 
         expect(router.state.uri.path, AppRoutePaths.events);
 
-        // Card 1 link -> Event Details
+        // Card 1 link -> Event Details (public-speaking-summit)
         final card1Link = find.descendant(
           of: find.byKey(EventsDiscoveryScreen.eventCard1Key),
           matching: find.text('View event details  →'),
@@ -104,7 +104,10 @@ void main() {
         await tester.tap(card1Link);
         await tester.pumpAndSettle();
 
-        expect(router.state.uri.path, AppRoutePaths.eventDetails);
+        expect(
+          router.state.uri.path,
+          '${AppRoutePaths.events}/public-speaking-summit',
+        );
         expect(find.byKey(EventDetailsScreen.screenKey), findsOneWidget);
 
         // Go back to Events Discovery
@@ -116,7 +119,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Card 2 link -> Event Details
+        // Card 2 link -> Event Details (presentation-practice-meetup)
         final card2Link = find.descendant(
           of: find.byKey(EventsDiscoveryScreen.eventCard2Key),
           matching: find.text('View event details  →'),
@@ -125,13 +128,16 @@ void main() {
         await tester.tap(card2Link);
         await tester.pumpAndSettle();
 
-        expect(router.state.uri.path, AppRoutePaths.eventDetails);
+        expect(
+          router.state.uri.path,
+          '${AppRoutePaths.events}/presentation-practice-meetup',
+        );
         expect(find.byKey(EventDetailsScreen.screenKey), findsOneWidget);
       },
     );
 
     testWidgets(
-      'Bottom navigation: Tracks and Progress are interactive; Home and Profile are presentation-only',
+      'Bottom navigation: Home, Profile, Tracks, and Progress navigate to their routes',
       (tester) async {
         final router = await pumpAuratioApp(tester);
         await openAuratioRoute(
@@ -144,12 +150,12 @@ void main() {
 
         expect(router.state.uri.path, AppRoutePaths.events);
 
-        // Tap Home nav item -> stays on Events Discovery (presentation only)
+        // Tap Home nav item -> navigates to /home
         final homeNav = find.text('Home');
         expect(homeNav, findsOneWidget);
         await tester.tap(homeNav);
         await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.events);
+        expect(router.state.uri.path, AppRoutePaths.home);
 
         // Tap Profile nav item -> navigates to /profile (activated in Batch 13)
         final profileNav = find.text('Profile');

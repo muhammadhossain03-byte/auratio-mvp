@@ -58,11 +58,15 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         backgroundColor: AuratioColors.backgroundApp,
         body: Stack(
           children: [
-            const Positioned(
+            Positioned(
               left: 0,
               right: 0,
               top: 0,
-              child: AuratioScreenHeader(title: 'Verify Email', showBack: true),
+              child: AuratioScreenHeader(
+                title: 'Verify Email',
+                showBack: true,
+                onBack: () => context.go(AppRoutePaths.createAccount),
+              ),
             ),
             const Positioned(
               left: 155,

@@ -20,6 +20,7 @@ import '../../features/evaluations/presentation/screens/evaluation_report_screen
 import '../../features/evaluations/presentation/screens/evaluation_result_ai_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_result_human_screen.dart';
 import '../../features/evaluations/presentation/screens/evaluation_routing_screen.dart';
+import '../../features/events/domain/event_catalog.dart';
 import '../../features/events/presentation/screens/event_details_screen.dart';
 import '../../features/events/presentation/screens/events_discovery_screen.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
@@ -213,16 +214,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.evaluationResultAi,
+        redirect: (context, state) {
+          final trackParam = state.uri.queryParameters['track'];
+          if (trackParam != null &&
+              AuratioTrackCatalog.findBySlug(trackParam) == null) {
+            return AppRoutePaths.approvedEvaluationHistory;
+          }
+          return null;
+        },
         pageBuilder: (context, state) => _dissolvePage(
           key: state.pageKey,
-          child: const EvaluationResultAiScreen(),
+          child: EvaluationResultAiScreen(
+            trackSlug: state.uri.queryParameters['track'],
+          ),
         ),
       ),
       GoRoute(
         path: AppRoutePaths.evaluationResultHuman,
+        redirect: (context, state) {
+          final trackParam = state.uri.queryParameters['track'];
+          if (trackParam != null &&
+              AuratioTrackCatalog.findBySlug(trackParam) == null) {
+            return AppRoutePaths.approvedEvaluationHistory;
+          }
+          return null;
+        },
         pageBuilder: (context, state) => _dissolvePage(
           key: state.pageKey,
-          child: const EvaluationResultHumanScreen(),
+          child: EvaluationResultHumanScreen(
+            trackSlug: state.uri.queryParameters['track'],
+          ),
         ),
       ),
       GoRoute(
@@ -292,7 +313,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutePaths.eventDetails,
         pageBuilder: (context, state) => _dissolvePage(
           key: state.pageKey,
-          child: const EventDetailsScreen(),
+          child: const EventDetailsScreen(slug: 'public-speaking-summit'),
+        ),
+      ),
+      GoRoute(
+        path: '/events/:slug',
+        redirect: (context, state) {
+          final slug = state.pathParameters['slug'];
+          if (slug == null || AuratioEventCatalog.findBySlug(slug) == null) {
+            return AppRoutePaths.events;
+          }
+          return null;
+        },
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: EventDetailsScreen(slug: state.pathParameters['slug']),
         ),
       ),
       GoRoute(

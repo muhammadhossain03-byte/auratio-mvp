@@ -104,10 +104,18 @@ void main() {
     ('evaluation_processing_human', AppRoutePaths.evaluationProcessingHuman),
     ('evaluation_result_ai', AppRoutePaths.evaluationResultAi),
     ('evaluation_result_ai_informative', AppRoutePaths.evaluationResultAi),
+    (
+      'evaluation_result_ai_historical',
+      '${AppRoutePaths.evaluationResultAi}?track=business-pitch-sales-pitch',
+    ),
     ('evaluation_result_human', AppRoutePaths.evaluationResultHuman),
     (
       'evaluation_result_human_informative',
       AppRoutePaths.evaluationResultHuman,
+    ),
+    (
+      'evaluation_result_human_historical',
+      '${AppRoutePaths.evaluationResultHuman}?track=business-pitch-sales-pitch',
     ),
     ('evaluation_report', AppRoutePaths.evaluationReport),
     (
@@ -122,6 +130,10 @@ void main() {
     ('leaderboard_human_all_time', AppRoutePaths.leaderboardHuman),
     ('events_discovery', AppRoutePaths.events),
     ('event_details', AppRoutePaths.eventDetails),
+    (
+      'event_details_meetup',
+      '${AppRoutePaths.events}/presentation-practice-meetup',
+    ),
     ('profile', AppRoutePaths.profile),
     ('settings', AppRoutePaths.profileSettings),
     ('manage_paths', AppRoutePaths.managePaths),

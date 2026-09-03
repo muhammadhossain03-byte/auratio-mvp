@@ -51,10 +51,14 @@ class EvaluationProcessingScreen extends ConsumerWidget {
           top: false,
           child: Column(
             children: [
-              const AuratioScreenHeader(
+              AuratioScreenHeader(
                 title: 'Evaluation Status',
                 showBack: true,
-                onBack: null,
+                onBack: () => context.go(
+                  _isAi
+                      ? AppRoutePaths.routingAssignedAi
+                      : AppRoutePaths.routingAssignedHuman,
+                ),
               ),
               Expanded(
                 child: SingleChildScrollView(

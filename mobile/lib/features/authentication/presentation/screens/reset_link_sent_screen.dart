@@ -59,13 +59,14 @@ class _ResetLinkSentScreenState extends ConsumerState<ResetLinkSentScreen> {
         backgroundColor: AuratioColors.backgroundApp,
         body: Stack(
           children: [
-            const Positioned(
+            Positioned(
               left: 0,
               right: 0,
               top: 0,
               child: AuratioScreenHeader(
                 title: 'Check Your Email',
                 showBack: true,
+                onBack: () => context.go(AppRoutePaths.forgotPassword),
               ),
             ),
             const Positioned(
