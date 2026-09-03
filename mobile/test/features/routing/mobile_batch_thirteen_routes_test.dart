@@ -77,31 +77,41 @@ void main() {
       expect(find.byKey(ProfileScreen.screenKey), findsOneWidget);
     });
 
-    testWidgets('Tracks Profile bottom nav routes to /profile, Home is no-op', (
-      tester,
-    ) async {
-      final router = await pumpAuratioApp(tester);
-      await openAuratioRoute(
-        tester,
-        router,
-        AppRoutePaths.tracks,
-        settle: false,
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Tracks Profile bottom nav routes to /profile, Home routes to /home',
+      (tester) async {
+        final router = await pumpAuratioApp(tester);
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.tracks,
+          settle: false,
+        );
+        await tester.pumpAndSettle();
 
-      // Tap Home in bottom nav -> remains on Tracks
-      await tester.tap(find.text('Home'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.tracks);
+        // Tap Home in bottom nav -> routes to /home
+        await tester.tap(find.text('Home'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.home);
 
-      // Tap Profile in bottom nav -> routes to /profile
-      await tester.tap(find.text('Profile'));
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.profile);
-    });
+        // Return to Tracks
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.tracks,
+          settle: false,
+        );
+        await tester.pumpAndSettle();
+
+        // Tap Profile in bottom nav -> routes to /profile
+        await tester.tap(find.text('Profile'));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.path, AppRoutePaths.profile);
+      },
+    );
 
     testWidgets(
-      'Private Progress Profile bottom nav routes to /profile, Home is no-op',
+      'Private Progress Profile bottom nav routes to /profile, Home routes to /home',
       (tester) async {
         final router = await pumpAuratioApp(tester);
         await openAuratioRoute(
@@ -112,10 +122,19 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Tap Home in bottom nav -> remains on Progress
+        // Tap Home in bottom nav -> routes to /home
         await tester.tap(find.text('Home'));
         await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.progress);
+        expect(router.state.uri.path, AppRoutePaths.home);
+
+        // Return to Progress
+        await openAuratioRoute(
+          tester,
+          router,
+          AppRoutePaths.progress,
+          settle: false,
+        );
+        await tester.pumpAndSettle();
 
         // Tap Profile in bottom nav -> routes to /profile
         await tester.tap(find.text('Profile'));

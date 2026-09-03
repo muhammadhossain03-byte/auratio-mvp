@@ -399,9 +399,11 @@ class ProfileScreen extends ConsumerWidget {
               key: bottomNavKey,
               destinations: canonicalMobileDestinations,
               currentIndex: 3,
-              interactiveIndices: const {1, 2},
+              interactiveIndices: const {0, 1, 2},
               onDestinationSelected: (index) {
-                if (index == 1) {
+                if (index == 0) {
+                  context.go(AppRoutePaths.home);
+                } else if (index == 1) {
                   context.go(AppRoutePaths.tracks);
                 } else if (index == 2) {
                   context.go(AppRoutePaths.progress);

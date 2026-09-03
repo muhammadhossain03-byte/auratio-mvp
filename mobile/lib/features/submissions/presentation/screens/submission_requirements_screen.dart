@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../../tracks/application/selected_track_provider.dart';
 
-class SubmissionRequirementsScreen extends StatelessWidget {
+class SubmissionRequirementsScreen extends ConsumerWidget {
   const SubmissionRequirementsScreen({super.key});
 
   static const submissionRequirementsScreenKey = Key(
@@ -23,7 +25,9 @@ class SubmissionRequirementsScreen extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final track = ref.watch(selectedTrackProvider);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: submissionRequirementsScreenKey,
       value: _overlayStyle,
@@ -36,7 +40,8 @@ class SubmissionRequirementsScreen extends StatelessWidget {
               AuratioScreenHeader(
                 title: 'Submission Requirements',
                 showBack: true,
-                onBack: () => context.go(AppRoutePaths.trackDetails),
+                onBack: () =>
+                    context.go(AppRoutePaths.trackDetailsFor(track.slug)),
               ),
               Expanded(
                 child: SingleChildScrollView(

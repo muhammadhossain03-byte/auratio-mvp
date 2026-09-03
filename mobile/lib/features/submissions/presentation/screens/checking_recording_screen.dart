@@ -2,13 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../../tracks/application/selected_track_provider.dart';
 
-class CheckingRecordingScreen extends StatefulWidget {
+class CheckingRecordingScreen extends ConsumerStatefulWidget {
   const CheckingRecordingScreen({
     this.autoTransition = true,
     this.transitionDelay = const Duration(milliseconds: 1200),
@@ -34,11 +36,12 @@ class CheckingRecordingScreen extends StatefulWidget {
   );
 
   @override
-  State<CheckingRecordingScreen> createState() =>
+  ConsumerState<CheckingRecordingScreen> createState() =>
       _CheckingRecordingScreenState();
 }
 
-class _CheckingRecordingScreenState extends State<CheckingRecordingScreen> {
+class _CheckingRecordingScreenState
+    extends ConsumerState<CheckingRecordingScreen> {
   Timer? _timer;
 
   @override
@@ -61,6 +64,8 @@ class _CheckingRecordingScreenState extends State<CheckingRecordingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final track = ref.watch(selectedTrackProvider);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: CheckingRecordingScreen.checkingRecordingScreenKey,
       value: CheckingRecordingScreen._overlayStyle,
@@ -163,7 +168,7 @@ class _CheckingRecordingScreenState extends State<CheckingRecordingScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Business Pitch / Sales Pitch',
+                                track.name,
                                 style: AuratioTypography.labelLarge.copyWith(
                                   color: AuratioColors.textPrimary,
                                   fontSize: 14,
@@ -172,7 +177,7 @@ class _CheckingRecordingScreenState extends State<CheckingRecordingScreen> {
                                 ),
                               ),
                               Text(
-                                'Accepted duration: 2:30–5:30',
+                                'Accepted duration: ${track.acceptedDuration}',
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 12,

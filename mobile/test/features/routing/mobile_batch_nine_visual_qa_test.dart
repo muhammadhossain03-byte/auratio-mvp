@@ -153,7 +153,7 @@ void main() {
         expect(find.text('Start a New Evaluation'), findsOneWidget);
         expect(
           find.widgetWithText(AuratioButton, 'Start a New Evaluation'),
-          findsNothing,
+          findsOneWidget,
         );
         expect(
           find.widgetWithText(AuratioButton, 'Return to Home'),

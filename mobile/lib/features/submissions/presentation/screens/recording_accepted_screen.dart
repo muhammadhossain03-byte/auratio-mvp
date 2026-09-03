@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../../tracks/application/selected_track_provider.dart';
 
-class RecordingAcceptedScreen extends StatelessWidget {
+class RecordingAcceptedScreen extends ConsumerWidget {
   const RecordingAcceptedScreen({super.key});
 
   static const recordingAcceptedScreenKey = Key(
@@ -30,7 +32,8 @@ class RecordingAcceptedScreen extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final track = ref.watch(selectedTrackProvider);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: recordingAcceptedScreenKey,
       value: _overlayStyle,
@@ -140,7 +143,7 @@ class RecordingAcceptedScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '4:12',
+                                track.sampleValidDuration,
                                 style: AuratioTypography.headingLarge.copyWith(
                                   color: AuratioColors.backgroundBrand,
                                   fontSize: 30,
@@ -149,7 +152,7 @@ class RecordingAcceptedScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                'Accepted window 2:30–5:30',
+                                'Accepted window ${track.acceptedDuration}',
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 12,

@@ -76,76 +76,55 @@ void main() {
       },
     );
 
-    testWidgets(
-      'Pending Moderation auto-transitions to Human Approved Result at exactly 2200 ms',
-      (tester) async {
-        final router = await pumpAuratioApp(tester);
-        await openAuratioRoute(
-          tester,
-          router,
-          AppRoutePaths.evaluationStatusPendingModeration,
-          settle: false,
-        );
-        await tester.pump();
+    testWidgets('Pending Moderation remains on hold without auto-transition', (
+      tester,
+    ) async {
+      final router = await pumpAuratioApp(tester);
+      await openAuratioRoute(
+        tester,
+        router,
+        AppRoutePaths.evaluationStatusPendingModeration,
+        settle: false,
+      );
+      await tester.pump();
 
-        expect(
-          router.state.uri.path,
-          AppRoutePaths.evaluationStatusPendingModeration,
-        );
+      expect(
+        router.state.uri.path,
+        AppRoutePaths.evaluationStatusPendingModeration,
+      );
 
-        // Before 2200 ms: remains on Pending Moderation screen
-        await tester.pump(const Duration(milliseconds: 1500));
-        expect(
-          router.state.uri.path,
-          AppRoutePaths.evaluationStatusPendingModeration,
-        );
+      // Advance by 3000 ms; screen must remain on Pending Moderation
+      await tester.pump(const Duration(milliseconds: 3000));
+      expect(
+        router.state.uri.path,
+        AppRoutePaths.evaluationStatusPendingModeration,
+      );
+    });
 
-        await tester.pump(const Duration(milliseconds: 699));
-        expect(
-          router.state.uri.path,
-          AppRoutePaths.evaluationStatusPendingModeration,
-        );
+    testWidgets('Return to Home navigates to Home', (tester) async {
+      final router = await pumpAuratioApp(tester);
+      await openAuratioRoute(
+        tester,
+        router,
+        AppRoutePaths.evaluationStatusPendingModeration,
+        settle: false,
+      );
+      await tester.pump();
 
-        // At 2200 ms: triggers navigation to Human Approved Result
-        await tester.pump(const Duration(milliseconds: 1));
-        await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.evaluationResultHuman);
-      },
-    );
+      expect(
+        router.state.uri.path,
+        AppRoutePaths.evaluationStatusPendingModeration,
+      );
 
-    testWidgets(
-      'Return to Home before timeout navigates to Home and cancels delayed timer',
-      (tester) async {
-        final router = await pumpAuratioApp(tester);
-        await openAuratioRoute(
-          tester,
-          router,
-          AppRoutePaths.evaluationStatusPendingModeration,
-          settle: false,
-        );
-        await tester.pump();
+      final returnHomeBtn = find.byKey(
+        EvaluationPendingModerationScreen.returnHomeButtonKey,
+      );
+      expect(returnHomeBtn, findsOneWidget);
+      await tester.tap(returnHomeBtn);
+      await tester.pumpAndSettle();
 
-        expect(
-          router.state.uri.path,
-          AppRoutePaths.evaluationStatusPendingModeration,
-        );
-
-        // Tap Return to Home before 2200 ms
-        final returnHomeBtn = find.byKey(
-          EvaluationPendingModerationScreen.returnHomeButtonKey,
-        );
-        expect(returnHomeBtn, findsOneWidget);
-        await tester.tap(returnHomeBtn);
-        await tester.pumpAndSettle();
-
-        expect(router.state.uri.path, AppRoutePaths.home);
-
-        // Advance beyond 2200 ms to confirm no delayed navigation fires
-        await tester.pump(const Duration(milliseconds: 3000));
-        await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.home);
-      },
-    );
+      expect(router.state.uri.path, AppRoutePaths.home);
+    });
   });
 
   group('Evaluation Rejected (282:588)', () {
@@ -204,15 +183,15 @@ void main() {
         expect(find.text('Start a New Evaluation'), findsOneWidget);
         expect(
           find.widgetWithText(AuratioButton, 'Start a New Evaluation'),
-          findsNothing,
+          findsOneWidget,
         );
 
-        // Tapping Start a New Evaluation causes no navigation or errors
+        // Tapping Start a New Evaluation navigates to Tracks
         await tester.tap(
-          find.byKey(EvaluationRejectedScreen.startNewVisualKey),
+          find.widgetWithText(AuratioButton, 'Start a New Evaluation'),
         );
         await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.evaluationStatusRejected);
+        expect(router.state.uri.path, AppRoutePaths.tracks);
         expect(tester.takeException(), isNull);
       },
     );

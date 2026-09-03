@@ -6,6 +6,8 @@ import 'package:auratio_mobile/app/router/app_route_paths.dart';
 import 'package:auratio_mobile/features/onboarding/application/path_selection_controller.dart';
 import 'package:auratio_mobile/features/onboarding/domain/auratio_path.dart';
 import 'package:auratio_mobile/features/shared/presentation/widgets/auratio_brand_lockup.dart';
+import 'package:auratio_mobile/features/tracks/application/selected_track_provider.dart';
+import 'package:auratio_mobile/features/tracks/domain/track_catalog.dart';
 import 'package:auratio_mobile/foundation/design_system/auratio_design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -69,13 +71,28 @@ void main() {
   });
 
   for (final item in [
+    ('sign_in', AppRoutePaths.signIn),
+    ('create_account', AppRoutePaths.createAccount),
+    ('verify_email', AppRoutePaths.verifyEmail),
+    ('email_verified', AppRoutePaths.emailVerified),
+    ('sign_in_new_account', AppRoutePaths.signInNewAccount),
+    ('forgot_password', AppRoutePaths.forgotPassword),
+    ('reset_link_sent', AppRoutePaths.resetLinkSent),
+    ('reset_password', AppRoutePaths.resetPassword),
+    ('password_reset_complete', AppRoutePaths.passwordResetComplete),
+    ('onboarding_intro', AppRoutePaths.onboardingIntro),
+    ('choose_paths', AppRoutePaths.choosePaths),
     ('home', AppRoutePaths.home),
     ('tracks', AppRoutePaths.tracks),
     ('track_details', AppRoutePaths.trackDetails),
+    ('track_details_informative', '/tracks/informative'),
+    ('track_details_marketing', '/tracks/marketing-promotional'),
     ('submission_requirements', AppRoutePaths.submissionRequirements),
     ('upload_recording', AppRoutePaths.uploadRecording),
+    ('upload_recording_informative', AppRoutePaths.uploadRecording),
     ('checking_recording', AppRoutePaths.checkingRecording),
     ('recording_accepted', AppRoutePaths.recordingAccepted),
+    ('recording_accepted_informative', AppRoutePaths.recordingAccepted),
     ('choose_evaluation_ai', AppRoutePaths.chooseEvaluationMethod),
     (
       'choose_evaluation_human',
@@ -86,7 +103,12 @@ void main() {
     ('evaluation_processing_ai', AppRoutePaths.evaluationProcessingAi),
     ('evaluation_processing_human', AppRoutePaths.evaluationProcessingHuman),
     ('evaluation_result_ai', AppRoutePaths.evaluationResultAi),
+    ('evaluation_result_ai_informative', AppRoutePaths.evaluationResultAi),
     ('evaluation_result_human', AppRoutePaths.evaluationResultHuman),
+    (
+      'evaluation_result_human_informative',
+      AppRoutePaths.evaluationResultHuman,
+    ),
     ('evaluation_report', AppRoutePaths.evaluationReport),
     (
       'evaluation_report_download_simulated',
@@ -126,18 +148,34 @@ void main() {
       final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
       final router = app.routerConfig! as GoRouter;
 
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MaterialApp)),
+      );
       if (item.$1 == 'manage_paths_content_added' ||
           item.$1 == 'profile_three_paths') {
-        final container = ProviderScope.containerOf(
-          tester.element(find.byType(MaterialApp)),
-        );
         container
             .read(selectedPathsProvider.notifier)
             .setPaths(AuratioPath.values.toSet());
       }
 
+      if (item.$1.contains('informative')) {
+        container
+            .read(selectedTrackProvider.notifier)
+            .select(AuratioTrackCatalog.informative);
+      } else if (item.$1.contains('marketing')) {
+        container
+            .read(selectedTrackProvider.notifier)
+            .select(AuratioTrackCatalog.marketingPromotional);
+      } else {
+        container
+            .read(selectedTrackProvider.notifier)
+            .select(AuratioTrackCatalog.businessPitch);
+      }
+
       router.go(item.$2);
-      if (item.$1 == 'pending_moderation') {
+      if (item.$1 == 'pending_moderation' ||
+          item.$1 == 'verify_email' ||
+          item.$1 == 'reset_link_sent') {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 200));
         await tester.pump();
@@ -145,8 +183,11 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      // Precache logo image if on home screen
-      if (item.$1 == 'home') {
+      // Precache logo image if screen uses AuratioBrandLockup
+      if (item.$1 == 'home' ||
+          item.$1 == 'sign_in' ||
+          item.$1 == 'sign_in_new_account' ||
+          item.$1 == 'onboarding_intro') {
         await tester.runAsync(() async {
           final element = tester.element(find.byType(AuratioApp));
           await precacheImage(

@@ -22,6 +22,7 @@ abstract final class AppRoutePaths {
   static const home = '/home';
   static const tracks = '/tracks';
   static const trackDetails = '$tracks/business-pitch-sales-pitch';
+  static String trackDetailsFor(String slug) => '$tracks/$slug';
   static const submissionRequirements = '/submissions/requirements';
   static const uploadRecording = '/submissions/upload-recording';
   static const checkingRecording = '/submissions/checking-recording';

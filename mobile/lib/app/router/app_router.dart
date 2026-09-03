@@ -122,7 +122,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.trackDetails,
-        builder: (context, state) => const TrackDetailsScreen(),
+        builder: (context, state) =>
+            const TrackDetailsScreen(slug: 'business-pitch-sales-pitch'),
+      ),
+      GoRoute(
+        path: '/tracks/:slug',
+        builder: (context, state) =>
+            TrackDetailsScreen(slug: state.pathParameters['slug']),
       ),
       GoRoute(
         path: AppRoutePaths.submissionRequirements,

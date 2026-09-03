@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -8,13 +6,8 @@ import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 
-class EvaluationPendingModerationScreen extends StatefulWidget {
-  const EvaluationPendingModerationScreen({
-    this.enableAutoTransition = true,
-    super.key,
-  });
-
-  final bool enableAutoTransition;
+class EvaluationPendingModerationScreen extends StatelessWidget {
+  const EvaluationPendingModerationScreen({super.key});
 
   static const screenKey = Key('evaluation-pending-moderation-screen');
   static const badgeKey = Key('evaluation-pending-moderation-badge');
@@ -35,38 +28,6 @@ class EvaluationPendingModerationScreen extends StatefulWidget {
     systemNavigationBarColor: AuratioColors.backgroundApp,
     systemNavigationBarIconBrightness: Brightness.dark,
   );
-
-  @override
-  State<EvaluationPendingModerationScreen> createState() =>
-      _EvaluationPendingModerationScreenState();
-}
-
-class _EvaluationPendingModerationScreenState
-    extends State<EvaluationPendingModerationScreen> {
-  Timer? _autoTransitionTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.enableAutoTransition) {
-      _autoTransitionTimer = Timer(const Duration(milliseconds: 2200), () {
-        if (mounted) {
-          context.go(AppRoutePaths.evaluationResultHuman);
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _autoTransitionTimer?.cancel();
-    super.dispose();
-  }
-
-  void _onReturnHome() {
-    _autoTransitionTimer?.cancel();
-    context.go(AppRoutePaths.home);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -261,7 +222,7 @@ class _EvaluationPendingModerationScreenState
                           label: 'Return to Home',
                           variant: AuratioButtonVariant.secondary,
                           expand: true,
-                          onPressed: _onReturnHome,
+                          onPressed: () => context.go(AppRoutePaths.home),
                         ),
                       ),
 

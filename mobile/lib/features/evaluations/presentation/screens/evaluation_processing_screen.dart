@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../../tracks/application/selected_track_provider.dart';
 import '../../domain/evaluation_method.dart';
 
-class EvaluationProcessingScreen extends StatelessWidget {
+class EvaluationProcessingScreen extends ConsumerWidget {
   const EvaluationProcessingScreen({required this.method, super.key});
 
   final EvaluationMethod method;
@@ -37,7 +39,9 @@ class EvaluationProcessingScreen extends StatelessWidget {
   bool get _isAi => method == EvaluationMethod.ai;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final track = ref.watch(selectedTrackProvider);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: _isAi ? aiScreenKey : humanScreenKey,
       value: _overlayStyle,
@@ -147,7 +151,7 @@ class EvaluationProcessingScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                'Business Pitch / Sales Pitch',
+                                track.name,
                                 style: AuratioTypography.labelLarge.copyWith(
                                   color: AuratioColors.textPrimary,
                                   fontSize: 14,

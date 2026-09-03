@@ -174,7 +174,7 @@ void main() {
   });
 
   testWidgets(
-    'Tracks screen bottom nav: Home is presentation-only, Profile navigates to Profile',
+    'Tracks screen bottom nav: Home, Progress, and Profile navigate correctly',
     (tester) async {
       final router = await pumpAuratioApp(tester);
       await openAuratioRoute(
@@ -187,10 +187,33 @@ void main() {
 
       expect(router.state.uri.path, AppRoutePaths.tracks);
 
-      // Home is presentation-only on Tracks
+      // Home routes to /home
       await tester.tap(find.text('Home'));
       await tester.pumpAndSettle();
-      expect(router.state.uri.path, AppRoutePaths.tracks);
+      expect(router.state.uri.path, AppRoutePaths.home);
+
+      // Return to Tracks
+      await openAuratioRoute(
+        tester,
+        router,
+        AppRoutePaths.tracks,
+        settle: false,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Progress routes to /progress
+      await tester.tap(find.text('Progress'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, AppRoutePaths.progress);
+
+      // Return to Tracks
+      await openAuratioRoute(
+        tester,
+        router,
+        AppRoutePaths.tracks,
+        settle: false,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Profile routes to /profile
       await tester.tap(find.text('Profile'));

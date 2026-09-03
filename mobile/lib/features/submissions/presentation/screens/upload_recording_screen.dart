@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../../tracks/application/selected_track_provider.dart';
 
-class UploadRecordingScreen extends StatelessWidget {
+class UploadRecordingScreen extends ConsumerWidget {
   const UploadRecordingScreen({super.key});
 
   static const uploadRecordingScreenKey = Key('mobile-upload-recording-screen');
@@ -23,7 +25,9 @@ class UploadRecordingScreen extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final track = ref.watch(selectedTrackProvider);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: uploadRecordingScreenKey,
       value: _overlayStyle,
@@ -71,7 +75,7 @@ class UploadRecordingScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Business Pitch / Sales Pitch',
+                                track.name,
                                 style: AuratioTypography.titleMedium.copyWith(
                                   color: AuratioColors.textPrimary,
                                   fontSize: 18,
@@ -80,7 +84,7 @@ class UploadRecordingScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Accepted upload window 2:30–5:30',
+                                'Accepted upload window ${track.acceptedDuration}',
                                 style: AuratioTypography.bodyMedium.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 14,
@@ -190,7 +194,7 @@ class UploadRecordingScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'business-pitch.mp4',
+                                track.effectiveFileName,
                                 style: AuratioTypography.titleMedium.copyWith(
                                   color: AuratioColors.textPrimary,
                                   fontSize: 18,

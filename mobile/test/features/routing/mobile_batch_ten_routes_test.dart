@@ -122,7 +122,7 @@ void main() {
     );
 
     testWidgets(
-      'Bottom nav: Tracks is interactive; Home, Progress, and Profile are non-interactive presentation-only items',
+      'Bottom nav: Home, Tracks, and Profile are interactive; Progress is visually active and non-interactive',
       (tester) async {
         final router = await pumpAuratioApp(tester);
         await openAuratioRoute(
@@ -135,12 +135,12 @@ void main() {
 
         expect(router.state.uri.path, AppRoutePaths.progress);
 
-        // Home (index 0) - non-interactive (no InkResponse, isInteractive == false)
+        // Home (index 0) - interactive
         final homeItem = tester.widget<AuratioMobileNavigationItem>(
           find.widgetWithText(AuratioMobileNavigationItem, 'Home'),
         );
-        expect(homeItem.isInteractive, isFalse);
-        expect(homeItem.onTap, isNull);
+        expect(homeItem.isInteractive, isTrue);
+        expect(homeItem.onTap, isNotNull);
 
         // Progress (index 2) - visually active, but non-interactive
         final progressItem = tester.widget<AuratioMobileNavigationItem>(
@@ -150,28 +150,26 @@ void main() {
         expect(progressItem.isInteractive, isFalse);
         expect(progressItem.onTap, isNull);
 
-        // Profile (index 3) - interactive in Batch 13
+        // Profile (index 3) - interactive
         final profileItem = tester.widget<AuratioMobileNavigationItem>(
           find.widgetWithText(AuratioMobileNavigationItem, 'Profile'),
         );
         expect(profileItem.isInteractive, isTrue);
         expect(profileItem.onTap, isNotNull);
 
-        // Tracks (index 1) - interactive with active button semantics & onTap
+        // Tracks (index 1) - interactive
         final tracksItem = tester.widget<AuratioMobileNavigationItem>(
           find.widgetWithText(AuratioMobileNavigationItem, 'Tracks'),
         );
         expect(tracksItem.isInteractive, isTrue);
         expect(tracksItem.onTap, isNotNull);
 
-        // Tap Tracks to verify navigation works
-        final tracksNavFinder = find.widgetWithText(
-          AuratioMobileNavigationItem,
-          'Tracks',
+        // Tap Home to verify navigation works
+        await tester.tap(
+          find.widgetWithText(AuratioMobileNavigationItem, 'Home'),
         );
-        await tester.tap(tracksNavFinder);
         await tester.pumpAndSettle();
-        expect(router.state.uri.path, AppRoutePaths.tracks);
+        expect(router.state.uri.path, AppRoutePaths.home);
       },
     );
   });

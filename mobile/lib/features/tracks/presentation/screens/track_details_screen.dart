@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../application/selected_track_provider.dart';
+import '../../domain/track_catalog.dart';
 
-class TrackDetailsScreen extends StatelessWidget {
-  const TrackDetailsScreen({super.key});
+class TrackDetailsScreen extends ConsumerWidget {
+  const TrackDetailsScreen({this.slug, super.key});
+
+  final String? slug;
 
   static const trackDetailsScreenKey = Key('mobile-track-details-screen');
   static const startEvaluationButtonKey = Key('track-details-start-evaluation');
@@ -21,7 +26,11 @@ class TrackDetailsScreen extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final track = slug != null
+        ? AuratioTrackCatalog.findBySlug(slug!)
+        : ref.watch(selectedTrackProvider);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: trackDetailsScreenKey,
       value: _overlayStyle,
@@ -47,8 +56,8 @@ class TrackDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 20),
 
                       // Path Badge (y=112, h=34)
-                      const AuratioChipTab(
-                        label: 'Professional Presenting',
+                      AuratioChipTab(
+                        label: track.category.path.label,
                         selected: true,
                         presentationOnly: true,
                       ),
@@ -57,14 +66,14 @@ class TrackDetailsScreen extends StatelessWidget {
 
                       // Track Title & Description
                       Text(
-                        'Business Pitch / Sales Pitch',
+                        track.name,
                         style: AuratioTypography.headingMedium.copyWith(
                           color: AuratioColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Deliver a speaker-visible pitch for structured communication evaluation.',
+                        track.description,
                         style: AuratioTypography.bodyMedium.copyWith(
                           color: AuratioColors.textSecondary,
                         ),
@@ -73,17 +82,17 @@ class TrackDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 22),
 
                       // Card 1: Duration (y=264, h=104)
-                      const SizedBox(
+                      SizedBox(
                         height: 104,
                         width: double.infinity,
                         child: AuratioCard(
                           tone: AuratioCardTone.defaultTone,
                           elevation: AuratioCardElevation.flat,
-                          padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Duration',
                                 style: TextStyle(
                                   fontSize: 17,
@@ -91,10 +100,10 @@ class TrackDetailsScreen extends StatelessWidget {
                                   color: AuratioColors.textPrimary,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
-                                'Target 3:00–5:00  •  Accepted upload\nwindow 2:30–5:30',
-                                style: TextStyle(
+                                'Target ${track.targetDuration}  •  Accepted upload\nwindow ${track.acceptedDuration}',
+                                style: const TextStyle(
                                   fontSize: 13,
                                   color: AuratioColors.textSecondary,
                                   height: 18 / 13,
@@ -193,8 +202,12 @@ class TrackDetailsScreen extends StatelessWidget {
                           label: 'Start Evaluation',
                           variant: AuratioButtonVariant.primary,
                           expand: true,
-                          onPressed: () =>
-                              context.go(AppRoutePaths.submissionRequirements),
+                          onPressed: () {
+                            ref
+                                .read(selectedTrackProvider.notifier)
+                                .select(track);
+                            context.go(AppRoutePaths.submissionRequirements);
+                          },
                         ),
                       ),
 

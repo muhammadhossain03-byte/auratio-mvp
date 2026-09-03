@@ -16,6 +16,7 @@ class EvaluationRejectedScreen extends StatelessWidget {
   static const statusCardKey = Key('evaluation-rejected-status-card');
   static const whatNextCardKey = Key('evaluation-rejected-what-next-card');
   static const startNewVisualKey = Key('evaluation-rejected-start-new-visual');
+  static const startNewButtonKey = Key('evaluation-rejected-start-new-button');
   static const returnHomeButtonKey = Key(
     'evaluation-rejected-return-home-button',
   );
@@ -202,28 +203,17 @@ class EvaluationRejectedScreen extends StatelessWidget {
 
                       const SizedBox(height: 164),
 
-                      // Primary Visual: Start a New Evaluation (y=688, w=350, h=48) - non-interactive
+                      // Primary CTA: Start a New Evaluation (y=688, w=350, h=48)
                       SizedBox(
                         key: startNewVisualKey,
                         height: 48,
                         width: double.infinity,
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AuratioColors.actionPrimaryBackground,
-                            borderRadius: BorderRadius.circular(
-                              AuratioRadii.md,
-                            ),
-                          ),
-                          child: Text(
-                            'Start a New Evaluation',
-                            style: AuratioTypography.labelLarge.copyWith(
-                              color: AuratioColors.actionPrimaryForeground,
-                              fontSize: 14,
-                              height: 20 / 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        child: AuratioButton(
+                          key: startNewButtonKey,
+                          label: 'Start a New Evaluation',
+                          variant: AuratioButtonVariant.primary,
+                          expand: true,
+                          onPressed: () => context.go(AppRoutePaths.tracks),
                         ),
                       ),
 

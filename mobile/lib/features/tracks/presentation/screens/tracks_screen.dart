@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../../foundation/navigation/auratio_navigation.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../application/selected_track_provider.dart';
 import '../../domain/track_catalog.dart';
 
-class TracksScreen extends StatelessWidget {
+class TracksScreen extends ConsumerWidget {
   const TracksScreen({super.key});
 
   static const tracksScreenKey = Key('mobile-tracks-screen');
@@ -25,7 +27,7 @@ class TracksScreen extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: tracksScreenKey,
       value: _overlayStyle,
@@ -86,6 +88,7 @@ class TracksScreen extends StatelessWidget {
                     // Category 1: Public Speaking
                     _buildCategorySection(
                       context,
+                      ref: ref,
                       header: 'PUBLIC SPEAKING',
                       tracks: AuratioTrackCatalog.publicSpeakingTracks,
                     ),
@@ -95,6 +98,7 @@ class TracksScreen extends StatelessWidget {
                     // Category 2: Professional Presenting
                     _buildCategorySection(
                       context,
+                      ref: ref,
                       header: 'PROFESSIONAL PRESENTING',
                       tracks: AuratioTrackCatalog.professionalPresentingTracks,
                     ),
@@ -104,6 +108,7 @@ class TracksScreen extends StatelessWidget {
                     // Category 3: Content Creation
                     _buildCategorySection(
                       context,
+                      ref: ref,
                       header: 'CONTENT CREATION',
                       tracks: AuratioTrackCatalog.contentCreationTracks,
                     ),
@@ -118,9 +123,11 @@ class TracksScreen extends StatelessWidget {
         bottomNavigationBar: AuratioMobileNavigationBar(
           destinations: canonicalMobileDestinations,
           currentIndex: 1,
-          interactiveIndices: const {2, 3},
+          interactiveIndices: const {0, 2, 3},
           onDestinationSelected: (index) {
-            if (index == 2) {
+            if (index == 0) {
+              context.go(AppRoutePaths.home);
+            } else if (index == 2) {
               context.go(AppRoutePaths.progress);
             } else if (index == 3) {
               context.go(AppRoutePaths.profile);
@@ -133,6 +140,7 @@ class TracksScreen extends StatelessWidget {
 
   Widget _buildCategorySection(
     BuildContext context, {
+    required WidgetRef ref,
     required String header,
     required List<TrackItem> tracks,
   }) {
@@ -151,11 +159,12 @@ class TracksScreen extends StatelessWidget {
         for (var i = 0; i < tracks.length; i++) ...[
           if (i > 0) const SizedBox(height: 6),
           _TrackRow(
-            key: tracks[i].hasDetailsRoute ? businessPitchTrackKey : null,
+            key: Key('track-row-${tracks[i].slug}'),
             track: tracks[i],
-            onTap: tracks[i].hasDetailsRoute
-                ? () => context.go(AppRoutePaths.trackDetails)
-                : null,
+            onTap: () {
+              ref.read(selectedTrackProvider.notifier).select(tracks[i]);
+              context.go(AppRoutePaths.trackDetailsFor(tracks[i].slug));
+            },
           ),
         ],
       ],
