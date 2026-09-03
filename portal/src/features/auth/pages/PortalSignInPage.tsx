@@ -51,12 +51,14 @@ export function PortalSignInPage() {
         />
 
         <div style={{ marginTop: '14px', textAlign: 'right' }}>
-          <span
-            className="auratio-auth-link auratio-auth-link--presentation"
+          <button
+            type="button"
+            onClick={() => navigate(portalRoutePaths.authentication.forgotPassword)}
+            className="auratio-auth-link"
             style={{ fontSize: '12px' }}
           >
             Forgot password?
-          </span>
+          </button>
         </div>
 
         <AuthButton

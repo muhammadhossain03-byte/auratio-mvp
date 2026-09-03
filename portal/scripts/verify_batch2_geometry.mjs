@@ -1,74 +1,10 @@
 import { spawn } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join, resolve } from 'node:path'
 
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-const PORT = 4173
-const CAPTURE_DIR = resolve(process.cwd(), 'capture_output')
-
-const SCREENS = [
-  {
-    name: 'portal_sign_in',
-    path: '/auth/sign-in',
-  },
-  {
-    name: 'portal_role_authorization',
-    path: '/auth/role-authorization',
-  },
-  {
-    name: 'portal_email_verification_required',
-    path: '/auth/email-verification',
-  },
-  {
-    name: 'portal_access_unavailable',
-    path: '/auth/access-unavailable',
-  },
-  {
-    name: 'portal_forgot_password',
-    path: '/auth/forgot-password',
-  },
-  {
-    name: 'portal_reset_link_sent',
-    path: '/auth/reset-link-sent',
-  },
-  {
-    name: 'portal_reset_password',
-    path: '/auth/reset-password',
-  },
-  {
-    name: 'portal_password_reset_complete',
-    path: '/auth/password-reset-complete',
-  },
-  {
-    name: 'volunteer_active_assignments',
-    path: '/volunteer/assignments',
-  },
-  {
-    name: 'volunteer_assigned_task',
-    path: '/volunteer/assignments/sub-8821',
-  },
-  {
-    name: 'volunteer_decline_assignment',
-    path: '/volunteer/assignments/sub-8821/decline',
-  },
-  {
-    name: 'volunteer_availability',
-    path: '/volunteer/availability',
-  },
-  {
-    name: 'volunteer_scoring_workspace',
-    path: '/volunteer/evaluation/sub-8821',
-  },
-  {
-    name: 'volunteer_active_assignments_after_decline',
-    path: '/volunteer/assignments/after-decline',
-  },
-  {
-    name: 'volunteer_availability_unavailable',
-    path: '/volunteer/availability/unavailable',
-  },
-]
+const PORT = 4175
 
 const MIME_TYPES = {
   '.html': 'text/html',
@@ -86,7 +22,6 @@ function startStaticServer(distDir) {
       const urlPath = req.url.split('?')[0]
       let filePath = join(distDir, urlPath)
 
-      // Fallback for SPA routing
       if (!existsSync(filePath) || urlPath === '/' || !extname(urlPath)) {
         filePath = join(distDir, 'index.html')
       }
@@ -105,10 +40,8 @@ function startStaticServer(distDir) {
     })
 
     server.listen(PORT, '127.0.0.1', () => {
-      console.log(`Static server running on http://127.0.0.1:${PORT}`)
       resolveServer(server)
     })
-
     server.on('error', rejectServer)
   })
 }
@@ -133,7 +66,7 @@ async function sendCdp(ws, method, params = {}) {
           }
         }
       } catch {
-        // ignore other messages
+        // ignore
       }
     }
 
@@ -142,28 +75,17 @@ async function sendCdp(ws, method, params = {}) {
   })
 }
 
-async function run() {
-  if (!existsSync(CAPTURE_DIR)) {
-    mkdirSync(CAPTURE_DIR, { recursive: true })
-  }
-
+async function inspectGeometry() {
   const distDir = resolve(process.cwd(), 'dist')
-  if (!existsSync(distDir)) {
-    console.error('dist directory not found. Please run npm run build first.')
-    process.exit(1)
-  }
-
   const server = await startStaticServer(distDir)
 
-  console.log('Launching Chrome...')
-  const cdpPort = 9223
+  const cdpPort = 9228
   const chrome = spawn(CHROME_PATH, [
     '--headless=new',
     `--remote-debugging-port=${cdpPort}`,
     '--disable-gpu',
     '--no-first-run',
     '--no-default-browser-check',
-    '--hide-scrollbars',
     '--window-size=1366,900',
     'about:blank',
   ])
@@ -175,17 +97,11 @@ async function run() {
     const pages = await listRes.json()
     const targetPage = pages.find((p) => p.type === 'page') || pages[0]
 
-    if (!targetPage) {
-      throw new Error('No target page found in Chrome CDP')
-    }
-
     const ws = new WebSocket(targetPage.webSocketDebuggerUrl)
     await new Promise((r, rej) => {
       ws.onopen = r
       ws.onerror = rej
     })
-
-    console.log('Connected to Chrome DevTools WebSocket')
 
     await sendCdp(ws, 'Page.enable')
     await sendCdp(ws, 'Emulation.setDeviceMetricsOverride', {
@@ -194,39 +110,55 @@ async function run() {
       deviceScaleFactor: 1,
       mobile: false,
     })
-    await sendCdp(ws, 'Emulation.setDefaultBackgroundColorOverride', {
-      color: { r: 0, g: 0, b: 0, a: 0 },
-    })
 
-    for (const screen of SCREENS) {
-      console.log(`Capturing ${screen.name} at ${screen.path}...`)
-      await sendCdp(ws, 'Page.navigate', {
-        url: `http://127.0.0.1:${PORT}${screen.path}`,
-      })
+    const routes = [
+      '/auth/forgot-password',
+      '/auth/reset-link-sent',
+      '/auth/reset-password',
+      '/auth/password-reset-complete',
+    ]
 
-      // Wait for page load and fonts ready
+    for (const route of routes) {
+      console.log(`\n=================== ROUTE: ${route} ===================`)
+      await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}${route}` })
       await new Promise((r) => setTimeout(r, 600))
       await sendCdp(ws, 'Runtime.evaluate', {
         expression: 'document.fonts.ready.then(() => true)',
         awaitPromise: true,
       })
-      await new Promise((r) => setTimeout(r, 300))
 
-      const screenshotResult = await sendCdp(ws, 'Page.captureScreenshot', {
-        format: 'png',
-        clip: {
-          x: 0,
-          y: 0,
-          width: 1366,
-          height: 900,
-          scale: 1,
-        },
+      const evalResult = await sendCdp(ws, 'Runtime.evaluate', {
+        expression: `(() => {
+          function rect(el) {
+            if (!el) return null;
+            const r = el.getBoundingClientRect();
+            return {
+              tag: el.tagName,
+              cls: el.className ? el.className.split(' ')[0] : '',
+              text: el.innerText ? el.innerText.slice(0, 30).replace(/\\n/g, ' ') : '',
+              x: Math.round(r.x),
+              y: Math.round(r.y),
+              width: Math.round(r.width),
+              height: Math.round(r.height),
+            };
+          }
+          const isAuth = !!document.querySelector('.auratio-auth-card');
+          if (isAuth) {
+            const card = document.querySelector('.auratio-auth-card');
+            const elements = card ? Array.from(card.children).map(rect) : [];
+            return JSON.stringify({ isAuth: true, elements });
+          } else {
+            const sidebar = rect(document.querySelector('.auratio-volunteer-sidebar'));
+            const topbar = rect(document.querySelector('.auratio-volunteer-topbar'));
+            const title = rect(document.querySelector('.auratio-volunteer-page-title'));
+            const subtitle = rect(document.querySelector('.auratio-volunteer-page-subtitle'));
+            const panels = Array.from(document.querySelectorAll('.auratio-volunteer-panel')).map(rect);
+            return JSON.stringify({ isAuth: false, sidebar, topbar, title, subtitle, panels });
+          }
+        })()`,
       })
 
-      const buffer = Buffer.from(screenshotResult.data, 'base64')
-      const outputPath = join(CAPTURE_DIR, `${screen.name}.png`)
-      writeFileSync(outputPath, buffer)
-      console.log(`Saved: ${outputPath} (${buffer.length} bytes)`)
+      console.log(JSON.parse(evalResult.result.value))
     }
 
     ws.close()
@@ -234,11 +166,6 @@ async function run() {
     chrome.kill()
     server.close()
   }
-
-  console.log('All screens captured successfully!')
 }
 
-run().catch((err) => {
-  console.error('Capture failed:', err)
-  process.exit(1)
-})
+inspectGeometry().catch(console.error)

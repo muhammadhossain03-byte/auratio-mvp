@@ -33,7 +33,7 @@ export function PortalRoleAuthorizationPage() {
       </div>
 
       <AuthButton
-        presentationOnly
+        onClick={() => navigate(portalRoutePaths.volunteer.assignments)}
         style={{ marginTop: '10px' }}
       >
         Open resolved Volunteer Evaluator workspace

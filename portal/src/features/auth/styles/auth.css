@@ -138,6 +138,16 @@ body:has(.auratio-auth-viewport) {
   background-color: var(--auratio-brand-navy-800);
 }
 
+.auratio-auth-btn--secondary {
+  background-color: var(--auratio-surface-default);
+  color: var(--auratio-brand-navy-900);
+  border: 1px solid var(--auratio-neutral-300);
+}
+
+.auratio-auth-btn--secondary:hover {
+  background-color: var(--auratio-brand-blue-50);
+}
+
 .auratio-auth-btn:focus-visible {
   outline: 2px solid var(--auratio-border-focus);
   outline-offset: 2px;

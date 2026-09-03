@@ -1,0 +1,368 @@
+/* Auratio Portal — Volunteer Evaluator Shell & Page Styles */
+
+.auratio-volunteer-viewport {
+  position: relative;
+  width: 1366px;
+  height: 900px;
+  min-width: 1366px;
+  min-height: 900px;
+  margin: 0 auto;
+  background-color: var(--auratio-neutral-25);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Sidebar */
+.auratio-volunteer-sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 230px;
+  height: 900px;
+  background-color: var(--auratio-brand-navy-900);
+  box-sizing: border-box;
+}
+
+.auratio-volunteer-logo {
+  position: absolute;
+  left: 28px;
+  top: 24px;
+  width: 140px;
+  height: 41.21px;
+  display: block;
+}
+
+.auratio-volunteer-sidebar-sub {
+  position: absolute;
+  left: 28px;
+  top: 76px;
+  width: 174px;
+  height: 18px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--auratio-brand-blue-200);
+}
+
+.auratio-volunteer-sidebar-role {
+  position: absolute;
+  left: 28px;
+  top: 98px;
+  width: 174px;
+  height: 16px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.0167em;
+  color: var(--auratio-neutral-white);
+}
+
+/* Sidebar Navigation Items */
+.auratio-volunteer-nav-item {
+  position: absolute;
+  left: 32px;
+  width: 165px;
+  height: 20px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--auratio-brand-blue-200);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+
+.auratio-volunteer-nav-item:hover {
+  color: var(--auratio-neutral-white);
+}
+
+.auratio-volunteer-nav-item--active-box {
+  position: absolute;
+  left: 18px;
+  width: 194px;
+  height: 40px;
+  background-color: var(--auratio-brand-navy-800);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding-left: 14px;
+}
+
+.auratio-volunteer-nav-item--active {
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.0143em;
+  color: var(--auratio-neutral-white);
+  cursor: default;
+}
+
+.auratio-volunteer-nav-item--presentation {
+  cursor: default;
+  pointer-events: none;
+}
+
+.auratio-volunteer-nav-item--presentation:hover {
+  color: var(--auratio-brand-blue-200);
+}
+
+/* Sidebar Footer */
+.auratio-volunteer-sidebar-footer-title {
+  position: absolute;
+  left: 28px;
+  top: 838px;
+  width: 175px;
+  height: 16px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.0167em;
+  color: var(--auratio-brand-blue-200);
+}
+
+.auratio-volunteer-sidebar-footer-sub {
+  position: absolute;
+  left: 28px;
+  top: 862px;
+  width: 175px;
+  height: 16px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.0182em;
+  color: var(--auratio-brand-blue-200);
+}
+
+/* Topbar */
+.auratio-volunteer-topbar {
+  position: absolute;
+  left: 230px;
+  top: 0;
+  width: 1136px;
+  height: 72px;
+  background-color: var(--auratio-surface-default);
+  box-sizing: border-box;
+}
+
+.auratio-volunteer-topbar-title {
+  position: absolute;
+  left: 28px;
+  top: 20px;
+  width: 690px;
+  height: 32px;
+  margin: 0;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: -0.0125em;
+  color: var(--auratio-neutral-900);
+}
+
+.auratio-volunteer-topbar-pill {
+  position: absolute;
+  left: 900px;
+  top: 18px;
+  width: 180px;
+  height: 34px;
+  background-color: var(--auratio-brand-blue-50);
+  border-radius: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.0167em;
+  color: var(--auratio-brand-blue-700);
+  box-sizing: border-box;
+}
+
+.auratio-volunteer-topbar-avatar {
+  position: absolute;
+  left: 894px;
+  top: 18px;
+  width: 36px;
+  height: 36px;
+  background-color: var(--auratio-brand-blue-200);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.0167em;
+  color: var(--auratio-neutral-900);
+}
+
+.auratio-volunteer-topbar-user-role {
+  position: absolute;
+  left: 944px;
+  top: 25px;
+  width: 164px;
+  height: 20px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--auratio-neutral-600);
+}
+
+/* Page Content Viewport */
+.auratio-volunteer-content {
+  position: absolute;
+  left: 230px;
+  top: 72px;
+  width: 1136px;
+  height: 828px;
+  box-sizing: border-box;
+}
+
+.auratio-volunteer-page-title {
+  position: absolute;
+  left: 30px;
+  top: 34px;
+  margin: 0;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 40px;
+  letter-spacing: -0.0094em;
+  color: var(--auratio-neutral-900);
+}
+
+.auratio-volunteer-page-subtitle {
+  position: absolute;
+  left: 30px;
+  top: 78px;
+  margin: 0;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: var(--auratio-neutral-600);
+}
+
+/* Common Panels / Cards */
+.auratio-volunteer-panel {
+  position: absolute;
+  background-color: var(--auratio-surface-default);
+  border: 1px solid var(--auratio-neutral-200);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+.auratio-volunteer-panel-title {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  margin: 0;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+  color: var(--auratio-neutral-900);
+}
+
+/* Status Pills */
+.auratio-volunteer-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 17px;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.0167em;
+  box-sizing: border-box;
+}
+
+.auratio-volunteer-pill--assigned,
+.auratio-volunteer-pill--accepted,
+.auratio-volunteer-pill--in-evaluation-table {
+  background-color: var(--auratio-brand-blue-50);
+  color: var(--auratio-brand-blue-700);
+}
+
+.auratio-volunteer-pill--processing {
+  background-color: var(--auratio-brand-blue-50);
+  color: var(--auratio-brand-navy-800);
+}
+
+.auratio-volunteer-pill--available,
+.auratio-volunteer-pill--unavailable {
+  background-color: var(--auratio-green-50);
+  color: var(--auratio-green-700);
+}
+
+.auratio-volunteer-pill--in-evaluation-header {
+  background-color: var(--auratio-neutral-50);
+  border: 1px solid var(--auratio-neutral-200);
+  border-radius: 999px;
+  color: var(--auratio-neutral-900);
+}
+
+/* Buttons */
+.auratio-volunteer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--auratio-font-family-inter), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.0143em;
+  text-align: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  text-decoration: none;
+  border: 0;
+  outline: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.auratio-volunteer-btn--primary {
+  background-color: var(--auratio-brand-navy-900);
+  color: var(--auratio-neutral-white);
+  border-radius: 10px;
+}
+
+.auratio-volunteer-btn--primary:hover {
+  background-color: var(--auratio-brand-navy-800);
+}
+
+.auratio-volunteer-btn--secondary {
+  background-color: var(--auratio-surface-default);
+  color: var(--auratio-neutral-900);
+  border: 1px solid var(--auratio-neutral-300);
+  border-radius: 10px;
+}
+
+.auratio-volunteer-btn--secondary:hover {
+  background-color: var(--auratio-brand-blue-50);
+}
+
+.auratio-volunteer-btn--presentation {
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+}
+
+.auratio-volunteer-btn--presentation:hover {
+  background-color: inherit;
+}
