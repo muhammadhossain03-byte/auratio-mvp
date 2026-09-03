@@ -58,6 +58,11 @@ export const portalRoutePaths = {
   },
   superAdmin: {
     root: '/super-admin',
+    adminAccounts: '/super-admin/admin-accounts',
+    inviteAdmin: '/super-admin/admin-accounts/invite',
+    adminAccount: '/super-admin/admin-accounts/nadia',
+    confirmAdminDeactivation: '/super-admin/admin-accounts/nadia/deactivate',
+    protectedRootAccount: '/super-admin/admin-accounts/root',
   },
 } as const
 

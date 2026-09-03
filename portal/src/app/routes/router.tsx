@@ -54,6 +54,13 @@ import {
   AdminVolunteerEvaluatorsPage,
   AdminVolunteerTrackEligibilityPage,
 } from '../../features/admin'
+import {
+  SuperAdminAccountPage,
+  SuperAdminAccountsPage,
+  SuperAdminConfirmDeactivationPage,
+  SuperAdminInviteAdminPage,
+  SuperAdminProtectedRootPage,
+} from '../../features/superAdmin'
 import { portalRoutePaths } from './routePaths'
 
 // Journey route groups are reserved in routePaths and are registered here only
@@ -262,6 +269,30 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.admin.audit,
     element: <AdminAuditLogPage />,
+  },
+  {
+    path: portalRoutePaths.superAdmin.root,
+    element: <Navigate to={portalRoutePaths.superAdmin.adminAccounts} replace />,
+  },
+  {
+    path: portalRoutePaths.superAdmin.adminAccounts,
+    element: <SuperAdminAccountsPage />,
+  },
+  {
+    path: portalRoutePaths.superAdmin.inviteAdmin,
+    element: <SuperAdminInviteAdminPage />,
+  },
+  {
+    path: portalRoutePaths.superAdmin.adminAccount,
+    element: <SuperAdminAccountPage />,
+  },
+  {
+    path: portalRoutePaths.superAdmin.confirmAdminDeactivation,
+    element: <SuperAdminConfirmDeactivationPage />,
+  },
+  {
+    path: portalRoutePaths.superAdmin.protectedRootAccount,
+    element: <SuperAdminProtectedRootPage />,
   },
 ])
 

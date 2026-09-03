@@ -1175,21 +1175,223 @@ async function run() {
       throw new Error('Expected /admin/events after Save Draft')
     }
 
-    // 23. PRESENTATION-ONLY CONTROLS
-    console.log('\n--- Testing Out-of-Batch & Locked Controls are Presentation-Only ---')
-    // Check role auth super admin
+    // 23. SUPER ADMIN JOURNEY & GOVERNANCE
+    console.log('\n--- Testing Super Admin Journey & Governance ---')
+
+    // Role Authorization -> Super Admin workspace
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/auth/role-authorization` })
     await new Promise((r) => setTimeout(r, 500))
-    const superAdminPres = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `(() => {
-        const btns = Array.from(document.querySelectorAll('.auratio-auth-btn--presentation'));
-        return btns.some(b => b.textContent.includes('Super Admin'));
-      })()`,
-    })
-    if (!superAdminPres.result.value) {
-      throw new Error('Expected Super Admin button to be presentation-only')
+    await clickByText('button.auratio-auth-btn', 'Open resolved Super Admin workspace')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error(`Expected /super-admin/admin-accounts after clicking Super Admin workspace, got ${await getPathname()}`)
     }
 
+    // Reset state to ensure baseline
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__auratioResetSuperAdmin ? window.__auratioResetSuperAdmin() : true',
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Admin Accounts -> Invite Admin
+    await clickByText('button.auratio-admin-btn--primary', 'Invite Admin')
+    if (await getPathname() !== '/super-admin/admin-accounts/invite') {
+      throw new Error(`Expected /super-admin/admin-accounts/invite from Invite Admin, got ${await getPathname()}`)
+    }
+
+    // Invite Admin -> Cancel -> Admin Accounts
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error(`Expected /super-admin/admin-accounts after Cancel, got ${await getPathname()}`)
+    }
+
+    // Invite Admin -> Send Admin Invite -> Admin Accounts
+    await clickByText('button.auratio-admin-btn--primary', 'Invite Admin')
+    if (await getPathname() !== '/super-admin/admin-accounts/invite') {
+      throw new Error(`Expected /super-admin/admin-accounts/invite, got ${await getPathname()}`)
+    }
+    await clickByText('button.auratio-admin-btn--primary', 'Send Admin Invite')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error(`Expected /super-admin/admin-accounts after Send Admin Invite, got ${await getPathname()}`)
+    }
+
+    // Imran Open -> Admin Account (prototype reuses same destination)
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btns = Array.from(document.querySelectorAll('button')).filter(b => b.innerText.trim() === 'Open');
+        if (btns.length > 1) btns[1].click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    if (await getPathname() !== '/super-admin/admin-accounts/nadia') {
+      throw new Error(`Expected /super-admin/admin-accounts/nadia from Imran Open, got ${await getPathname()}`)
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Accounts')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error(`Expected /super-admin/admin-accounts after Back to Accounts, got ${await getPathname()}`)
+    }
+
+    // Nadia Open -> Admin Account
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btns = Array.from(document.querySelectorAll('button')).filter(b => b.innerText.trim() === 'Open');
+        if (btns.length > 0) btns[0].click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    if (await getPathname() !== '/super-admin/admin-accounts/nadia') {
+      throw new Error(`Expected /super-admin/admin-accounts/nadia from Nadia Open, got ${await getPathname()}`)
+    }
+
+    // Admin Account -> Save Changes -> Admin Accounts
+    await clickByText('button.auratio-admin-btn--primary', 'Save Changes')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error(`Expected /super-admin/admin-accounts after Save Changes, got ${await getPathname()}`)
+    }
+
+    // Admin Account -> Deactivate -> Cancel
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts/nadia` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-btn--secondary', 'Deactivate…')
+    if (await getPathname() !== '/super-admin/admin-accounts/nadia/deactivate') {
+      throw new Error(`Expected /super-admin/admin-accounts/nadia/deactivate from Deactivate…, got ${await getPathname()}`)
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/super-admin/admin-accounts/nadia') {
+      throw new Error(`Expected /super-admin/admin-accounts/nadia after Cancel, got ${await getPathname()}`)
+    }
+    // Verify Nadia remains Active
+    const nadiaActiveCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'document.body.innerText.includes("Active")',
+    })
+    if (!nadiaActiveCheck.result.value) {
+      throw new Error('Expected Nadia to remain Active after Cancel')
+    }
+
+    // Admin Account -> Deactivate -> Confirm Deactivation
+    await clickByText('button.auratio-admin-btn--secondary', 'Deactivate…')
+    if (await getPathname() !== '/super-admin/admin-accounts/nadia/deactivate') {
+      throw new Error(`Expected /super-admin/admin-accounts/nadia/deactivate, got ${await getPathname()}`)
+    }
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Deactivation')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error(`Expected /super-admin/admin-accounts after Confirm Deactivation, got ${await getPathname()}`)
+    }
+
+    // Verify Nadia is now Deactivated in directory, Root is Active & Protected
+    const dirStatusCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const text = document.body.innerText;
+        return JSON.stringify({
+          hasDeactivated: text.includes('Deactivated'),
+          hasProtected: text.includes('Protected'),
+          hasActive: text.includes('Active'),
+        });
+      })()`,
+    })
+    const dirStatus = JSON.parse(dirStatusCheck.result.value)
+    if (!dirStatus.hasDeactivated || !dirStatus.hasProtected || !dirStatus.hasActive) {
+      throw new Error(`Directory status invalid after deactivation: ${JSON.stringify(dirStatus)}`)
+    }
+
+    // Admin Accounts -> Root View (Protected Super Admin Account)
+    await clickByText('button', 'View')
+    if (await getPathname() !== '/super-admin/admin-accounts/root') {
+      throw new Error(`Expected /super-admin/admin-accounts/root from View, got ${await getPathname()}`)
+    }
+
+    // Assert Root protection: no Save Changes, no Deactivate button
+    const rootControlsCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const hasSave = btns.some(b => b.innerText.includes('Save Changes'));
+        const hasDeact = btns.some(b => b.innerText.includes('Deactivate'));
+        return JSON.stringify({ hasSave, hasDeact });
+      })()`,
+    })
+    const rootControls = JSON.parse(rootControlsCheck.result.value)
+    if (rootControls.hasSave || rootControls.hasDeact) {
+      throw new Error(`CRITICAL: Protected Root exposes mutation controls: ${JSON.stringify(rootControls)}`)
+    }
+
+    // Back to Accounts from Root
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Accounts')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error(`Expected /super-admin/admin-accounts from Root Back to Accounts, got ${await getPathname()}`)
+    }
+
+    // Reset state back to baseline
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__auratioResetSuperAdmin ? window.__auratioResetSuperAdmin() : true',
+    })
+
+    // Permission boundary: verify ordinary Admin sidebar does NOT contain Admin Accounts
+    console.log('\n--- Testing Permission Boundary on Ordinary Admin ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/dashboard` })
+    await new Promise((r) => setTimeout(r, 500))
+    const ordinaryAdminSidebarCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const sidebar = document.querySelector('.auratio-admin-sidebar');
+        return sidebar ? sidebar.innerText.includes('Admin Accounts') : false;
+      })()`,
+    })
+    if (ordinaryAdminSidebarCheck.result.value) {
+      throw new Error('CRITICAL PERMISSION LEAK: Ordinary Admin sidebar contains Admin Accounts!')
+    }
+
+    // Super Admin inherited navigation
+    console.log('\n--- Testing Super Admin Inherited Navigation ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-nav-item', 'Dashboard')
+    if (await getPathname() !== '/admin/dashboard') {
+      throw new Error(`Expected /admin/dashboard, got ${await getPathname()}`)
+    }
+
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-nav-item', 'Requests')
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error(`Expected /admin/requests, got ${await getPathname()}`)
+    }
+
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-nav-item', 'Evaluations')
+    if (await getPathname() !== '/admin/evaluations') {
+      throw new Error(`Expected /admin/evaluations, got ${await getPathname()}`)
+    }
+
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-nav-item', 'Moderation')
+    if (await getPathname() !== '/admin/moderation') {
+      throw new Error(`Expected /admin/moderation, got ${await getPathname()}`)
+    }
+
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-nav-item', 'Volunteers')
+    if (await getPathname() !== '/admin/volunteers') {
+      throw new Error(`Expected /admin/volunteers, got ${await getPathname()}`)
+    }
+
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-nav-item', 'Events')
+    if (await getPathname() !== '/admin/events') {
+      throw new Error(`Expected /admin/events, got ${await getPathname()}`)
+    }
+
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-nav-item', 'Audit Log')
+    if (await getPathname() !== '/admin/audit') {
+      throw new Error(`Expected /admin/audit, got ${await getPathname()}`)
+    }
+
+    // 24. PRESENTATION-ONLY CONTROLS
+    console.log('\n--- Testing Out-of-Batch & Locked Controls are Presentation-Only ---')
     // Check Event Editor Publish Event and Delete Event are presentation-only
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events/editor` })
     await new Promise((r) => setTimeout(r, 500))

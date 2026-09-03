@@ -47,7 +47,7 @@ export function PortalRoleAuthorizationPage() {
       </AuthButton>
 
       <AuthButton
-        presentationOnly
+        onClick={() => navigate(portalRoutePaths.superAdmin.adminAccounts)}
         style={{ marginTop: '16px' }}
       >
         Open resolved Super Admin workspace

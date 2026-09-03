@@ -196,6 +196,26 @@ const SCREENS = [
     name: 'admin_audit_log',
     path: '/admin/audit',
   },
+  {
+    name: 'super_admin_accounts',
+    path: '/super-admin/admin-accounts',
+  },
+  {
+    name: 'super_admin_invite_admin',
+    path: '/super-admin/admin-accounts/invite',
+  },
+  {
+    name: 'super_admin_admin_account',
+    path: '/super-admin/admin-accounts/nadia',
+  },
+  {
+    name: 'super_admin_confirm_deactivation',
+    path: '/super-admin/admin-accounts/nadia/deactivate',
+  },
+  {
+    name: 'super_admin_protected_root',
+    path: '/super-admin/admin-accounts/root',
+  },
 ]
 
 const MIME_TYPES = {
@@ -334,6 +354,9 @@ async function run() {
 
       // Wait for page load and fonts ready
       await new Promise((r) => setTimeout(r, 600))
+      await sendCdp(ws, 'Runtime.evaluate', {
+        expression: 'window.__auratioResetSuperAdmin ? window.__auratioResetSuperAdmin() : true',
+      })
       await sendCdp(ws, 'Runtime.evaluate', {
         expression: 'document.fonts.ready.then(() => true)',
         awaitPromise: true,
