@@ -514,15 +514,28 @@ async function run() {
       throw new Error('Expected /admin/dashboard after clicking Dashboard')
     }
 
-    // 13. DASHBOARD METRIC -> REQUESTS
-    console.log('\n--- Testing Dashboard Open Requests Metric Link ---')
-    await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelector('button.auratio-admin-metric-card').click()`,
+    // 13. DASHBOARD METRICS ARE NON-INTERACTIVE & SIDEBAR NAVIGATES TO REQUESTS
+    console.log('\n--- Testing Dashboard Open Requests Metric is Non-Interactive ---')
+    const metricIsButtonOrLink = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const cards = Array.from(document.querySelectorAll('.auratio-admin-metric-card'));
+        const openReq = cards.find(c => c.textContent.includes('OPEN REQUESTS'));
+        if (!openReq) return 'missing';
+        if (openReq.tagName === 'BUTTON' || openReq.tagName === 'A') return true;
+        if (openReq.getAttribute('role') === 'button' || openReq.getAttribute('role') === 'link') return true;
+        if (openReq.onclick !== null) return true;
+        return false;
+      })()`,
     })
-    await new Promise((r) => setTimeout(r, 300))
-    console.log('Path after clicking Open Requests metric:', await getPathname())
+    if (metricIsButtonOrLink.result.value !== false) {
+      throw new Error(`Expected OPEN REQUESTS card to be non-interactive, got ${metricIsButtonOrLink.result.value}`)
+    }
+
+    // Verify Admin sidebar Requests navigation routes correctly to /admin/requests
+    await clickByText('button.auratio-admin-nav-item', 'Requests')
+    console.log('Path after clicking Requests sidebar nav:', await getPathname())
     if (await getPathname() !== '/admin/requests') {
-      throw new Error('Expected /admin/requests after clicking Open Requests metric')
+      throw new Error('Expected /admin/requests after clicking Requests sidebar nav')
     }
 
     // Helper functions for semantic targeting

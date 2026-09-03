@@ -1,10 +1,6 @@
-import { useNavigate } from 'react-router-dom'
-import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { AdminLayout } from '../components/AdminLayout'
 
 export function AdminOperationsDashboardPage() {
-  const navigate = useNavigate()
-
   return (
     <AdminLayout
       ariaLabel="Admin Operations Dashboard"
@@ -27,10 +23,8 @@ export function AdminOperationsDashboardPage() {
 
       {/* 4 Metric Cards */}
       <div style={{ position: 'absolute', left: '30px', top: '112px', display: 'flex', gap: '20px' }}>
-        {/* Open Requests (Interactive Link to Requests Queue) */}
-        <button
-          type="button"
-          onClick={() => navigate(portalRoutePaths.admin.requests)}
+        {/* Open Requests */}
+        <div
           className="auratio-admin-metric-card"
           style={{
             width: '230px',
@@ -39,8 +33,6 @@ export function AdminOperationsDashboardPage() {
             border: '1px solid #DCE3ED',
             borderRadius: '16px',
             padding: '16px 18px',
-            textAlign: 'left',
-            cursor: 'pointer',
             boxSizing: 'border-box',
           }}
         >
@@ -50,7 +42,7 @@ export function AdminOperationsDashboardPage() {
           <div style={{ fontSize: '30px', fontWeight: 700, lineHeight: '38px', color: '#041B3B', marginTop: '10px' }}>
             12
           </div>
-        </button>
+        </div>
 
         {/* Pending Moderation */}
         <div
