@@ -29,6 +29,18 @@ import {
   VolunteerReopenedEvaluationPage,
   VolunteerScoringWorkspacePage,
 } from '../../features/volunteer'
+import {
+  AdminAssignmentPickerPage,
+  AdminConfirmReassignmentPage,
+  AdminEvaluationApprovedAiPage,
+  AdminEvaluationProcessingHumanPage,
+  AdminEvaluationRecordsPage,
+  AdminEvaluationRequestQueuePage,
+  AdminOperationsDashboardPage,
+  AdminRequestAssignedAiPage,
+  AdminRequestDetailsRoutingPage,
+  AdminRequestRedirectedHumanPage,
+} from '../../features/admin'
 import { portalRoutePaths } from './routePaths'
 
 // Journey route groups are reserved in routePaths and are registered here only
@@ -141,6 +153,50 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.volunteer.reopenedEvaluation,
     element: <VolunteerReopenedEvaluationPage />,
+  },
+  {
+    path: portalRoutePaths.admin.root,
+    element: <Navigate to={portalRoutePaths.admin.dashboard} replace />,
+  },
+  {
+    path: portalRoutePaths.admin.dashboard,
+    element: <AdminOperationsDashboardPage />,
+  },
+  {
+    path: portalRoutePaths.admin.requests,
+    element: <AdminEvaluationRequestQueuePage />,
+  },
+  {
+    path: portalRoutePaths.admin.requestDetailsRouting,
+    element: <AdminRequestDetailsRoutingPage />,
+  },
+  {
+    path: portalRoutePaths.admin.assignmentPicker,
+    element: <AdminAssignmentPickerPage />,
+  },
+  {
+    path: portalRoutePaths.admin.confirmReassignment,
+    element: <AdminConfirmReassignmentPage />,
+  },
+  {
+    path: portalRoutePaths.admin.requestAssignedAi,
+    element: <AdminRequestAssignedAiPage />,
+  },
+  {
+    path: portalRoutePaths.admin.requestRedirectedHuman,
+    element: <AdminRequestRedirectedHumanPage />,
+  },
+  {
+    path: portalRoutePaths.admin.evaluations,
+    element: <AdminEvaluationRecordsPage />,
+  },
+  {
+    path: portalRoutePaths.admin.evaluationProcessingHuman,
+    element: <AdminEvaluationProcessingHumanPage />,
+  },
+  {
+    path: portalRoutePaths.admin.evaluationApprovedAi,
+    element: <AdminEvaluationApprovedAiPage />,
   },
 ])
 

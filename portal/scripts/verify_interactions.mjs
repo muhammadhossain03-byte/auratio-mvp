@@ -479,7 +479,226 @@ async function run() {
       throw new Error('Expected /volunteer/completed after clicking Completed / History')
     }
 
-    console.log('\nALL 10 INTERACTION FLOWS PASSED PERFECTLY!')
+    // ==========================================
+    // BATCH 4: ADMIN INTERACTIONS
+    // ==========================================
+
+    // 11. ROLE AUTHORIZATION -> ADMIN WORKSPACE
+    console.log('\n--- Testing Role Authorization -> Admin Workspace ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/auth/role-authorization` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    await clickByText('button.auratio-auth-btn', 'Open resolved Admin workspace')
+    console.log('Path after clicking Open resolved Admin workspace:', await getPathname())
+    if (await getPathname() !== '/admin/dashboard') {
+      throw new Error('Expected /admin/dashboard after Open resolved Admin workspace')
+    }
+
+    // 12. ADMIN NAVIGATION: Dashboard <-> Requests <-> Evaluations
+    console.log('\n--- Testing Admin Sidebar Navigation ---')
+    await clickByText('button.auratio-admin-nav-item', 'Requests')
+    console.log('Path after clicking Requests:', await getPathname())
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after clicking Requests')
+    }
+
+    await clickByText('button.auratio-admin-nav-item', 'Evaluations')
+    console.log('Path after clicking Evaluations:', await getPathname())
+    if (await getPathname() !== '/admin/evaluations') {
+      throw new Error('Expected /admin/evaluations after clicking Evaluations')
+    }
+
+    await clickByText('button.auratio-admin-nav-item', 'Dashboard')
+    console.log('Path after clicking Dashboard:', await getPathname())
+    if (await getPathname() !== '/admin/dashboard') {
+      throw new Error('Expected /admin/dashboard after clicking Dashboard')
+    }
+
+    // 13. DASHBOARD METRIC -> REQUESTS
+    console.log('\n--- Testing Dashboard Open Requests Metric Link ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('button.auratio-admin-metric-card').click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after clicking Open Requests metric:', await getPathname())
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after clicking Open Requests metric')
+    }
+
+    // 14. REQUEST QUEUE -> HUMAN REQUEST DETAILS & ASSIGNMENT PICKER
+    console.log('\n--- Testing Request Queue -> REQ-1042 -> Assignment Picker ---')
+    // Click Open button for row 1 (REQ-1042)
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-admin-btn--table-open')[0].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after opening REQ-1042:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1042') {
+      throw new Error('Expected /admin/requests/req-1042')
+    }
+
+    // Click Assign Human
+    await clickByText('button.auratio-admin-btn--primary', 'Assign Human')
+    console.log('Path after Assign Human:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1042/assign') {
+      throw new Error('Expected /admin/requests/req-1042/assign')
+    }
+
+    // In Assignment Picker, click Select on Farhana Islam (candidate 0)
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[0].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after selecting Farhana Islam:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1042') {
+      throw new Error('Expected /admin/requests/req-1042 after selecting Farhana')
+    }
+
+    // Click Back to Queue
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Queue')
+    console.log('Path after Back to Queue:', await getPathname())
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after Back to Queue')
+    }
+
+    // 15. AI ROUTING: REQ-1041 (Assigned AI) & REQ-1034 (Redirected Human)
+    console.log('\n--- Testing Request Queue -> REQ-1041 & REQ-1034 ---')
+    // Row 2: REQ-1041
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-admin-btn--table-open')[1].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after opening REQ-1041:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1041') {
+      throw new Error('Expected /admin/requests/req-1041')
+    }
+
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Queue')
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after Back to Queue from REQ-1041')
+    }
+
+    // Row 4: REQ-1034
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-admin-btn--table-open')[2].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after opening REQ-1034:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1034') {
+      throw new Error('Expected /admin/requests/req-1034')
+    }
+
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Queue')
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after Back to Queue from REQ-1034')
+    }
+
+    // 16. REASSIGNMENT: Cancel & Confirm Flow
+    console.log('\n--- Testing Reassignment Flow ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042/reassign` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Click Cancel -> returns to assignment picker
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    console.log('Path after Cancel:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1042/assign') {
+      throw new Error('Expected /admin/requests/req-1042/assign after Cancel')
+    }
+
+    // Navigate back to reassign to test Confirm
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042/reassign` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Reassignment')
+    console.log('Path after Confirm Reassignment:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1042') {
+      throw new Error('Expected /admin/requests/req-1042 after Confirm Reassignment')
+    }
+
+    // 17. EVALUATION RECORDS -> PROCESSING HUMAN & APPROVED AI
+    console.log('\n--- Testing Evaluation Records Detail Routes ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/evaluations` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Open SUB-8834 (Processing Human, button 0)
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[0].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after opening SUB-8834:', await getPathname())
+    if (await getPathname() !== '/admin/evaluations/sub-8834') {
+      throw new Error('Expected /admin/evaluations/sub-8834')
+    }
+
+    await clickByText('button.auratio-admin-btn--primary', 'Back to Evaluations')
+    if (await getPathname() !== '/admin/evaluations') {
+      throw new Error('Expected /admin/evaluations after Back to Evaluations')
+    }
+
+    // Open SUB-8798 (Approved AI, button 1)
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[1].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after opening SUB-8798:', await getPathname())
+    if (await getPathname() !== '/admin/evaluations/sub-8798') {
+      throw new Error('Expected /admin/evaluations/sub-8798')
+    }
+
+    await clickByText('button.auratio-admin-btn--primary', 'Back to Evaluations')
+    if (await getPathname() !== '/admin/evaluations') {
+      throw new Error('Expected /admin/evaluations after Back to Evaluations')
+    }
+
+    // 18. OUT-OF-BATCH CONTROLS
+    console.log('\n--- Testing Out-of-Batch Controls are Presentation-Only ---')
+    // Check role auth super admin
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/auth/role-authorization` })
+    await new Promise((r) => setTimeout(r, 500))
+    const superAdminPres = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btns = Array.from(document.querySelectorAll('.auratio-auth-btn--presentation'));
+        return btns.some(b => b.textContent.includes('Super Admin'));
+      })()`,
+    })
+    if (!superAdminPres.result.value) {
+      throw new Error('Expected Super Admin button to be presentation-only')
+    }
+
+    // Check admin sidebar presentation items
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/dashboard` })
+    await new Promise((r) => setTimeout(r, 500))
+    const sidebarPres = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const pres = Array.from(document.querySelectorAll('.auratio-admin-nav-item--presentation')).map(e => e.textContent.trim());
+        return ['Moderation', 'Volunteers', 'Events', 'Audit Log'].every(label => pres.includes(label));
+      })()`,
+    })
+    if (!sidebarPres.result.value) {
+      throw new Error('Expected Moderation, Volunteers, Events, Audit Log to be presentation-only')
+    }
+
+    // Check evaluation records row 1 (SUB-8821) presentation button
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/evaluations` })
+    await new Promise((r) => setTimeout(r, 500))
+    const sub8821Pres = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('.auratio-admin-btn--presentation') !== null`,
+    })
+    if (!sub8821Pres.result.value) {
+      throw new Error('Expected SUB-8821 action to be presentation-only')
+    }
+
+    // Check request queue row 3 (REQ-1038) presentation button
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests` })
+    await new Promise((r) => setTimeout(r, 500))
+    const req1038Pres = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('.auratio-admin-btn--presentation') !== null`,
+    })
+    if (!req1038Pres.result.value) {
+      throw new Error('Expected REQ-1038 action to be presentation-only')
+    }
+
+    console.log('\nALL 18 INTERACTION FLOWS PASSED PERFECTLY!')
 
     ws.close()
   } finally {

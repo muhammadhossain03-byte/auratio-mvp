@@ -40,7 +40,7 @@ export function PortalRoleAuthorizationPage() {
       </AuthButton>
 
       <AuthButton
-        presentationOnly
+        onClick={() => navigate(portalRoutePaths.admin.dashboard)}
         style={{ marginTop: '16px' }}
       >
         Open resolved Admin workspace

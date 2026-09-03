@@ -32,6 +32,16 @@ export const portalRoutePaths = {
   },
   admin: {
     root: '/admin',
+    dashboard: '/admin/dashboard',
+    requests: '/admin/requests',
+    requestDetailsRouting: '/admin/requests/req-1042',
+    assignmentPicker: '/admin/requests/req-1042/assign',
+    confirmReassignment: '/admin/requests/req-1042/reassign',
+    requestAssignedAi: '/admin/requests/req-1041',
+    requestRedirectedHuman: '/admin/requests/req-1034',
+    evaluations: '/admin/evaluations',
+    evaluationProcessingHuman: '/admin/evaluations/sub-8834',
+    evaluationApprovedAi: '/admin/evaluations/sub-8798',
   },
   superAdmin: {
     root: '/super-admin',

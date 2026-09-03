@@ -104,6 +104,46 @@ const SCREENS = [
     name: 'volunteer_completed_processing',
     path: '/volunteer/completed/sub-8741',
   },
+  {
+    name: 'admin_operations_dashboard',
+    path: '/admin/dashboard',
+  },
+  {
+    name: 'admin_evaluation_request_queue',
+    path: '/admin/requests',
+  },
+  {
+    name: 'admin_request_details_routing',
+    path: '/admin/requests/req-1042',
+  },
+  {
+    name: 'admin_assignment_picker',
+    path: '/admin/requests/req-1042/assign',
+  },
+  {
+    name: 'admin_confirm_reassignment',
+    path: '/admin/requests/req-1042/reassign',
+  },
+  {
+    name: 'admin_evaluation_records',
+    path: '/admin/evaluations',
+  },
+  {
+    name: 'admin_request_assigned_ai',
+    path: '/admin/requests/req-1041',
+  },
+  {
+    name: 'admin_request_redirected_human',
+    path: '/admin/requests/req-1034',
+  },
+  {
+    name: 'admin_evaluation_processing_human',
+    path: '/admin/evaluations/sub-8834',
+  },
+  {
+    name: 'admin_evaluation_approved_ai',
+    path: '/admin/evaluations/sub-8798',
+  },
 ]
 
 const MIME_TYPES = {
