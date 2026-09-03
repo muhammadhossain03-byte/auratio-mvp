@@ -135,8 +135,11 @@ async function run() {
         expression: `(() => {
           const el = document.querySelector('${selector}');
           if (el) {
-            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-            nativeInputValueSetter.call(el, ${JSON.stringify(value)});
+            const proto = el instanceof HTMLTextAreaElement
+              ? window.HTMLTextAreaElement.prototype
+              : window.HTMLInputElement.prototype;
+            const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+            nativeSetter.call(el, ${JSON.stringify(value)});
             el.dispatchEvent(new Event('input', { bubbles: true }));
             el.dispatchEvent(new Event('change', { bubbles: true }));
             return true;
@@ -275,22 +278,95 @@ async function run() {
       throw new Error('Expected /volunteer/evaluation/sub-8821/criterion')
     }
 
+    // Back to Scores works regardless of completeness
     await clickByText('button.auratio-volunteer-btn--secondary', 'Back to Scores')
     console.log('Path after Back to Scores:', await getPathname())
     if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
       throw new Error('Expected /volunteer/evaluation/sub-8821 after Back to Scores')
     }
 
+    // A. INITIAL COMPLETE STATE
+    console.log('Checking Case A: Initial complete state...')
     await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
     console.log('Path after re-opening criterion feedback:', await getPathname())
     if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
       throw new Error('Expected /volunteer/evaluation/sub-8821/criterion')
     }
 
+    // Check initial completeness text claims all ✓
+    const initialCompleteness = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+    })
+    console.log('Initial completeness row text:', initialCompleteness.result.value)
+    if (!initialCompleteness.result.value.includes('Timestamped evidence ✓')) {
+      throw new Error('Expected initial completeness to include "Timestamped evidence ✓"')
+    }
+
     await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
-    console.log('Path after Save Criterion Feedback:', await getPathname())
+    console.log('Path after Save Criterion Feedback on initial complete state:', await getPathname())
     if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
       throw new Error('Expected /volunteer/evaluation/sub-8821 after Save Criterion Feedback')
+    }
+
+    // B. EMPTY REQUIRED FIELD
+    console.log('Checking Case B: Empty required field blocks Save...')
+    await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--evidence', '')
+
+    const emptyCompleteness = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+    })
+    console.log('Completeness text with empty evidence:', emptyCompleteness.result.value)
+    if (emptyCompleteness.result.value.includes('Timestamped evidence ✓')) {
+      throw new Error('Completeness indicator falsely claims "Timestamped evidence ✓" when empty!')
+    }
+    if (!emptyCompleteness.result.value.includes('Timestamped evidence —')) {
+      throw new Error('Completeness indicator missing incomplete marker when empty!')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
+    console.log('Path after Save with empty evidence:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
+      throw new Error('Save Criterion Feedback navigated with empty evidence! Pathname changed.')
+    }
+
+    // C. WHITESPACE REQUIRED FIELD
+    console.log('Checking Case C: Whitespace-only required field blocks Save...')
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--evidence', '     \n  \t  ')
+
+    const whitespaceCompleteness = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+    })
+    console.log('Completeness text with whitespace evidence:', whitespaceCompleteness.result.value)
+    if (whitespaceCompleteness.result.value.includes('Timestamped evidence ✓')) {
+      throw new Error('Completeness indicator falsely claims "Timestamped evidence ✓" when whitespace!')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
+    console.log('Path after Save with whitespace evidence:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
+      throw new Error('Save Criterion Feedback navigated with whitespace evidence! Pathname changed.')
+    }
+
+    // D. RESTORED VALID FIELD
+    console.log('Checking Case D: Restored valid field permits Save...')
+    await setInputValue(
+      'textarea.auratio-volunteer-feedback-textarea--evidence',
+      'At 01:38, benefits are concrete and differentiated.'
+    )
+
+    const restoredCompleteness = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+    })
+    console.log('Completeness text with restored evidence:', restoredCompleteness.result.value)
+    if (!restoredCompleteness.result.value.includes('Timestamped evidence ✓')) {
+      throw new Error('Completeness indicator failed to restore "Timestamped evidence ✓"!')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
+    console.log('Path after Save with restored valid evidence:', await getPathname())
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821 after Save with valid evidence')
     }
 
     // 7. REVIEW & SUBMIT FLOW

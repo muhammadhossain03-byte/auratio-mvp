@@ -11,7 +11,25 @@ export function VolunteerCriterionFeedbackEditorPage() {
   const [weakness, setWeakness] = useState('Pricing proof is not yet quantified.')
   const [advice, setAdvice] = useState('Add one quantified customer or pricing outcome.')
 
-  const handleReturn = () => {
+  const evidenceComplete = evidence.trim().length > 0
+  const strengthComplete = strength.trim().length > 0
+  const weaknessComplete = weakness.trim().length > 0
+  const adviceComplete = advice.trim().length > 0
+
+  const feedbackComplete =
+    evidenceComplete &&
+    strengthComplete &&
+    weaknessComplete &&
+    adviceComplete
+
+  const handleBackToScores = () => {
+    navigate(portalRoutePaths.volunteer.scoringWorkspace)
+  }
+
+  const handleSave = () => {
+    if (!feedbackComplete) {
+      return
+    }
     navigate(portalRoutePaths.volunteer.scoringWorkspace)
   }
 
@@ -228,6 +246,8 @@ export function VolunteerCriterionFeedbackEditorPage() {
           Timestamped evidence
         </span>
         <textarea
+          aria-label="Timestamped evidence"
+          className="auratio-volunteer-feedback-textarea auratio-volunteer-feedback-textarea--evidence"
           value={evidence}
           onChange={(e) => setEvidence(e.target.value)}
           style={{
@@ -293,6 +313,8 @@ export function VolunteerCriterionFeedbackEditorPage() {
           Strength
         </span>
         <textarea
+          aria-label="Strength"
+          className="auratio-volunteer-feedback-textarea auratio-volunteer-feedback-textarea--strength"
           value={strength}
           onChange={(e) => setStrength(e.target.value)}
           style={{
@@ -358,6 +380,8 @@ export function VolunteerCriterionFeedbackEditorPage() {
           Weakness
         </span>
         <textarea
+          aria-label="Weakness"
+          className="auratio-volunteer-feedback-textarea auratio-volunteer-feedback-textarea--weakness"
           value={weakness}
           onChange={(e) => setWeakness(e.target.value)}
           style={{
@@ -423,6 +447,8 @@ export function VolunteerCriterionFeedbackEditorPage() {
           Actionable improvement advice
         </span>
         <textarea
+          aria-label="Actionable improvement advice"
+          className="auratio-volunteer-feedback-textarea auratio-volunteer-feedback-textarea--advice"
           value={advice}
           onChange={(e) => setAdvice(e.target.value)}
           style={{
@@ -491,6 +517,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
           Criterion completeness
         </span>
         <span
+          className="auratio-volunteer-criterion-completeness-row"
           style={{
             position: 'absolute',
             left: '220px',
@@ -504,14 +531,14 @@ export function VolunteerCriterionFeedbackEditorPage() {
             color: 'var(--auratio-amber-700)',
           }}
         >
-          Anchor ✓&nbsp;&nbsp;&nbsp;Exact score ✓&nbsp;&nbsp;&nbsp;Timestamped evidence ✓&nbsp;&nbsp;&nbsp;Strength ✓&nbsp;&nbsp;&nbsp;Weakness ✓&nbsp;&nbsp;&nbsp;Actionable advice ✓
+          Anchor ✓&nbsp;&nbsp;&nbsp;Exact score ✓&nbsp;&nbsp;&nbsp;Timestamped evidence {evidenceComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Strength {strengthComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Weakness {weaknessComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Actionable advice {adviceComplete ? '✓' : '—'}
         </span>
       </div>
 
       {/* Buttons */}
       <button
         type="button"
-        onClick={handleReturn}
+        onClick={handleBackToScores}
         className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
         style={{
           position: 'absolute',
@@ -527,7 +554,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
 
       <button
         type="button"
-        onClick={handleReturn}
+        onClick={handleSave}
         className="auratio-volunteer-btn auratio-volunteer-btn--primary"
         style={{
           position: 'absolute',
