@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join, resolve } from 'node:path'
 
@@ -601,6 +601,18 @@ async function run() {
     bodyText = await getBodyText()
     if (!bodyText.includes('Deactivate Kazi Anis Updated?') || !bodyText.includes('kazi.updated@auratio.org • Admin')) {
       throw new Error('Expected deactivation screen to target Kazi Anis, not Nadia')
+    }
+    if (!bodyText.includes('This cancels pending Admin portal activation for the selected ordinary Admin account.')) {
+      throw new Error('Expected invited deactivation subtitle copy for invited admin')
+    }
+    if (!bodyText.includes('Pending Admin portal activation is cancelled.')) {
+      throw new Error('Expected pending activation cancelled in impact box for invited admin')
+    }
+    if (bodyText.includes('This removes active Admin portal authorization')) {
+      throw new Error('Invited admin deactivation confirmation must NOT claim active portal authorization is being removed')
+    }
+    if (bodyText.includes('Active Admin portal access is removed')) {
+      throw new Error('Invited admin deactivation confirmation must NOT claim active portal access is removed')
     }
 
     // Confirm deactivation

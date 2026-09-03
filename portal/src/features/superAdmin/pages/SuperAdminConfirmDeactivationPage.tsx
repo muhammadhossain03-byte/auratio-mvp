@@ -33,6 +33,21 @@ export function SuperAdminConfirmDeactivationPage() {
     }
   }
 
+  const isInvited = account?.status === 'Invited'
+  const isDeactivated = account?.status === 'Deactivated'
+
+  const subtitleText = isInvited
+    ? 'This cancels pending Admin portal activation for the selected ordinary Admin account.'
+    : isDeactivated
+      ? 'This confirms deactivation for the selected ordinary Admin account.'
+      : 'This removes active Admin portal authorization for the selected ordinary Admin account.'
+
+  const impactFirstLine = isInvited
+    ? '• Pending Admin portal activation is cancelled.'
+    : isDeactivated
+      ? '• Admin portal access remains deactivated.'
+      : '• Active Admin portal access is removed.'
+
   return (
     <SuperAdminLayout
       ariaLabel="Confirm Admin Deactivation"
@@ -48,7 +63,7 @@ export function SuperAdminConfirmDeactivationPage() {
         className="auratio-admin-page-subtitle"
         style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
       >
-        This removes active Admin portal authorization for the selected ordinary Admin account.
+        {subtitleText}
       </p>
 
       {/* Confirmation Modal / Card */}
@@ -107,7 +122,7 @@ export function SuperAdminConfirmDeactivationPage() {
               color: '#925F12',
             }}
           >
-            <div>• Active Admin portal access is removed.</div>
+            <div>{impactFirstLine}</div>
             <div>• The account is not promoted/demoted into another role.</div>
             <div>• Previous operational/audit records remain attributable.</div>
             <div>• This lifecycle action is auditable.</div>
