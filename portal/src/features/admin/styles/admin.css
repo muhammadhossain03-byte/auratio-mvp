@@ -358,3 +358,79 @@
   cursor: default;
   pointer-events: none;
 }
+
+.auratio-admin-status-pill--active {
+  background-color: #EAF7F0;
+  color: #1F6B48;
+  border-radius: 17px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.auratio-admin-status-pill--submitted {
+  background-color: #F3F8FE;
+  color: #256EA5;
+  border-radius: 17px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.auratio-admin-status-pill--published {
+  background-color: #ECFDF3;
+  color: #18794E;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.auratio-admin-status-pill--draft {
+  background-color: #F3F8FE;
+  color: #041B3B;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.auratio-admin-input {
+  box-sizing: border-box;
+  background-color: #FFFFFF;
+  border: 1px solid #C8D2E0;
+  border-radius: 10px;
+  font-family: var(--auratio-font-family-inter, Inter), sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: #111827;
+  padding: 12px 14px;
+  outline: none;
+}
+
+.auratio-admin-input:focus {
+  border-color: #041B3B;
+}
+
+.auratio-admin-input::placeholder {
+  color: #6B788A;
+}
+
+.auratio-admin-textarea {
+  box-sizing: border-box;
+  background-color: #FFFFFF;
+  border: 1px solid #C8D2E0;
+  border-radius: 10px;
+  font-family: var(--auratio-font-family-inter, Inter), sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: #111827;
+  padding: 14px;
+  outline: none;
+  resize: none;
+}
+
+.auratio-admin-textarea:focus {
+  border-color: #041B3B;
+}
+
+.auratio-admin-textarea::placeholder {
+  color: #6B788A;
+}
+

@@ -681,14 +681,28 @@ async function run() {
       throw new Error(`Expected superseded Farhana and active Nadia, got ${JSON.stringify(confirmObj)}`)
     }
 
-    // 17. EVALUATION RECORDS -> PROCESSING HUMAN & APPROVED AI
+    // 17. EVALUATION RECORDS -> MODERATION REVIEW, PROCESSING HUMAN & APPROVED AI
     console.log('\n--- Testing Evaluation Records Detail Routes ---')
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/evaluations` })
     await new Promise((r) => setTimeout(r, 500))
 
-    // Open SUB-8834 (Processing Human, button 0)
+    // Open SUB-8821 (Row 0 -> Moderation Review)
     await sendCdp(ws, 'Runtime.evaluate', {
       expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[0].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    console.log('Path after opening SUB-8821:', await getPathname())
+    if (await getPathname() !== '/admin/moderation/sub-8821') {
+      throw new Error('Expected /admin/moderation/sub-8821 when opening SUB-8821')
+    }
+
+    // Return to evaluations
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/evaluations` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Open SUB-8834 (Row 1 -> Processing Human)
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[1].click()`,
     })
     await new Promise((r) => setTimeout(r, 300))
     console.log('Path after opening SUB-8834:', await getPathname())
@@ -701,9 +715,9 @@ async function run() {
       throw new Error('Expected /admin/evaluations after Back to Evaluations')
     }
 
-    // Open SUB-8798 (Approved AI, button 1)
+    // Open SUB-8798 (Row 2 -> Approved AI)
     await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[1].click()`,
+      expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[2].click()`,
     })
     await new Promise((r) => setTimeout(r, 300))
     console.log('Path after opening SUB-8798:', await getPathname())
@@ -716,8 +730,230 @@ async function run() {
       throw new Error('Expected /admin/evaluations after Back to Evaluations')
     }
 
-    // 18. OUT-OF-BATCH CONTROLS
-    console.log('\n--- Testing Out-of-Batch Controls are Presentation-Only ---')
+    // 18. ADMIN SIDEBAR NAVIGATION
+    console.log('\n--- Testing Admin Sidebar Navigation Across All 7 Destinations ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/dashboard` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    const navDestinations = [
+      { text: 'Requests', path: '/admin/requests' },
+      { text: 'Evaluations', path: '/admin/evaluations' },
+      { text: 'Moderation', path: '/admin/moderation' },
+      { text: 'Volunteers', path: '/admin/volunteers' },
+      { text: 'Events', path: '/admin/events' },
+      { text: 'Audit Log', path: '/admin/audit' },
+      { text: 'Dashboard', path: '/admin/dashboard' },
+    ]
+
+    for (const dest of navDestinations) {
+      await clickByText('button.auratio-admin-nav-item', dest.text)
+      const current = await getPathname()
+      console.log(`Sidebar clicked ${dest.text} -> ${current}`)
+      if (current !== dest.path) {
+        throw new Error(`Expected sidebar navigation to ${dest.path}, got ${current}`)
+      }
+    }
+
+    // 19. MODERATION FLOWS
+    console.log('\n--- Testing Moderation Flows ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Queue -> Review
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelectorAll('button.auratio-admin-btn--secondary')[0].click()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    if (await getPathname() !== '/admin/moderation/sub-8821') {
+      throw new Error('Expected /admin/moderation/sub-8821 from Queue Open')
+    }
+
+    // Review -> Approve -> Cancel -> Review
+    await clickByText('button.auratio-admin-btn--primary', 'Approve')
+    if (await getPathname() !== '/admin/moderation/sub-8821/approve') {
+      throw new Error('Expected /admin/moderation/sub-8821/approve')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/moderation/sub-8821') {
+      throw new Error('Expected /admin/moderation/sub-8821 after Cancel approval')
+    }
+
+    // Review -> Approve -> Confirm Approval -> Evaluations
+    await clickByText('button.auratio-admin-btn--primary', 'Approve')
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Approval')
+    if (await getPathname() !== '/admin/evaluations') {
+      throw new Error('Expected /admin/evaluations after Confirm Approval')
+    }
+
+    // Review -> Reject -> Cancel -> Review
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation/sub-8821` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-btn--secondary', 'Reject')
+    if (await getPathname() !== '/admin/moderation/sub-8821/reject') {
+      throw new Error('Expected /admin/moderation/sub-8821/reject')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/moderation/sub-8821') {
+      throw new Error('Expected /admin/moderation/sub-8821 after Cancel rejection')
+    }
+
+    // Review -> Reject -> Reason validation
+    await clickByText('button.auratio-admin-btn--secondary', 'Reject')
+    // 1) Empty reason: click Confirm Rejection must NOT navigate
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Rejection')
+    if (await getPathname() !== '/admin/moderation/sub-8821/reject') {
+      throw new Error('Expected empty reason to stay on /admin/moderation/sub-8821/reject')
+    }
+    // 2) Whitespace-only reason: must NOT navigate
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const ta = document.querySelector('textarea.auratio-admin-textarea');
+        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+        nativeSetter.call(ta, '    ');
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        ta.dispatchEvent(new Event('change', { bubbles: true }));
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 200))
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Rejection')
+    if (await getPathname() !== '/admin/moderation/sub-8821/reject') {
+      throw new Error('Expected whitespace-only reason to stay on /admin/moderation/sub-8821/reject')
+    }
+    // 3) Valid reason: must navigate to /admin/evaluations
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const ta = document.querySelector('textarea.auratio-admin-textarea');
+        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+        nativeSetter.call(ta, 'Evidence is insufficient to support criterion score.');
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        ta.dispatchEvent(new Event('change', { bubbles: true }));
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 200))
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Rejection')
+    if (await getPathname() !== '/admin/evaluations') {
+      throw new Error('Expected /admin/evaluations after valid Confirm Rejection')
+    }
+
+    // Review -> Request Re-review -> Cancel -> Review
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation/sub-8821` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-btn--secondary', 'Request Re-review')
+    if (await getPathname() !== '/admin/moderation/sub-8821/re-review') {
+      throw new Error('Expected /admin/moderation/sub-8821/re-review')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/moderation/sub-8821') {
+      throw new Error('Expected /admin/moderation/sub-8821 after Cancel re-review')
+    }
+
+    // Review -> Request Re-review -> Confirm -> /volunteer/evaluation/sub-8821/reopened
+    await clickByText('button.auratio-admin-btn--secondary', 'Request Re-review')
+    await clickByText('button.auratio-admin-btn--primary', 'Request Re-review')
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/reopened') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821/reopened after Confirm Request Re-review')
+    }
+
+    // 20. VOLUNTEER FLOWS
+    console.log('\n--- Testing Volunteer Evaluators Flows ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Directory -> Invite -> Cancel -> Directory
+    await clickByText('button.auratio-admin-btn--primary', 'Invite Volunteer')
+    if (await getPathname() !== '/admin/volunteers/invite') {
+      throw new Error('Expected /admin/volunteers/invite')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/volunteers') {
+      throw new Error('Expected /admin/volunteers after Cancel invite')
+    }
+
+    // Invite -> Choose / Edit Tracks -> Track Eligibility
+    await clickByText('button.auratio-admin-btn--primary', 'Invite Volunteer')
+    await clickByText('button.auratio-admin-btn--primary', 'Choose / Edit Tracks')
+    if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
+      throw new Error('Expected /admin/volunteers/farhana/tracks')
+    }
+
+    // Invite -> Send Volunteer Invite -> Directory
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/invite` })
+    await new Promise((r) => setTimeout(r, 500))
+    await clickByText('button.auratio-admin-btn--primary', 'Send Volunteer Invite')
+    if (await getPathname() !== '/admin/volunteers') {
+      throw new Error('Expected /admin/volunteers after Send Volunteer Invite')
+    }
+
+    // Directory -> Farhana Open -> Volunteer Account
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const open = btns.find(b => b.textContent.trim() === 'Open');
+        if (open) open.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    if (await getPathname() !== '/admin/volunteers/farhana') {
+      throw new Error('Expected /admin/volunteers/farhana from directory Open')
+    }
+
+    // Volunteer Account -> Availability Override -> Cancel -> Volunteer Account
+    await clickByText('button.auratio-admin-btn--primary', 'Override Availability')
+    if (await getPathname() !== '/admin/volunteers/farhana/availability') {
+      throw new Error('Expected /admin/volunteers/farhana/availability')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/volunteers/farhana') {
+      throw new Error('Expected /admin/volunteers/farhana after Cancel override')
+    }
+
+    // Volunteer Account -> Availability Override -> Apply -> Volunteer Account
+    await clickByText('button.auratio-admin-btn--primary', 'Override Availability')
+    await clickByText('button.auratio-admin-btn--primary', 'Apply Override')
+    if (await getPathname() !== '/admin/volunteers/farhana') {
+      throw new Error('Expected /admin/volunteers/farhana after Apply Override')
+    }
+
+    // Volunteer Account -> Manage Track Eligibility
+    await clickByText('button.auratio-admin-btn--primary', 'Manage Track Eligibility')
+    if (await getPathname() !== '/admin/volunteers/farhana/tracks') {
+      throw new Error('Expected /admin/volunteers/farhana/tracks from Manage Track Eligibility')
+    }
+
+    // 21. EVENT MANAGEMENT FLOWS
+    console.log('\n--- Testing Event Management Flows ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Event Management -> Create Event -> Editor
+    await clickByText('button.auratio-admin-btn--primary', 'Create Event')
+    if (await getPathname() !== '/admin/events/editor') {
+      throw new Error('Expected /admin/events/editor from Create Event')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Save Draft')
+    if (await getPathname() !== '/admin/events') {
+      throw new Error('Expected /admin/events after Save Draft')
+    }
+
+    // Event Management -> Edit -> Editor
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const edit = btns.find(b => b.textContent.trim() === 'Edit');
+        if (edit) edit.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+    if (await getPathname() !== '/admin/events/editor') {
+      throw new Error('Expected /admin/events/editor from Edit action')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Save Draft')
+    if (await getPathname() !== '/admin/events') {
+      throw new Error('Expected /admin/events after Save Draft')
+    }
+
+    // 22. PRESENTATION-ONLY CONTROLS
+    console.log('\n--- Testing Out-of-Batch & Locked Controls are Presentation-Only ---')
     // Check role auth super admin
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/auth/role-authorization` })
     await new Promise((r) => setTimeout(r, 500))
@@ -731,30 +967,33 @@ async function run() {
       throw new Error('Expected Super Admin button to be presentation-only')
     }
 
-    // Check admin sidebar presentation items
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/dashboard` })
+    // Check Track Eligibility Save and Cancel are presentation-only
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/farhana/tracks` })
     await new Promise((r) => setTimeout(r, 500))
-    const sidebarPres = await sendCdp(ws, 'Runtime.evaluate', {
+    const trackEligPres = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `(() => {
-        const pres = Array.from(document.querySelectorAll('.auratio-admin-nav-item--presentation')).map(e => e.textContent.trim());
-        return ['Moderation', 'Volunteers', 'Events', 'Audit Log'].every(label => pres.includes(label));
+        const pres = Array.from(document.querySelectorAll('.auratio-admin-btn--presentation')).map(e => e.textContent.trim());
+        return pres.includes('Save Eligibility') && pres.includes('Cancel');
       })()`,
     })
-    if (!sidebarPres.result.value) {
-      throw new Error('Expected Moderation, Volunteers, Events, Audit Log to be presentation-only')
+    if (!trackEligPres.result.value) {
+      throw new Error('Expected Save Eligibility and Cancel to be presentation-only')
     }
 
-    // Check evaluation records row 1 (SUB-8821) presentation button
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/evaluations` })
+    // Check Event Editor Publish Event and Delete Event are presentation-only
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events/editor` })
     await new Promise((r) => setTimeout(r, 500))
-    const sub8821Pres = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelector('.auratio-admin-btn--presentation') !== null`,
+    const eventEditorPres = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const pres = Array.from(document.querySelectorAll('.auratio-admin-btn--presentation')).map(e => e.textContent.trim());
+        return pres.includes('Publish Event') && pres.includes('Delete Event');
+      })()`,
     })
-    if (!sub8821Pres.result.value) {
-      throw new Error('Expected SUB-8821 action to be presentation-only')
+    if (!eventEditorPres.result.value) {
+      throw new Error('Expected Publish Event and Delete Event to be presentation-only')
     }
 
-    console.log('\nALL 18 INTERACTION FLOWS PASSED PERFECTLY!')
+    console.log('\nALL INTERACTION FLOWS PASSED PERFECTLY!')
 
     ws.close()
   } finally {
@@ -767,3 +1006,4 @@ run().catch((err) => {
   console.error('Interaction test failed:', err)
   process.exit(1)
 })
+

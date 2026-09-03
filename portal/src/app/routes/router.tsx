@@ -31,15 +31,28 @@ import {
 } from '../../features/volunteer'
 import {
   AdminAssignmentPickerPage,
+  AdminAuditLogPage,
+  AdminAvailabilityOverridePage,
+  AdminConfirmModerationApprovalPage,
+  AdminConfirmModerationRejectionPage,
   AdminConfirmReassignmentPage,
   AdminEvaluationApprovedAiPage,
   AdminEvaluationProcessingHumanPage,
   AdminEvaluationRecordsPage,
   AdminEvaluationRequestQueuePage,
+  AdminEventEditorPage,
+  AdminEventManagementPage,
+  AdminInviteVolunteerPage,
+  AdminModerationQueuePage,
+  AdminModerationReviewPage,
   AdminOperationsDashboardPage,
   AdminRequestAssignedAiPage,
   AdminRequestDetailsRoutingPage,
   AdminRequestRedirectedHumanPage,
+  AdminRequestReReviewPage,
+  AdminVolunteerAccountPage,
+  AdminVolunteerEvaluatorsPage,
+  AdminVolunteerTrackEligibilityPage,
 } from '../../features/admin'
 import { portalRoutePaths } from './routePaths'
 
@@ -197,6 +210,58 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.admin.evaluationApprovedAi,
     element: <AdminEvaluationApprovedAiPage />,
+  },
+  {
+    path: portalRoutePaths.admin.moderation,
+    element: <AdminModerationQueuePage />,
+  },
+  {
+    path: portalRoutePaths.admin.moderationReview,
+    element: <AdminModerationReviewPage />,
+  },
+  {
+    path: portalRoutePaths.admin.confirmModerationApproval,
+    element: <AdminConfirmModerationApprovalPage />,
+  },
+  {
+    path: portalRoutePaths.admin.confirmModerationRejection,
+    element: <AdminConfirmModerationRejectionPage />,
+  },
+  {
+    path: portalRoutePaths.admin.requestReReview,
+    element: <AdminRequestReReviewPage />,
+  },
+  {
+    path: portalRoutePaths.admin.volunteers,
+    element: <AdminVolunteerEvaluatorsPage />,
+  },
+  {
+    path: portalRoutePaths.admin.inviteVolunteer,
+    element: <AdminInviteVolunteerPage />,
+  },
+  {
+    path: portalRoutePaths.admin.volunteerAccount,
+    element: <AdminVolunteerAccountPage />,
+  },
+  {
+    path: portalRoutePaths.admin.availabilityOverride,
+    element: <AdminAvailabilityOverridePage />,
+  },
+  {
+    path: portalRoutePaths.admin.volunteerTrackEligibility,
+    element: <AdminVolunteerTrackEligibilityPage />,
+  },
+  {
+    path: portalRoutePaths.admin.events,
+    element: <AdminEventManagementPage />,
+  },
+  {
+    path: portalRoutePaths.admin.eventEditor,
+    element: <AdminEventEditorPage />,
+  },
+  {
+    path: portalRoutePaths.admin.audit,
+    element: <AdminAuditLogPage />,
   },
 ])
 

@@ -7,7 +7,7 @@ import '../styles/admin.css'
 interface AdminLayoutProps {
   children: ReactNode
   topbarTitle: string
-  activeNav?: 'dashboard' | 'requests' | 'evaluations'
+  activeNav?: 'dashboard' | 'requests' | 'evaluations' | 'moderation' | 'volunteers' | 'events' | 'audit'
   topbarRightVariant?: 'avatar' | 'pill'
   ariaLabel: string
 }
@@ -97,7 +97,7 @@ export function AdminLayout({
         {activeNav === 'evaluations' ? (
           <div
             className="auratio-admin-nav-item--active-box"
-            style={{ top: '214px' }}
+            style={{ top: isDetailed ? '214px' : '212px' }}
           >
             <span className="auratio-admin-nav-item--active">
               Evaluations
@@ -114,45 +114,89 @@ export function AdminLayout({
           </button>
         )}
 
-        {/* Moderation (Presentation-only) */}
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-admin-nav-item auratio-admin-nav-item--presentation"
-          style={{ top: isDetailed ? '274px' : '272px' }}
-        >
-          Moderation
-        </div>
+        {/* Moderation Nav Item */}
+        {activeNav === 'moderation' ? (
+          <div
+            className="auratio-admin-nav-item--active-box"
+            style={{ top: isDetailed ? '264px' : '262px' }}
+          >
+            <span className="auratio-admin-nav-item--active">
+              Moderation
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate(portalRoutePaths.admin.moderation)}
+            className="auratio-admin-nav-item"
+            style={{ top: isDetailed ? '274px' : '272px' }}
+          >
+            Moderation
+          </button>
+        )}
 
-        {/* Volunteers (Presentation-only) */}
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-admin-nav-item auratio-admin-nav-item--presentation"
-          style={{ top: isDetailed ? '324px' : '322px' }}
-        >
-          Volunteers
-        </div>
+        {/* Volunteers Nav Item */}
+        {activeNav === 'volunteers' ? (
+          <div
+            className="auratio-admin-nav-item--active-box"
+            style={{ top: isDetailed ? '314px' : '312px' }}
+          >
+            <span className="auratio-admin-nav-item--active">
+              Volunteers
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate(portalRoutePaths.admin.volunteers)}
+            className="auratio-admin-nav-item"
+            style={{ top: isDetailed ? '324px' : '322px' }}
+          >
+            Volunteers
+          </button>
+        )}
 
-        {/* Events (Presentation-only) */}
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-admin-nav-item auratio-admin-nav-item--presentation"
-          style={{ top: isDetailed ? '374px' : '372px' }}
-        >
-          Events
-        </div>
+        {/* Events Nav Item */}
+        {activeNav === 'events' ? (
+          <div
+            className="auratio-admin-nav-item--active-box"
+            style={{ top: isDetailed ? '364px' : '362px' }}
+          >
+            <span className="auratio-admin-nav-item--active">
+              Events
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate(portalRoutePaths.admin.events)}
+            className="auratio-admin-nav-item"
+            style={{ top: isDetailed ? '374px' : '372px' }}
+          >
+            Events
+          </button>
+        )}
 
-        {/* Audit Log (Presentation-only) */}
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-admin-nav-item auratio-admin-nav-item--presentation"
-          style={{ top: isDetailed ? '424px' : '422px' }}
-        >
-          Audit Log
-        </div>
+        {/* Audit Log Nav Item */}
+        {activeNav === 'audit' ? (
+          <div
+            className="auratio-admin-nav-item--active-box"
+            style={{ top: isDetailed ? '414px' : '412px' }}
+          >
+            <span className="auratio-admin-nav-item--active">
+              Audit Log
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate(portalRoutePaths.admin.audit)}
+            className="auratio-admin-nav-item"
+            style={{ top: isDetailed ? '424px' : '422px' }}
+          >
+            Audit Log
+          </button>
+        )}
 
         {/* Sidebar Footer (Present on detailed variant) */}
         {isDetailed && (

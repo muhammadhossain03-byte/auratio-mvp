@@ -107,14 +107,14 @@ export function AdminEvaluationRecordsPage() {
             85 / 100
           </div>
           <div style={{ width: '92px' }}>
-            <div
-              role="presentation"
-              aria-hidden="true"
-              className="auratio-admin-btn auratio-admin-btn--secondary auratio-admin-btn--presentation"
+            <button
+              type="button"
+              onClick={() => navigate(adminEvaluationRecords[0].destinationPath!)}
+              className="auratio-admin-btn auratio-admin-btn--secondary"
               style={{ width: '92px', height: '44px', fontSize: '14px', fontWeight: 600 }}
             >
               Open
-            </div>
+            </button>
           </div>
         </div>
 

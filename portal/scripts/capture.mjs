@@ -144,6 +144,58 @@ const SCREENS = [
     name: 'admin_evaluation_approved_ai',
     path: '/admin/evaluations/sub-8798',
   },
+  {
+    name: 'admin_moderation_queue',
+    path: '/admin/moderation',
+  },
+  {
+    name: 'admin_moderation_review',
+    path: '/admin/moderation/sub-8821',
+  },
+  {
+    name: 'admin_confirm_moderation_approval',
+    path: '/admin/moderation/sub-8821/approve',
+  },
+  {
+    name: 'admin_confirm_moderation_rejection',
+    path: '/admin/moderation/sub-8821/reject',
+  },
+  {
+    name: 'admin_request_rereview',
+    path: '/admin/moderation/sub-8821/re-review',
+  },
+  {
+    name: 'admin_volunteer_evaluators',
+    path: '/admin/volunteers',
+  },
+  {
+    name: 'admin_invite_volunteer',
+    path: '/admin/volunteers/invite',
+  },
+  {
+    name: 'admin_volunteer_account',
+    path: '/admin/volunteers/farhana',
+  },
+  {
+    name: 'admin_availability_override',
+    path: '/admin/volunteers/farhana/availability',
+  },
+  {
+    name: 'admin_volunteer_track_eligibility',
+    path: '/admin/volunteers/farhana/tracks',
+  },
+  {
+    name: 'admin_event_management',
+    path: '/admin/events',
+  },
+  {
+    name: 'admin_event_editor',
+    path: '/admin/events/editor',
+  },
+  {
+    name: 'admin_audit_log',
+    path: '/admin/audit',
+  },
 ]
 
 const MIME_TYPES = {
