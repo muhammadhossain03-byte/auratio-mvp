@@ -33,22 +33,22 @@ export function PortalRoleAuthorizationPage() {
       </div>
 
       <AuthButton
+        presentationOnly
         style={{ marginTop: '10px' }}
-        aria-label="Open resolved Volunteer Evaluator workspace (out of batch)"
       >
         Open resolved Volunteer Evaluator workspace
       </AuthButton>
 
       <AuthButton
+        presentationOnly
         style={{ marginTop: '16px' }}
-        aria-label="Open resolved Admin workspace (out of batch)"
       >
         Open resolved Admin workspace
       </AuthButton>
 
       <AuthButton
+        presentationOnly
         style={{ marginTop: '16px' }}
-        aria-label="Open resolved Super Admin workspace (out of batch)"
       >
         Open resolved Super Admin workspace
       </AuthButton>

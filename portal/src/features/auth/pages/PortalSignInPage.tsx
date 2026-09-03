@@ -51,14 +51,12 @@ export function PortalSignInPage() {
         />
 
         <div style={{ marginTop: '14px', textAlign: 'right' }}>
-          <button
-            type="button"
-            className="auratio-auth-link"
+          <span
+            className="auratio-auth-link auratio-auth-link--presentation"
             style={{ fontSize: '12px' }}
-            aria-label="Forgot password (out of batch)"
           >
             Forgot password?
-          </button>
+          </span>
         </div>
 
         <AuthButton

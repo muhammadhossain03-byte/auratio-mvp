@@ -1,5 +1,11 @@
 /* Auratio Portal — Authentication Layout & Component Styles */
 
+html:has(.auratio-auth-viewport),
+body:has(.auratio-auth-viewport) {
+  background-color: transparent;
+  background: transparent;
+}
+
 .auratio-auth-viewport {
   position: relative;
   width: 1366px;
@@ -8,6 +14,7 @@
   min-height: 900px;
   margin: 0 auto;
   background-color: var(--auratio-brand-navy-900);
+  border-radius: 22px;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -136,6 +143,21 @@
   outline-offset: 2px;
 }
 
+.auratio-auth-btn--presentation {
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+}
+
+.auratio-auth-btn--presentation:hover {
+  background-color: var(--auratio-brand-navy-900);
+}
+
+.auratio-auth-btn--presentation:focus,
+.auratio-auth-btn--presentation:focus-visible {
+  outline: none;
+}
+
 /* Info Callout Box */
 .auratio-auth-info-card {
   width: 100%;
@@ -188,6 +210,18 @@
 .auratio-auth-link:focus-visible {
   outline: 2px solid var(--auratio-border-focus);
   outline-offset: 2px;
+}
+
+.auratio-auth-link--presentation {
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+  text-decoration: none;
+}
+
+.auratio-auth-link--presentation:hover {
+  color: var(--auratio-neutral-500);
+  text-decoration: none;
 }
 
 .auratio-auth-section-title {

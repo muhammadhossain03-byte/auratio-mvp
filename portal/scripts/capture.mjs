@@ -150,6 +150,9 @@ async function run() {
       deviceScaleFactor: 1,
       mobile: false,
     })
+    await sendCdp(ws, 'Emulation.setDefaultBackgroundColorOverride', {
+      color: { r: 0, g: 0, b: 0, a: 0 },
+    })
 
     for (const screen of SCREENS) {
       console.log(`Capturing ${screen.name} at ${screen.path}...`)
