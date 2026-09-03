@@ -1231,25 +1231,95 @@ async function run() {
       throw new Error(`Expected /super-admin/admin-accounts after Back to Accounts, got ${await getPathname()}`)
     }
 
-    // Nadia Open -> Admin Account
+    // CASE A — SAVE PERSISTS
+    console.log('\n--- Testing Nadia Profile Save Persistence (Case A) ---')
     await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `(() => {
-        const btns = Array.from(document.querySelectorAll('button')).filter(b => b.innerText.trim() === 'Open');
-        if (btns.length > 0) btns[0].click();
-      })()`,
+      expression: 'window.__auratioResetSuperAdmin ? window.__auratioResetSuperAdmin() : true',
     })
-    await new Promise((r) => setTimeout(r, 300))
-    if (await getPathname() !== '/super-admin/admin-accounts/nadia') {
-      throw new Error(`Expected /super-admin/admin-accounts/nadia from Nadia Open, got ${await getPathname()}`)
-    }
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts/nadia` })
+    await new Promise((r) => setTimeout(r, 500))
 
-    // Admin Account -> Save Changes -> Admin Accounts
+    await setInputValue('input[aria-label="Display name"]', 'Nadia Rahman QA')
+    await setInputValue('input[aria-label="Email / auth identity"]', 'nadia.qa@auratio.org')
+
     await clickByText('button.auratio-admin-btn--primary', 'Save Changes')
     if (await getPathname() !== '/super-admin/admin-accounts') {
       throw new Error(`Expected /super-admin/admin-accounts after Save Changes, got ${await getPathname()}`)
     }
 
-    // Admin Account -> Deactivate -> Cancel
+    // Row-specific assertion: Nadia row specifically contains updated name and email
+    const nadiaRowSaved = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const row = document.querySelector('[data-testid="admin-account-row-nadia"]');
+        return row ? row.innerText : '';
+      })()`,
+    })
+    console.log('Nadia row after Save Changes:', nadiaRowSaved.result.value)
+    if (!nadiaRowSaved.result.value.includes('Nadia Rahman QA') || !nadiaRowSaved.result.value.includes('nadia.qa@auratio.org')) {
+      throw new Error(`Expected Nadia row to contain "Nadia Rahman QA" and "nadia.qa@auratio.org", got: ${nadiaRowSaved.result.value}`)
+    }
+
+    // Reopen Nadia
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const row = document.querySelector('[data-testid="admin-account-row-nadia"]');
+        const btn = row ? row.querySelector('button') : null;
+        if (btn) btn.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 400))
+    if (await getPathname() !== '/super-admin/admin-accounts/nadia') {
+      throw new Error(`Expected /super-admin/admin-accounts/nadia after reopening Nadia, got ${await getPathname()}`)
+    }
+
+    // Assert the two inputs contain the saved values
+    const nadiaInputsCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const nameInput = document.querySelector('input[aria-label="Display name"]');
+        const emailInput = document.querySelector('input[aria-label="Email / auth identity"]');
+        return JSON.stringify({
+          displayName: nameInput ? nameInput.value : '',
+          email: emailInput ? emailInput.value : '',
+        });
+      })()`,
+    })
+    const nadiaInputs = JSON.parse(nadiaInputsCheck.result.value)
+    console.log('Reopened Nadia inputs:', nadiaInputs)
+    if (nadiaInputs.displayName !== 'Nadia Rahman QA' || nadiaInputs.email !== 'nadia.qa@auratio.org') {
+      throw new Error(`Expected inputs to have saved values, got: ${JSON.stringify(nadiaInputs)}`)
+    }
+
+    // CASE B — BACK DOES NOT SAVE
+    console.log('\n--- Testing Nadia Profile Back Without Save (Case B) ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__auratioResetSuperAdmin ? window.__auratioResetSuperAdmin() : true',
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts/nadia` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    await setInputValue('input[aria-label="Display name"]', 'Nadia Rahman Unsaved')
+    await setInputValue('input[aria-label="Email / auth identity"]', 'unsaved@auratio.org')
+
+    // Click Back to Accounts without saving
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Accounts')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error(`Expected /super-admin/admin-accounts after Back to Accounts, got ${await getPathname()}`)
+    }
+
+    // Assert canonical Nadia values remain unchanged in directory
+    const nadiaRowUnsaved = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const row = document.querySelector('[data-testid="admin-account-row-nadia"]');
+        return row ? row.innerText : '';
+      })()`,
+    })
+    console.log('Nadia row after Back without Save:', nadiaRowUnsaved.result.value)
+    if (!nadiaRowUnsaved.result.value.includes('Nadia Rahman') || nadiaRowUnsaved.result.value.includes('Nadia Rahman Unsaved') || nadiaRowUnsaved.result.value.includes('unsaved@auratio.org')) {
+      throw new Error(`Expected Nadia row to retain canonical values, got: ${nadiaRowUnsaved.result.value}`)
+    }
+
+    // DEACTIVATION CANCEL FLOW
+    console.log('\n--- Testing Deactivation Cancel Flow ---')
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts/nadia` })
     await new Promise((r) => setTimeout(r, 500))
     await clickByText('button.auratio-admin-btn--secondary', 'Deactivate…')
@@ -1268,7 +1338,8 @@ async function run() {
       throw new Error('Expected Nadia to remain Active after Cancel')
     }
 
-    // Admin Account -> Deactivate -> Confirm Deactivation
+    // DEACTIVATION CONFIRM FLOW & HARDENED ROW-SPECIFIC ASSERTIONS
+    console.log('\n--- Testing Deactivation Confirm Flow & Row-Specific Assertions ---')
     await clickByText('button.auratio-admin-btn--secondary', 'Deactivate…')
     if (await getPathname() !== '/super-admin/admin-accounts/nadia/deactivate') {
       throw new Error(`Expected /super-admin/admin-accounts/nadia/deactivate, got ${await getPathname()}`)
@@ -1278,20 +1349,28 @@ async function run() {
       throw new Error(`Expected /super-admin/admin-accounts after Confirm Deactivation, got ${await getPathname()}`)
     }
 
-    // Verify Nadia is now Deactivated in directory, Root is Active & Protected
-    const dirStatusCheck = await sendCdp(ws, 'Runtime.evaluate', {
+    // HARDENED ASSERTION: Check Nadia row specifically
+    const nadiaDeactCheck = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `(() => {
-        const text = document.body.innerText;
-        return JSON.stringify({
-          hasDeactivated: text.includes('Deactivated'),
-          hasProtected: text.includes('Protected'),
-          hasActive: text.includes('Active'),
-        });
+        const row = document.querySelector('[data-testid="admin-account-row-nadia"]');
+        return row ? row.innerText : '';
       })()`,
     })
-    const dirStatus = JSON.parse(dirStatusCheck.result.value)
-    if (!dirStatus.hasDeactivated || !dirStatus.hasProtected || !dirStatus.hasActive) {
-      throw new Error(`Directory status invalid after deactivation: ${JSON.stringify(dirStatus)}`)
+    console.log('Nadia row after Confirm Deactivation:', nadiaDeactCheck.result.value)
+    if (!nadiaDeactCheck.result.value.includes('Deactivated')) {
+      throw new Error(`Expected Nadia row specifically to have Deactivated status, got: ${nadiaDeactCheck.result.value}`)
+    }
+
+    // HARDENED ASSERTION: Check Auratio Root row specifically
+    const rootCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const row = document.querySelector('[data-testid="admin-account-row-root"]');
+        return row ? row.innerText : '';
+      })()`,
+    })
+    console.log('Root row after deactivation:', rootCheck.result.value)
+    if (!rootCheck.result.value.includes('Active') || !rootCheck.result.value.includes('Protected')) {
+      throw new Error(`Expected Root row specifically to be Active and Protected, got: ${rootCheck.result.value}`)
     }
 
     // Admin Accounts -> Root View (Protected Super Admin Account)

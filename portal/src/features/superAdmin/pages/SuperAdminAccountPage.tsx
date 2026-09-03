@@ -2,15 +2,17 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { isNadiaDeactivated } from '../data/mockSuperAdminData'
+import { getNadiaAdminAccount, updateNadiaAdminAccount } from '../data/mockSuperAdminData'
 
 export function SuperAdminAccountPage() {
   const navigate = useNavigate()
-  const deactivated = isNadiaDeactivated()
-  const [displayName, setDisplayName] = useState('Nadia Rahman')
-  const [email, setEmail] = useState('nadia@auratio.org')
+  const nadiaAccount = getNadiaAdminAccount()
+  const [displayName, setDisplayName] = useState(nadiaAccount.displayName)
+  const [email, setEmail] = useState(nadiaAccount.email)
+  const deactivated = nadiaAccount.status === 'Deactivated'
 
   function handleSave() {
+    updateNadiaAdminAccount({ displayName, email })
     navigate(portalRoutePaths.superAdmin.adminAccounts)
   }
 
@@ -31,7 +33,7 @@ export function SuperAdminAccountPage() {
         className="auratio-admin-page-title"
         style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
       >
-        Nadia Rahman
+        {nadiaAccount.displayName}
       </h2>
       <p
         className="auratio-admin-page-subtitle"

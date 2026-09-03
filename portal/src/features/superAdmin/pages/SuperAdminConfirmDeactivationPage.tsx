@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { deactivateNadia } from '../data/mockSuperAdminData'
+import { deactivateNadia, getNadiaAdminAccount } from '../data/mockSuperAdminData'
 
 export function SuperAdminConfirmDeactivationPage() {
   const navigate = useNavigate()
+  const nadiaAccount = getNadiaAdminAccount()
   const [reason, setReason] = useState('')
 
   function handleConfirm() {
@@ -52,7 +53,7 @@ export function SuperAdminConfirmDeactivationPage() {
         }}
       >
         <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: '32px', color: '#111827' }}>
-          Deactivate Nadia Rahman?
+          Deactivate {nadiaAccount.displayName}?
         </div>
         <div
           style={{
@@ -63,7 +64,7 @@ export function SuperAdminConfirmDeactivationPage() {
             color: '#4E5968',
           }}
         >
-          nadia@auratio.org • Admin
+          {nadiaAccount.email} • Admin
         </div>
 
         {/* Impact Box */}

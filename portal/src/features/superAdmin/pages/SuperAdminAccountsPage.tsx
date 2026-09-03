@@ -112,6 +112,7 @@ export function SuperAdminAccountsPage() {
         {accounts.map((acc, idx) => (
           <div key={acc.id}>
             <div
+              data-testid={`admin-account-row-${acc.id}`}
               style={{
                 display: 'flex',
                 alignItems: 'center',

@@ -12,22 +12,54 @@ export interface SuperAdminAccountItem {
   destinationPath: string
 }
 
-let nadiaDeactivated = false
+export interface NadiaProfileState {
+  displayName: string
+  email: string
+  status: 'Active' | 'Deactivated'
+}
+
+const CANONICAL_NADIA_PROFILE: NadiaProfileState = {
+  displayName: 'Nadia Rahman',
+  email: 'nadia@auratio.org',
+  status: 'Active',
+}
+
+let nadiaProfile: NadiaProfileState = { ...CANONICAL_NADIA_PROFILE }
+
+export function getNadiaAdminAccount(): NadiaProfileState {
+  return { ...nadiaProfile }
+}
+
+export function updateNadiaAdminAccount(updates: { displayName?: string; email?: string }): void {
+  if (updates.displayName !== undefined) {
+    nadiaProfile.displayName = updates.displayName
+  }
+  if (updates.email !== undefined) {
+    nadiaProfile.email = updates.email
+  }
+}
 
 export function isNadiaDeactivated(): boolean {
-  return nadiaDeactivated
+  return nadiaProfile.status === 'Deactivated'
 }
 
 export function deactivateNadia(): void {
-  nadiaDeactivated = true
+  nadiaProfile.status = 'Deactivated'
 }
 
 export function resetSuperAdminState(): void {
-  nadiaDeactivated = false
+  nadiaProfile = { ...CANONICAL_NADIA_PROFILE }
 }
 
 if (typeof window !== 'undefined') {
-  ;(window as unknown as { __auratioResetSuperAdmin?: () => void }).__auratioResetSuperAdmin = resetSuperAdminState
+  const win = window as unknown as {
+    __auratioResetSuperAdmin?: () => void
+    __getNadiaAdminAccount?: () => NadiaProfileState
+    __updateNadiaAdminAccount?: (updates: { displayName?: string; email?: string }) => void
+  }
+  win.__auratioResetSuperAdmin = resetSuperAdminState
+  win.__getNadiaAdminAccount = getNadiaAdminAccount
+  win.__updateNadiaAdminAccount = updateNadiaAdminAccount
 }
 
 export function getAdminAccountsList(): SuperAdminAccountItem[] {
@@ -45,10 +77,10 @@ export function getAdminAccountsList(): SuperAdminAccountItem[] {
     },
     {
       id: 'nadia',
-      name: 'Nadia Rahman',
-      email: 'nadia@auratio.org',
+      name: nadiaProfile.displayName,
+      email: nadiaProfile.email,
       accountType: 'Admin',
-      status: nadiaDeactivated ? 'Deactivated' : 'Active',
+      status: nadiaProfile.status,
       protection: '—',
       isRoot: false,
       actionLabel: 'Open',
