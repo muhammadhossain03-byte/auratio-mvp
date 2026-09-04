@@ -60,14 +60,20 @@ export function AdminAuditLogPage() {
               key={opt}
               type="button"
               onClick={() => setActiveFilter(opt)}
-              className="auratio-admin-status-pill auratio-admin-status-pill--submitted"
+              aria-pressed={activeFilter === opt}
+              className={`auratio-admin-status-pill ${
+                activeFilter === opt
+                  ? 'auratio-admin-btn--filter-active'
+                  : 'auratio-admin-status-pill--submitted'
+              }`}
               style={{
                 width: '136px',
                 height: '34px',
                 marginRight: '12px',
                 cursor: 'pointer',
-                border: 'none',
-                opacity: activeFilter === opt ? 1 : 0.75,
+                borderRadius: '17px',
+                fontWeight: 600,
+                fontSize: '12px',
               }}
             >
               {opt}
@@ -124,59 +130,88 @@ export function AdminAuditLogPage() {
         </div>
 
         {/* Rows */}
-        {adminAuditLogsList.map((log, idx) => (
-          <div key={`${log.timestamp}-${log.action}`}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                height: '48px',
-                marginTop: idx === 0 ? '16px' : '22px',
-              }}
-            >
-              <div style={{ width: '160px', fontSize: '12px', fontWeight: 400, color: '#111827' }}>
-                {log.timestamp}
-              </div>
-              <div style={{ width: '180px', fontSize: '12px', fontWeight: 400, color: '#111827' }}>
-                {log.actor}
-              </div>
-              <div
-                style={{
-                  width: '260px',
-                  fontSize: '12px',
-                  fontWeight: log.action.includes('Reassigned') ? 600 : 400,
-                  color: '#111827',
-                }}
-              >
-                {log.action}
-              </div>
-              <div style={{ width: '190px', fontSize: '12px', fontWeight: 400, color: '#111827' }}>
-                {log.target}
-              </div>
-              <div
-                style={{
-                  width: '220px',
-                  fontSize: '12px',
-                  fontWeight: 400,
-                  color: log.reason === '—' ? '#6B788A' : '#111827',
-                }}
-              >
-                {log.reason}
-              </div>
-            </div>
+        {(() => {
+          const filteredLogs =
+            activeFilter === 'All events'
+              ? adminAuditLogsList
+              : adminAuditLogsList.filter((log) => log.category === activeFilter)
 
-            {idx < adminAuditLogsList.length - 1 && (
+          if (filteredLogs.length === 0) {
+            return (
               <div
                 style={{
-                  width: '1040px',
-                  height: '1px',
-                  backgroundColor: '#DCE3ED',
-                  marginTop: '10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '340px',
+                  textAlign: 'center',
                 }}
-              />
-            )}
-          </div>
-        ))}
+              >
+                <div style={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>
+                  No audit logs found for category &ldquo;{activeFilter}&rdquo;
+                </div>
+                <div style={{ fontSize: '13px', color: '#6B788A', marginTop: '6px' }}>
+                  There are currently no recorded operational events in this category.
+                </div>
+              </div>
+            )
+          }
+
+          return filteredLogs.map((log, idx) => (
+            <div key={`${log.timestamp}-${log.action}-${idx}`}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: '48px',
+                  marginTop: idx === 0 ? '16px' : '22px',
+                }}
+              >
+                <div style={{ width: '160px', fontSize: '12px', fontWeight: 400, color: '#111827' }}>
+                  {log.timestamp}
+                </div>
+                <div style={{ width: '180px', fontSize: '12px', fontWeight: 400, color: '#111827' }}>
+                  {log.actor}
+                </div>
+                <div
+                  style={{
+                    width: '260px',
+                    fontSize: '12px',
+                    fontWeight: log.action.includes('Reassigned') ? 600 : 400,
+                    color: '#111827',
+                  }}
+                >
+                  {log.action}
+                </div>
+                <div style={{ width: '190px', fontSize: '12px', fontWeight: 400, color: '#111827' }}>
+                  {log.target}
+                </div>
+                <div
+                  style={{
+                    width: '220px',
+                    fontSize: '12px',
+                    fontWeight: 400,
+                    color: log.reason === '—' ? '#6B788A' : '#111827',
+                  }}
+                >
+                  {log.reason}
+                </div>
+              </div>
+
+              {idx < filteredLogs.length - 1 && (
+                <div
+                  style={{
+                    width: '1040px',
+                    height: '1px',
+                    backgroundColor: '#DCE3ED',
+                    marginTop: '10px',
+                  }}
+                />
+              )}
+            </div>
+          ))
+        })()}
       </div>
 
       {/* Bottom note */}

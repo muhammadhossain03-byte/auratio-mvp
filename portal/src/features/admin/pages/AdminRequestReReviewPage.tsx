@@ -1,17 +1,25 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { requestReReviewSub8821 } from '../data/mockAdminData'
+import { getModerationEntityState, requestReReviewModerationEntity } from '../data/mockAdminData'
 
 export function AdminRequestReReviewPage() {
   const navigate = useNavigate()
+  const { submissionId: paramId } = useParams<{ submissionId?: string }>()
+  const resolvedId = (paramId || 'sub-8821').toUpperCase()
+  const modItem = getModerationEntityState(resolvedId)
   const [adminNote, setAdminNote] = useState('')
 
   const handleConfirm = () => {
-    requestReReviewSub8821()
+    requestReReviewModerationEntity(resolvedId)
     navigate(portalRoutePaths.volunteer.reopenedEvaluation)
   }
+
+  const cancelPath =
+    resolvedId === 'SUB-8821'
+      ? portalRoutePaths.admin.moderationReview
+      : `/admin/moderation/${resolvedId.toLowerCase()}`
 
   return (
     <AdminLayout
@@ -30,7 +38,7 @@ export function AdminRequestReReviewPage() {
         className="auratio-admin-page-subtitle"
         style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
       >
-        SUB-8821 • submitted evaluator work • publication unresolved
+        {resolvedId} • submitted evaluator work • publication unresolved
       </p>
 
       {/* Top right pill */}
@@ -75,13 +83,13 @@ export function AdminRequestReReviewPage() {
             Evaluator
           </div>
           <div style={{ width: '280px', fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            Farhana Islam
+            {modItem.evaluator}
           </div>
           <div style={{ width: '180px', fontSize: '12px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.0167em' }}>
             Submitted score
           </div>
           <div style={{ width: '200px', fontSize: '14px', fontWeight: 600, color: '#111827', letterSpacing: '0.0143em' }}>
-            85 / 100
+            {modItem.scoreDisplay}
           </div>
         </div>
 
@@ -134,7 +142,7 @@ export function AdminRequestReReviewPage() {
             whiteSpace: 'pre-line',
           }}
         >
-          {`• prior submitted version remains preserved;\n• Farhana becomes the relevant active evaluator again;\n• assignment/work state becomes Re-review / Reopened;\n• reopened work returns to Active Assignments;\n• this action does not approve, reject, or rewrite the submitted score.`}
+          {`• prior submitted version remains preserved;\n• ${modItem.evaluator} becomes the relevant active evaluator again;\n• assignment/work state becomes Re-review / Reopened;\n• reopened work returns to Active Assignments;\n• this action does not approve, reject, or rewrite the submitted score.`}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', marginTop: '14px' }}>
@@ -177,7 +185,7 @@ export function AdminRequestReReviewPage() {
         </button>
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.moderationReview)}
+          onClick={() => navigate(cancelPath)}
           className="auratio-admin-btn auratio-admin-btn--secondary"
           style={{ width: '130px', height: '44px', fontSize: '14px', fontWeight: 600, marginLeft: '18px' }}
         >

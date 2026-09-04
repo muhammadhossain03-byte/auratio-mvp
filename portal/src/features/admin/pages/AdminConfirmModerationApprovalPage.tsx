@@ -1,15 +1,23 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { approveSub8821 } from '../data/mockAdminData'
+import { approveModerationEntity, getModerationEntityState } from '../data/mockAdminData'
 
 export function AdminConfirmModerationApprovalPage() {
   const navigate = useNavigate()
+  const { submissionId: paramId } = useParams<{ submissionId?: string }>()
+  const resolvedId = (paramId || 'sub-8821').toUpperCase()
+  const modItem = getModerationEntityState(resolvedId)
 
   const handleConfirm = () => {
-    approveSub8821()
+    approveModerationEntity(resolvedId)
     navigate(portalRoutePaths.admin.evaluations)
   }
+
+  const cancelPath =
+    resolvedId === 'SUB-8821'
+      ? portalRoutePaths.admin.moderationReview
+      : `/admin/moderation/${resolvedId.toLowerCase()}`
 
   return (
     <AdminLayout
@@ -28,7 +36,7 @@ export function AdminConfirmModerationApprovalPage() {
         className="auratio-admin-page-subtitle"
         style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
       >
-        SUB-8821 • publication decision
+        {resolvedId} • publication decision
       </p>
 
       {/* Top right pill */}
@@ -73,13 +81,13 @@ export function AdminConfirmModerationApprovalPage() {
             Evaluator
           </div>
           <div style={{ width: '270px', fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            Farhana Islam
+            {modItem.evaluator}
           </div>
           <div style={{ width: '180px', fontSize: '12px', fontWeight: 600, color: '#6B788A', letterSpacing: '0.0167em' }}>
             Submission Score
           </div>
           <div style={{ width: '180px', fontSize: '14px', fontWeight: 600, color: '#111827', letterSpacing: '0.0143em' }}>
-            85 / 100
+            {modItem.scoreDisplay}
           </div>
         </div>
 
@@ -92,7 +100,7 @@ export function AdminConfirmModerationApprovalPage() {
               className="auratio-admin-status-pill auratio-admin-status-pill--pending-moderation"
               style={{ width: '220px', height: '34px' }}
             >
-              Pending Moderation
+              {modItem.publicationStatus}
             </div>
           </div>
         </div>
@@ -155,7 +163,7 @@ export function AdminConfirmModerationApprovalPage() {
         </button>
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.moderationReview)}
+          onClick={() => navigate(cancelPath)}
           className="auratio-admin-btn auratio-admin-btn--secondary"
           style={{ width: '130px', height: '44px', fontSize: '14px', fontWeight: 600, marginLeft: '18px' }}
         >

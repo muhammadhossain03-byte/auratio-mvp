@@ -8,7 +8,7 @@ export function SuperAdminAccountPage() {
   const navigate = useNavigate()
   const { adminId } = useParams<{ adminId?: string }>()
   const resolvedId = adminId || 'nadia'
-  const isNadia = resolvedId === 'nadia'
+  const isNadia = resolvedId.toLowerCase() === 'nadia'
   const account = getAdminAccountById(resolvedId)
 
   const [displayName, setDisplayName] = useState(
@@ -372,23 +372,26 @@ export function SuperAdminAccountPage() {
               width: '350px',
             }}
           >
-            {isInvited
-              ? 'Cancels pending portal access. This is not a role-transfer or history-deletion action.'
-              : 'Stops active portal access. This is not a role-transfer or history-deletion action.'}
+            {deactivated
+              ? 'Portal access is already deactivated. Reactivation requires root administrator action.'
+              : isInvited
+                ? 'Cancels pending portal access. This is not a role-transfer or history-deletion action.'
+                : 'Stops active portal access. This is not a role-transfer or history-deletion action.'}
           </div>
           <button
             type="button"
-            onClick={handleDeactivate}
-            className="auratio-admin-btn auratio-admin-btn--secondary"
+            disabled={deactivated}
+            onClick={deactivated ? undefined : handleDeactivate}
+            className={`auratio-admin-btn ${deactivated ? 'auratio-admin-btn--disabled' : 'auratio-admin-btn--secondary'}`}
             style={{
               marginTop: '10px',
-              width: '150px',
+              width: deactivated ? '180px' : '150px',
               height: '44px',
               fontSize: '14px',
               fontWeight: 600,
             }}
           >
-            Deactivate…
+            {deactivated ? 'Account Deactivated' : 'Deactivate…'}
           </button>
         </div>
 

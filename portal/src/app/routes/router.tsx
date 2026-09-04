@@ -47,6 +47,7 @@ import {
   AdminModerationReviewPage,
   AdminOperationsDashboardPage,
   AdminRequestAssignedAiPage,
+  AdminRequestAssignedHumanPage,
   AdminRequestDetailsRoutingPage,
   AdminRequestRedirectedHumanPage,
   AdminRequestReReviewPage,
@@ -207,6 +208,10 @@ export const router = createBrowserRouter([
     element: <AdminRequestAssignedAiPage />,
   },
   {
+    path: '/admin/requests/req-1038',
+    element: <AdminRequestAssignedHumanPage />,
+  },
+  {
     path: portalRoutePaths.admin.requestRedirectedHuman,
     element: <AdminRequestRedirectedHumanPage />,
   },
@@ -231,7 +236,15 @@ export const router = createBrowserRouter([
     element: <AdminModerationReviewPage />,
   },
   {
+    path: '/admin/moderation/:submissionId',
+    element: <AdminModerationReviewPage />,
+  },
+  {
     path: portalRoutePaths.admin.confirmModerationApproval,
+    element: <AdminConfirmModerationApprovalPage />,
+  },
+  {
+    path: '/admin/moderation/:submissionId/approve',
     element: <AdminConfirmModerationApprovalPage />,
   },
   {
@@ -239,7 +252,15 @@ export const router = createBrowserRouter([
     element: <AdminConfirmModerationRejectionPage />,
   },
   {
+    path: '/admin/moderation/:submissionId/reject',
+    element: <AdminConfirmModerationRejectionPage />,
+  },
+  {
     path: portalRoutePaths.admin.requestReReview,
+    element: <AdminRequestReReviewPage />,
+  },
+  {
+    path: '/admin/moderation/:submissionId/re-review',
     element: <AdminRequestReReviewPage />,
   },
   {

@@ -1,9 +1,26 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { getModerationEntityState } from '../data/mockAdminData'
 
 export function AdminModerationReviewPage() {
   const navigate = useNavigate()
+  const { submissionId: paramId } = useParams<{ submissionId?: string }>()
+  const resolvedId = (paramId || 'sub-8821').toUpperCase()
+  const modItem = getModerationEntityState(resolvedId)
+
+  const approvePath =
+    resolvedId === 'SUB-8821'
+      ? portalRoutePaths.admin.confirmModerationApproval
+      : `/admin/moderation/${resolvedId.toLowerCase()}/approve`
+  const reReviewPath =
+    resolvedId === 'SUB-8821'
+      ? portalRoutePaths.admin.requestReReview
+      : `/admin/moderation/${resolvedId.toLowerCase()}/re-review`
+  const rejectPath =
+    resolvedId === 'SUB-8821'
+      ? portalRoutePaths.admin.confirmModerationRejection
+      : `/admin/moderation/${resolvedId.toLowerCase()}/reject`
 
   return (
     <AdminLayout
@@ -16,13 +33,13 @@ export function AdminModerationReviewPage() {
         className="auratio-admin-page-title"
         style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
       >
-        SUB-8821 — Moderation Review
+        {resolvedId} — Moderation Review
       </h2>
       <p
         className="auratio-admin-page-subtitle"
         style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
       >
-        Business Pitch / Sales Pitch • evaluator work submitted
+        {modItem.track} • evaluator work submitted
       </p>
 
       {/* Top right pill */}
@@ -39,7 +56,7 @@ export function AdminModerationReviewPage() {
           fontWeight: 600,
         }}
       >
-        Pending Moderation
+        {modItem.publicationStatus}
       </div>
 
       {/* Card 1: Evaluator-authored submission */}
@@ -67,7 +84,7 @@ export function AdminModerationReviewPage() {
             Evaluator
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            Farhana Islam
+            {modItem.evaluator}
           </div>
         </div>
 
@@ -85,7 +102,7 @@ export function AdminModerationReviewPage() {
             Submission Score
           </div>
           <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', letterSpacing: '0.0143em' }}>
-            85 / 100
+            {modItem.scoreDisplay}
           </div>
         </div>
 
@@ -94,7 +111,7 @@ export function AdminModerationReviewPage() {
             Universal Delivery
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            34 / 40
+            {modItem.universalDelivery}
           </div>
         </div>
 
@@ -103,7 +120,7 @@ export function AdminModerationReviewPage() {
             Structural Flow
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            17 / 20
+            {modItem.structuralFlow}
           </div>
         </div>
 
@@ -112,7 +129,7 @@ export function AdminModerationReviewPage() {
             Track Specialisation
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            34 / 40
+            {modItem.trackSpecialisation}
           </div>
         </div>
 
@@ -121,7 +138,7 @@ export function AdminModerationReviewPage() {
             Official .docx report
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            Not generated while pending
+            {modItem.docxStatus}
           </div>
         </div>
       </div>
@@ -154,7 +171,7 @@ export function AdminModerationReviewPage() {
             className="auratio-admin-status-pill auratio-admin-status-pill--pending-moderation"
             style={{ width: '220px', height: '34px' }}
           >
-            Pending Moderation
+            {modItem.publicationStatus}
           </div>
         </div>
 
@@ -163,7 +180,7 @@ export function AdminModerationReviewPage() {
             Trigger
           </div>
           <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', letterSpacing: '0.0143em' }}>
-            First Human Evaluation in this track
+            {modItem.trigger}
           </div>
         </div>
 
@@ -172,7 +189,7 @@ export function AdminModerationReviewPage() {
             Human baseline
           </div>
           <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            None yet
+            {modItem.baseline}
           </div>
         </div>
 
@@ -238,7 +255,7 @@ export function AdminModerationReviewPage() {
         <div style={{ display: 'flex', alignItems: 'center', marginTop: '18px' }}>
           <button
             type="button"
-            onClick={() => navigate(portalRoutePaths.admin.confirmModerationApproval)}
+            onClick={() => navigate(approvePath)}
             className="auratio-admin-btn auratio-admin-btn--primary"
             style={{ width: '150px', height: '44px', fontSize: '14px', fontWeight: 600 }}
           >
@@ -247,7 +264,7 @@ export function AdminModerationReviewPage() {
 
           <button
             type="button"
-            onClick={() => navigate(portalRoutePaths.admin.requestReReview)}
+            onClick={() => navigate(reReviewPath)}
             className="auratio-admin-btn auratio-admin-btn--secondary"
             style={{ width: '190px', height: '44px', fontSize: '14px', fontWeight: 600, marginLeft: '18px' }}
           >
@@ -256,7 +273,7 @@ export function AdminModerationReviewPage() {
 
           <button
             type="button"
-            onClick={() => navigate(portalRoutePaths.admin.confirmModerationRejection)}
+            onClick={() => navigate(rejectPath)}
             className="auratio-admin-btn auratio-admin-btn--secondary"
             style={{ width: '150px', height: '44px', fontSize: '14px', fontWeight: 600, marginLeft: '18px' }}
           >

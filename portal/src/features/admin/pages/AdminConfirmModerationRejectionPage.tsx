@@ -1,20 +1,27 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { rejectSub8821 } from '../data/mockAdminData'
+import { rejectModerationEntity } from '../data/mockAdminData'
 
 export function AdminConfirmModerationRejectionPage() {
   const navigate = useNavigate()
+  const { submissionId: paramId } = useParams<{ submissionId?: string }>()
+  const resolvedId = (paramId || 'sub-8821').toUpperCase()
   const [reason, setReason] = useState('')
 
   const handleConfirm = () => {
     if (reason.trim().length === 0) {
       return
     }
-    rejectSub8821(reason.trim())
+    rejectModerationEntity(resolvedId, reason.trim())
     navigate(portalRoutePaths.admin.evaluations)
   }
+
+  const cancelPath =
+    resolvedId === 'SUB-8821'
+      ? portalRoutePaths.admin.moderationReview
+      : `/admin/moderation/${resolvedId.toLowerCase()}`
 
   return (
     <AdminLayout
@@ -33,7 +40,7 @@ export function AdminConfirmModerationRejectionPage() {
         className="auratio-admin-page-subtitle"
         style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
       >
-        SUB-8821 • publication decision
+        {resolvedId} • publication decision
       </p>
 
       {/* Top right pill */}
@@ -157,7 +164,7 @@ export function AdminConfirmModerationRejectionPage() {
         </button>
         <button
           type="button"
-          onClick={() => navigate(portalRoutePaths.admin.moderationReview)}
+          onClick={() => navigate(cancelPath)}
           className="auratio-admin-btn auratio-admin-btn--secondary"
           style={{ width: '130px', height: '44px', fontSize: '14px', fontWeight: 600, marginLeft: '18px' }}
         >

@@ -339,6 +339,16 @@
   pointer-events: none;
 }
 
+.auratio-admin-btn--filter-active {
+  background-color: #041B3B;
+  color: #FFFFFF;
+  border: 1px solid #041B3B;
+}
+
+.auratio-admin-btn--filter-active:hover {
+  background-color: #082654;
+}
+
 .auratio-admin-btn--table-open {
   background-color: #F3F8FE;
   color: #041B3B;

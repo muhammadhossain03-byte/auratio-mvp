@@ -24,10 +24,21 @@ const CANONICAL_NADIA_PROFILE: NadiaProfileState = {
   status: 'Active',
 }
 
+const CANONICAL_IMRAN_PROFILE: NadiaProfileState = {
+  displayName: 'Imran Ahmed',
+  email: 'imran@auratio.org',
+  status: 'Deactivated',
+}
+
 let nadiaProfile: NadiaProfileState = { ...CANONICAL_NADIA_PROFILE }
+let imranProfile: NadiaProfileState = { ...CANONICAL_IMRAN_PROFILE }
 
 export function getNadiaAdminAccount(): NadiaProfileState {
   return { ...nadiaProfile }
+}
+
+export function getImranAdminAccount(): NadiaProfileState {
+  return { ...imranProfile }
 }
 
 export function updateNadiaAdminAccount(updates: { displayName?: string; email?: string }): void {
@@ -95,14 +106,14 @@ export function getAdminAccountsList(): SuperAdminAccountItem[] {
     },
     {
       id: 'imran',
-      name: 'Imran Ahmed',
-      email: 'imran@auratio.org',
+      name: imranProfile.displayName,
+      email: imranProfile.email,
       accountType: 'Admin',
-      status: 'Deactivated',
+      status: imranProfile.status,
       protection: '—',
       isRoot: false,
       actionLabel: 'Open',
-      destinationPath: portalRoutePaths.superAdmin.adminAccount,
+      destinationPath: '/super-admin/admin-accounts/imran',
     },
     ...extraAdminAccounts,
   ]
@@ -110,19 +121,29 @@ export function getAdminAccountsList(): SuperAdminAccountItem[] {
 
 export function getAdminAccountById(id: string): SuperAdminAccountItem | undefined {
   const all = getAdminAccountsList()
-  return all.find((a) => a.id === id) || (id === 'nadia' ? all.find((a) => a.id === 'nadia') : undefined)
+  return all.find((a) => a.id.toLowerCase() === id.toLowerCase())
 }
 
 export function updateAdminAccount(id: string, updates: { displayName?: string; email?: string }): void {
-  if (id === 'root') {
+  const normId = id.toLowerCase()
+  if (normId === 'root') {
     // Root can never be modified
     return
   }
-  if (id === 'nadia') {
+  if (normId === 'nadia') {
     updateNadiaAdminAccount(updates)
     return
   }
-  const custom = extraAdminAccounts.find((a) => a.id === id)
+  if (normId === 'imran') {
+    if (updates.displayName !== undefined) {
+      imranProfile.displayName = updates.displayName
+    }
+    if (updates.email !== undefined) {
+      imranProfile.email = updates.email
+    }
+    return
+  }
+  const custom = extraAdminAccounts.find((a) => a.id.toLowerCase() === normId)
   if (custom) {
     if (updates.displayName !== undefined) {
       custom.name = updates.displayName
@@ -135,15 +156,20 @@ export function updateAdminAccount(id: string, updates: { displayName?: string; 
 }
 
 export function deactivateAdminAccount(id: string): void {
-  if (id === 'root') {
+  const normId = id.toLowerCase()
+  if (normId === 'root') {
     // Root can never be targeted
     return
   }
-  if (id === 'nadia') {
+  if (normId === 'nadia') {
     deactivateNadia()
     return
   }
-  const custom = extraAdminAccounts.find((a) => a.id === id)
+  if (normId === 'imran') {
+    imranProfile.status = 'Deactivated'
+    return
+  }
+  const custom = extraAdminAccounts.find((a) => a.id.toLowerCase() === normId)
   if (custom) {
     custom.status = 'Deactivated'
     saveExtraAdminAccounts([...extraAdminAccounts])
@@ -169,6 +195,7 @@ export function inviteAdminAccount(params: { fullName: string; email: string }):
 
 export function resetSuperAdminState(): void {
   nadiaProfile = { ...CANONICAL_NADIA_PROFILE }
+  imranProfile = { ...CANONICAL_IMRAN_PROFILE }
   extraAdminAccounts = []
   if (typeof window !== 'undefined') {
     try {
@@ -181,6 +208,7 @@ if (typeof window !== 'undefined') {
   const win = window as unknown as {
     __auratioResetSuperAdmin?: () => void
     __getNadiaAdminAccount?: () => NadiaProfileState
+    __getImranAdminAccount?: () => NadiaProfileState
     __updateNadiaAdminAccount?: (updates: { displayName?: string; email?: string }) => void
     __inviteAdminAccount?: (params: { fullName: string; email: string }) => SuperAdminAccountItem
     __getAdminAccountsList?: () => SuperAdminAccountItem[]
@@ -190,6 +218,7 @@ if (typeof window !== 'undefined') {
   }
   win.__auratioResetSuperAdmin = resetSuperAdminState
   win.__getNadiaAdminAccount = getNadiaAdminAccount
+  win.__getImranAdminAccount = getImranAdminAccount
   win.__updateNadiaAdminAccount = updateNadiaAdminAccount
   win.__inviteAdminAccount = inviteAdminAccount
   win.__getAdminAccountsList = getAdminAccountsList

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
@@ -5,7 +6,9 @@ import { getAdminEventsList } from '../data/mockAdminData'
 
 export function AdminEventManagementPage() {
   const navigate = useNavigate()
-  const events = getAdminEventsList()
+  const [filter, setFilter] = useState<'all' | 'published'>('all')
+  const allEvents = getAdminEventsList()
+  const events = filter === 'published' ? allEvents.filter((ev) => ev.status === 'Published') : allEvents
 
   return (
     <AdminLayout
@@ -48,7 +51,10 @@ export function AdminEventManagementPage() {
 
         <button
           type="button"
-          className="auratio-admin-btn auratio-admin-btn--secondary"
+          data-testid="admin-events-filter-all"
+          aria-pressed={filter === 'all'}
+          onClick={() => setFilter('all')}
+          className={`auratio-admin-btn ${filter === 'all' ? 'auratio-admin-btn--filter-active' : 'auratio-admin-btn--secondary'}`}
           style={{ width: '120px', height: '42px', fontSize: '13px', fontWeight: 600, marginLeft: '12px' }}
         >
           All Events
@@ -56,7 +62,10 @@ export function AdminEventManagementPage() {
 
         <button
           type="button"
-          className="auratio-admin-btn auratio-admin-btn--secondary"
+          data-testid="admin-events-filter-published"
+          aria-pressed={filter === 'published'}
+          onClick={() => setFilter('published')}
+          className={`auratio-admin-btn ${filter === 'published' ? 'auratio-admin-btn--filter-active' : 'auratio-admin-btn--secondary'}`}
           style={{ width: '120px', height: '42px', fontSize: '13px', fontWeight: 600, marginLeft: '12px' }}
         >
           Published
@@ -101,7 +110,22 @@ export function AdminEventManagementPage() {
         </div>
 
         {/* Rows */}
-        {events.map((ev, idx) => (
+        {events.length === 0 ? (
+          <div
+            data-testid="admin-events-empty"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '180px',
+              fontSize: '12px',
+              color: '#6B788A',
+            }}
+          >
+            No events found for this filter.
+          </div>
+        ) : (
+          events.map((ev, idx) => (
           <div key={ev.title}>
             <div
               style={{
@@ -166,7 +190,7 @@ export function AdminEventManagementPage() {
               />
             )}
           </div>
-        ))}
+        )))}
       </div>
 
       {/* Locked Bangladesh relevance card */}

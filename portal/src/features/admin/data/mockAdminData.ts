@@ -57,7 +57,7 @@ export const initialAdminQueueItems: AdminQueueItem[] = [
     routing: 'Assigned Human',
     eligibility: 'Eligible',
     interactive: true,
-    destinationPath: '/admin/requests/req-1042/reassign',
+    destinationPath: '/admin/requests/req-1038',
   },
   {
     id: 'REQ-1034',
@@ -146,7 +146,7 @@ export const adminModerationQueueItems: AdminModerationQueueItem[] = [
     assignmentStatus: 'Submitted',
     publicationStatus: 'Pending Moderation',
     moderationTrigger: '+18 vs prior Approved Human average',
-    destinationPath: '/admin/moderation/sub-8821',
+    destinationPath: '/admin/moderation/sub-8730',
   },
 ]
 
@@ -185,7 +185,8 @@ export const CANONICAL_VOLUNTEERS: AdminVolunteerItem[] = [
     activeAssignments: '0',
     lifecycle: 'Active',
     actionLabel: 'Open',
-    destinationPath: '/admin/volunteers/farhana',
+    destinationPath: '/admin/volunteers/rakib',
+    selectedTracks: ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch', 'Extempore', 'Motivational'],
   },
   {
     id: 'mehnaz',
@@ -196,7 +197,8 @@ export const CANONICAL_VOLUNTEERS: AdminVolunteerItem[] = [
     activeAssignments: '4',
     lifecycle: 'Active',
     actionLabel: 'Open',
-    destinationPath: '/admin/volunteers/farhana',
+    destinationPath: '/admin/volunteers/mehnaz',
+    selectedTracks: ['Informative', 'Persuasive'],
   },
   {
     id: 'nusrat',
@@ -207,7 +209,8 @@ export const CANONICAL_VOLUNTEERS: AdminVolunteerItem[] = [
     activeAssignments: '—',
     lifecycle: 'Deactivated',
     actionLabel: 'View',
-    destinationPath: '/admin/volunteers/farhana',
+    destinationPath: '/admin/volunteers/nusrat',
+    selectedTracks: [],
   },
 ]
 
@@ -275,7 +278,7 @@ export function addAdminVolunteer(params: {
 
 export function getAdminVolunteerById(id: string): AdminVolunteerItem | undefined {
   const all = getAdminVolunteersList()
-  return all.find((v) => v.id === id) || (id === 'farhana' ? all.find((v) => v.id === 'farhana') : undefined)
+  return all.find((v) => v.id.toLowerCase() === id.toLowerCase())
 }
 
 export const adminVolunteersList: AdminVolunteerItem[] = adminVolunteers
@@ -446,6 +449,7 @@ export interface AdminAuditLogItem {
   action: string
   target: string
   reason: string
+  category: 'Governance' | 'Volunteer' | 'Assignment' | 'Evaluation' | 'Moderation'
 }
 
 export const adminAuditLogsList: AdminAuditLogItem[] = [
@@ -455,6 +459,7 @@ export const adminAuditLogsList: AdminAuditLogItem[] = [
     action: 'Reassigned Human Evaluation',
     target: 'HE-0142 / SUB-8821',
     reason: 'Scheduling / operational',
+    category: 'Assignment',
   },
   {
     timestamp: '25 Aug 03:26',
@@ -462,6 +467,7 @@ export const adminAuditLogsList: AdminAuditLogItem[] = [
     action: 'Submitted evaluator version',
     target: 'SUB-8821',
     reason: '—',
+    category: 'Evaluation',
   },
   {
     timestamp: '25 Aug 03:10',
@@ -469,6 +475,7 @@ export const adminAuditLogsList: AdminAuditLogItem[] = [
     action: 'Deactivated Admin account',
     target: 'admin@example',
     reason: 'Where applicable',
+    category: 'Governance',
   },
   {
     timestamp: '25 Aug 02:58',
@@ -476,6 +483,7 @@ export const adminAuditLogsList: AdminAuditLogItem[] = [
     action: 'Availability override',
     target: 'Nadia Rahman',
     reason: 'Coverage need',
+    category: 'Volunteer',
   },
   {
     timestamp: '25 Aug 02:44',
@@ -483,6 +491,7 @@ export const adminAuditLogsList: AdminAuditLogItem[] = [
     action: 'Changed track eligibility',
     target: 'Imran Hossain',
     reason: '—',
+    category: 'Volunteer',
   },
 ]
 
@@ -514,36 +523,145 @@ export function resetHE0142Reassignment() {
   he0142SupersededOwner = null
 }
 
-// In-memory moderation state for SUB-8821
-let sub8821PublicationStatus: 'Pending Moderation' | 'Approved' | 'Rejected' | 'Reopened' = 'Pending Moderation'
-let sub8821RejectionReason = ''
+// In-memory multi-entity moderation state
+export interface ModerationEntityState {
+  id: string
+  track: string
+  evaluator: string
+  scoreDisplay: string
+  universalDelivery: string
+  structuralFlow: string
+  trackSpecialisation: string
+  docxStatus: string
+  trigger: string
+  baseline: string
+  publicationStatus: 'Pending Moderation' | 'Approved' | 'Rejected' | 'Reopened'
+  rejectionReason: string
+}
+
+const INITIAL_MODERATION_ENTITIES: Record<string, ModerationEntityState> = {
+  'SUB-8821': {
+    id: 'SUB-8821',
+    track: 'Business Pitch / Sales Pitch',
+    evaluator: 'Farhana Islam',
+    scoreDisplay: '85 / 100',
+    universalDelivery: '34 / 40',
+    structuralFlow: '17 / 20',
+    trackSpecialisation: '34 / 40',
+    docxStatus: 'Not generated while pending',
+    trigger: 'First Human Evaluation in this track',
+    baseline: 'None yet',
+    publicationStatus: 'Pending Moderation',
+    rejectionReason: '',
+  },
+  'SUB-8730': {
+    id: 'SUB-8730',
+    track: 'Extempore',
+    evaluator: 'Assigned Human evaluator',
+    scoreDisplay: 'Recorded in submission (+18 flag)',
+    universalDelivery: 'Included in submission',
+    structuralFlow: 'Included in submission',
+    trackSpecialisation: 'Included in submission',
+    docxStatus: 'Not generated while pending',
+    trigger: '+18 vs prior Approved Human average',
+    baseline: 'Running average of prior Approved Human scores',
+    publicationStatus: 'Pending Moderation',
+    rejectionReason: '',
+  },
+}
+
+let moderationEntitiesState: Record<string, ModerationEntityState> = {
+  'SUB-8821': { ...INITIAL_MODERATION_ENTITIES['SUB-8821'] },
+  'SUB-8730': { ...INITIAL_MODERATION_ENTITIES['SUB-8730'] },
+}
+
+export function getModerationEntityState(rawId: string): ModerationEntityState {
+  const id = rawId.toUpperCase()
+  if (!moderationEntitiesState[id]) {
+    moderationEntitiesState[id] = {
+      id,
+      track: 'Extempore',
+      evaluator: 'Assigned Human evaluator',
+      scoreDisplay: 'Recorded in submission',
+      universalDelivery: 'Included in submission',
+      structuralFlow: 'Included in submission',
+      trackSpecialisation: 'Included in submission',
+      docxStatus: 'Not generated while pending',
+      trigger: 'Publication review required',
+      baseline: 'Running track baseline',
+      publicationStatus: 'Pending Moderation',
+      rejectionReason: '',
+    }
+  }
+  return { ...moderationEntitiesState[id] }
+}
+
+export function approveModerationEntity(rawId: string): ModerationEntityState {
+  const id = rawId.toUpperCase()
+  const current = getModerationEntityState(id)
+  moderationEntitiesState[id] = { ...current, publicationStatus: 'Approved' }
+  const queueIdx = adminModerationQueueItems.findIndex((item) => item.id === id)
+  if (queueIdx >= 0) {
+    adminModerationQueueItems[queueIdx].publicationStatus = 'Approved'
+  }
+  return { ...moderationEntitiesState[id] }
+}
+
+export function rejectModerationEntity(rawId: string, reason: string): ModerationEntityState {
+  const id = rawId.toUpperCase()
+  const current = getModerationEntityState(id)
+  moderationEntitiesState[id] = { ...current, publicationStatus: 'Rejected', rejectionReason: reason }
+  const queueIdx = adminModerationQueueItems.findIndex((item) => item.id === id)
+  if (queueIdx >= 0) {
+    adminModerationQueueItems[queueIdx].publicationStatus = 'Rejected'
+  }
+  return { ...moderationEntitiesState[id] }
+}
+
+export function requestReReviewModerationEntity(rawId: string): ModerationEntityState {
+  const id = rawId.toUpperCase()
+  const current = getModerationEntityState(id)
+  moderationEntitiesState[id] = { ...current, publicationStatus: 'Reopened' }
+  const queueIdx = adminModerationQueueItems.findIndex((item) => item.id === id)
+  if (queueIdx >= 0) {
+    adminModerationQueueItems[queueIdx].publicationStatus = 'Reopened'
+  }
+  return { ...moderationEntitiesState[id] }
+}
+
+export function resetAllModeration(): void {
+  moderationEntitiesState = {
+    'SUB-8821': { ...INITIAL_MODERATION_ENTITIES['SUB-8821'] },
+    'SUB-8730': { ...INITIAL_MODERATION_ENTITIES['SUB-8730'] },
+  }
+  const item8821 = adminModerationQueueItems.find((i) => i.id === 'SUB-8821')
+  if (item8821) item8821.publicationStatus = 'Pending Moderation'
+  const item8730 = adminModerationQueueItems.find((i) => i.id === 'SUB-8730')
+  if (item8730) item8730.publicationStatus = 'Pending Moderation'
+}
 
 export function getSub8821ModerationState() {
+  const s = getModerationEntityState('SUB-8821')
   return {
-    publicationStatus: sub8821PublicationStatus,
-    rejectionReason: sub8821RejectionReason,
+    publicationStatus: s.publicationStatus,
+    rejectionReason: s.rejectionReason,
   }
 }
 
 export function approveSub8821() {
-  sub8821PublicationStatus = 'Approved'
-  return getSub8821ModerationState()
+  return approveModerationEntity('SUB-8821')
 }
 
 export function rejectSub8821(reason: string) {
-  sub8821PublicationStatus = 'Rejected'
-  sub8821RejectionReason = reason
-  return getSub8821ModerationState()
+  return rejectModerationEntity('SUB-8821', reason)
 }
 
 export function requestReReviewSub8821() {
-  sub8821PublicationStatus = 'Reopened'
-  return getSub8821ModerationState()
+  return requestReReviewModerationEntity('SUB-8821')
 }
 
 export function resetSub8821Moderation() {
-  sub8821PublicationStatus = 'Pending Moderation'
-  sub8821RejectionReason = ''
+  resetAllModeration()
 }
 
 // In-memory Farhana availability override state
@@ -634,4 +752,9 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __getAdminEventsList: typeof getAdminEventsList }).__getAdminEventsList = getAdminEventsList
   ;(window as unknown as { __saveAdminEvent: typeof saveAdminEvent }).__saveAdminEvent = saveAdminEvent
   ;(window as unknown as { __addAdminVolunteer: typeof addAdminVolunteer }).__addAdminVolunteer = addAdminVolunteer
+  ;(window as unknown as { __getModerationEntityState: typeof getModerationEntityState }).__getModerationEntityState = getModerationEntityState
+  ;(window as unknown as { __approveModerationEntity: typeof approveModerationEntity }).__approveModerationEntity = approveModerationEntity
+  ;(window as unknown as { __rejectModerationEntity: typeof rejectModerationEntity }).__rejectModerationEntity = rejectModerationEntity
+  ;(window as unknown as { __requestReReviewModerationEntity: typeof requestReReviewModerationEntity }).__requestReReviewModerationEntity = requestReReviewModerationEntity
+  ;(window as unknown as { __resetAllModeration: typeof resetAllModeration }).__resetAllModeration = resetAllModeration
 }

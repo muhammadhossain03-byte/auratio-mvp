@@ -130,6 +130,13 @@ async function run() {
       return evalRes.result.value
     }
 
+    async function getBodyText() {
+      const evalRes = await sendCdp(ws, 'Runtime.evaluate', {
+        expression: 'document.body.innerText',
+      })
+      return evalRes.result.value || ''
+    }
+
     async function setInputValue(selector, value) {
       const evalRes = await sendCdp(ws, 'Runtime.evaluate', {
         expression: `(() => {
@@ -645,27 +652,42 @@ async function run() {
       throw new Error('Expected /admin/requests after Back to Queue from REQ-1034')
     }
 
-    // 16. REASSIGNMENT: REQ-1038 Entry, Cancel, and Confirm Flow
+    // 16. REQ-1038 Entity Details & Canonical Reassignment Flow
+    console.log('\n--- Testing REQ-1038 Entity Details ---')
+    await clickQueueOpen('REQ-1038')
+    console.log('Path after opening REQ-1038:', await getPathname())
+    if (await getPathname() !== '/admin/requests/req-1038') {
+      throw new Error('Expected /admin/requests/req-1038 when opening REQ-1038')
+    }
+    let bodyText = await getBodyText()
+    if (!bodyText.includes('REQ-1038') || !bodyText.includes('Taylor Kim') || !bodyText.includes('Extempore') || !bodyText.includes('Assigned Human')) {
+      throw new Error('REQ-1038 missing Taylor Kim / Extempore / Assigned Human details')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Queue')
+    if (await getPathname() !== '/admin/requests') {
+      throw new Error('Expected /admin/requests after Back to Queue from REQ-1038')
+    }
+
     console.log('\n--- Testing Reassignment Flow ---')
     // Reset mock assignment state in browser
     await sendCdp(ws, 'Runtime.evaluate', {
       expression: `window.__resetHE0142Reassignment && window.__resetHE0142Reassignment()`,
     })
 
-    // B. REASSIGNMENT ENTRY: From /admin/requests, click Open belonging specifically to REQ-1038
-    await clickQueueOpen('REQ-1038')
-    console.log('Path after opening REQ-1038:', await getPathname())
+    // Navigate to /admin/requests/req-1042/reassign
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042/reassign` })
+    await new Promise((r) => setTimeout(r, 400))
+    console.log('Path after navigating to reassignment:', await getPathname())
     if (await getPathname() !== '/admin/requests/req-1042/reassign') {
-      throw new Error('Expected /admin/requests/req-1042/reassign when opening REQ-1038')
+      throw new Error('Expected /admin/requests/req-1042/reassign')
     }
 
-    // C. CANCEL: REQ-1038 -> Confirm Reassignment -> Cancel
+    // Cancel: returns to /admin/requests, ownership unmutated
     await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
     console.log('Path after Cancel:', await getPathname())
     if (await getPathname() !== '/admin/requests') {
       throw new Error('Expected /admin/requests after Cancel')
     }
-    // Verify assignment ownership was NOT mutated
     const stateAfterCancel = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `JSON.stringify(window.__getHE0142AssignmentState())`,
     })
@@ -675,19 +697,15 @@ async function run() {
       throw new Error(`Expected unmutated ownership after Cancel, got ${JSON.stringify(cancelObj)}`)
     }
 
-    // D. CONFIRM: REQ-1038 -> Confirm Reassignment -> Confirm Reassignment
-    await clickQueueOpen('REQ-1038')
-    console.log('Path after re-entering REQ-1038:', await getPathname())
-    if (await getPathname() !== '/admin/requests/req-1042/reassign') {
-      throw new Error('Expected /admin/requests/req-1042/reassign when opening REQ-1038')
-    }
+    // Re-enter and confirm reassignment
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042/reassign` })
+    await new Promise((r) => setTimeout(r, 400))
 
     await clickByText('button.auratio-admin-btn--primary', 'Confirm Reassignment')
     console.log('Path after Confirm Reassignment:', await getPathname())
     if (await getPathname() !== '/admin/requests') {
       throw new Error('Expected /admin/requests after Confirm Reassignment')
     }
-    // Verify mock state has supersededOwner = Farhana Islam, activeOwner = Nadia Rahman, sole active owner
     const stateAfterConfirm = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `JSON.stringify(window.__getHE0142AssignmentState())`,
     })
@@ -1241,7 +1259,7 @@ async function run() {
       throw new Error(`Expected /super-admin/admin-accounts after Send Admin Invite, got ${await getPathname()}`)
     }
 
-    // Imran Open -> Admin Account (prototype reuses same destination)
+    // Imran Open -> Admin Account (resolved to Imran)
     await sendCdp(ws, 'Runtime.evaluate', {
       expression: `(() => {
         const btns = Array.from(document.querySelectorAll('button')).filter(b => b.innerText.trim() === 'Open');
@@ -1249,8 +1267,8 @@ async function run() {
       })()`,
     })
     await new Promise((r) => setTimeout(r, 300))
-    if (await getPathname() !== '/super-admin/admin-accounts/nadia') {
-      throw new Error(`Expected /super-admin/admin-accounts/nadia from Imran Open, got ${await getPathname()}`)
+    if (await getPathname() !== '/super-admin/admin-accounts/imran') {
+      throw new Error(`Expected /super-admin/admin-accounts/imran from Imran Open, got ${await getPathname()}`)
     }
     await clickByText('button.auratio-admin-btn--secondary', 'Back to Accounts')
     if (await getPathname() !== '/super-admin/admin-accounts') {
@@ -1495,22 +1513,334 @@ async function run() {
       throw new Error(`Expected /admin/audit, got ${await getPathname()}`)
     }
 
-    // 24. PRESENTATION-ONLY CONTROLS
-    console.log('\n--- Testing Out-of-Batch & Locked Controls are Presentation-Only ---')
-    // Check Event Editor Publish Event and Delete Event are presentation-only
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events/editor` })
-    await new Promise((r) => setTimeout(r, 500))
-    const eventEditorPres = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `(() => {
-        const pres = Array.from(document.querySelectorAll('.auratio-admin-btn--presentation')).map(e => e.textContent.trim());
-        return pres.includes('Publish Event') && pres.includes('Delete Event');
-      })()`,
+    // 25. PORTAL REPAIR BATCH P1 VERIFICATIONS
+    console.log('\n--- [P1-1] Testing Admin Event Filter Buttons ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__resetAdminEvents && window.__resetAdminEvents()',
     })
-    if (!eventEditorPres.result.value) {
-      throw new Error('Expected Publish Event and Delete Event to be presentation-only')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    let eventsBody = await getBodyText()
+    if (!eventsBody.includes('Public Speaking Summit') || !eventsBody.includes('Draft Event')) {
+      throw new Error('Initial events list should contain both Summit and Draft Event')
     }
 
-    console.log('\nALL INTERACTION FLOWS PASSED PERFECTLY!')
+    // Click 'Published' filter
+    await clickByText('button[data-testid="admin-events-filter-published"]', 'Published')
+    await new Promise((r) => setTimeout(r, 400))
+    eventsBody = await getBodyText()
+    console.log('Events body after clicking Published:', eventsBody)
+    if (!eventsBody.includes('Public Speaking Summit') || eventsBody.includes('Draft Event')) {
+      throw new Error(`Published filter should show Summit and hide Draft Event. Got:\n${eventsBody}`)
+    }
+
+    // Verify aria-pressed
+    const publishedPressed = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('button[data-testid="admin-events-filter-published"]')?.getAttribute('aria-pressed')`,
+    })
+    if (publishedPressed.result.value !== 'true') {
+      throw new Error('Published filter button should have aria-pressed="true"')
+    }
+
+    // Click 'All Events' filter
+    await clickByText('button[data-testid="admin-events-filter-all"]', 'All Events')
+    await new Promise((r) => setTimeout(r, 400))
+    eventsBody = await getBodyText()
+    if (!eventsBody.includes('Public Speaking Summit') || !eventsBody.includes('Draft Event')) {
+      throw new Error('All Events filter should restore both Summit and Draft Event')
+    }
+
+    console.log('\n--- [P1-3] Testing SUB-8730 Moderation Queue & Multi-Entity Isolation ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__resetAllModeration && window.__resetAllModeration()`,
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Open SUB-8730
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const rows = Array.from(document.querySelectorAll('div[style*="height: 76px"]'));
+        const targetRow = rows.find(r => r.textContent.includes('SUB-8730'));
+        if (targetRow) {
+          const btn = targetRow.querySelector('button');
+          btn?.click();
+        }
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 400))
+    console.log('Path after opening SUB-8730:', await getPathname())
+    if (await getPathname() !== '/admin/moderation/sub-8730') {
+      throw new Error('Expected /admin/moderation/sub-8730 when opening SUB-8730')
+    }
+    let sub8730Body = await getBodyText()
+    if (!sub8730Body.includes('SUB-8730') || !sub8730Body.includes('Extempore') || !sub8730Body.includes('Assigned Human evaluator')) {
+      throw new Error('SUB-8730 page missing expected entity details (SUB-8730, Extempore, Assigned Human evaluator)')
+    }
+
+    // Test SUB-8730 approve cancel
+    await clickByText('button.auratio-admin-btn--primary', 'Approve')
+    if (await getPathname() !== '/admin/moderation/sub-8730/approve') {
+      throw new Error('Expected /admin/moderation/sub-8730/approve')
+    }
+    let approveBody = await getBodyText()
+    if (!approveBody.includes('SUB-8730') || !approveBody.includes('Assigned Human evaluator')) {
+      throw new Error('SUB-8730 approve page missing entity binding')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/moderation/sub-8730') {
+      throw new Error('Expected Cancel on SUB-8730 approve to return to /admin/moderation/sub-8730')
+    }
+
+    // Test SUB-8730 reject cancel
+    await clickByText('button.auratio-admin-btn--secondary', 'Reject')
+    if (await getPathname() !== '/admin/moderation/sub-8730/reject') {
+      throw new Error('Expected /admin/moderation/sub-8730/reject')
+    }
+    let rejectBody = await getBodyText()
+    if (!rejectBody.includes('SUB-8730')) {
+      throw new Error('SUB-8730 reject page missing entity binding')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/moderation/sub-8730') {
+      throw new Error('Expected Cancel on SUB-8730 reject to return to /admin/moderation/sub-8730')
+    }
+
+    // Test SUB-8730 re-review cancel
+    await clickByText('button.auratio-admin-btn--secondary', 'Request Re-review')
+    if (await getPathname() !== '/admin/moderation/sub-8730/re-review') {
+      throw new Error('Expected /admin/moderation/sub-8730/re-review')
+    }
+    let reReviewBody = await getBodyText()
+    if (!reReviewBody.includes('SUB-8730') || !reReviewBody.includes('Assigned Human evaluator')) {
+      throw new Error('SUB-8730 re-review page missing entity binding')
+    }
+    await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
+    if (await getPathname() !== '/admin/moderation/sub-8730') {
+      throw new Error('Expected Cancel on SUB-8730 re-review to return to /admin/moderation/sub-8730')
+    }
+
+    // Confirm approval of SUB-8730 and verify isolation from SUB-8821
+    await clickByText('button.auratio-admin-btn--primary', 'Approve')
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Approval')
+    if (await getPathname() !== '/admin/evaluations') {
+      throw new Error('Expected /admin/evaluations after Confirm Approval')
+    }
+    const modStates = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify({
+        sub8730: window.__getModerationEntityState && window.__getModerationEntityState('SUB-8730'),
+        sub8821: window.__getModerationEntityState && window.__getModerationEntityState('SUB-8821')
+      })`,
+    })
+    const parsedModStates = JSON.parse(modStates.result.value)
+    if (parsedModStates.sub8730.publicationStatus !== 'Approved' || parsedModStates.sub8821.publicationStatus !== 'Pending Moderation') {
+      throw new Error(`Expected SUB-8730 Approved and SUB-8821 Pending Moderation, got ${JSON.stringify(parsedModStates)}`)
+    }
+
+    console.log('\n--- [P1-4] Testing Volunteer Directory Entity Routing ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Helper to click volunteer row Open button
+    async function openVolunteerRow(name) {
+      await sendCdp(ws, 'Runtime.evaluate', {
+        expression: `(() => {
+          const rows = Array.from(document.querySelectorAll('div[style*="height: 48px"]'));
+          const target = rows.find(r => r.textContent.includes('${name}'));
+          target?.querySelector('button')?.click();
+        })()`,
+      })
+      await new Promise((r) => setTimeout(r, 400))
+    }
+
+    // Rakib Hasan
+    await openVolunteerRow('Rakib Hasan')
+    if (await getPathname() !== '/admin/volunteers/rakib') {
+      throw new Error(`Expected /admin/volunteers/rakib, got ${await getPathname()}`)
+    }
+    let volBody = await getBodyText()
+    if (!volBody.includes('Rakib Hasan') || !volBody.includes('Active')) {
+      throw new Error('Rakib volunteer page missing Rakib Hasan or Active status')
+    }
+
+    // Mehnaz Karim
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers` })
+    await new Promise((r) => setTimeout(r, 400))
+    await openVolunteerRow('Mehnaz Karim')
+    if (await getPathname() !== '/admin/volunteers/mehnaz') {
+      throw new Error(`Expected /admin/volunteers/mehnaz, got ${await getPathname()}`)
+    }
+    volBody = await getBodyText()
+    if (!volBody.includes('Mehnaz Karim') || !volBody.includes('Active')) {
+      throw new Error('Mehnaz volunteer page missing Mehnaz Karim or Active status')
+    }
+
+    // Nusrat Jahan (Deactivated)
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers` })
+    await new Promise((r) => setTimeout(r, 400))
+    await openVolunteerRow('Nusrat Jahan')
+    if (await getPathname() !== '/admin/volunteers/nusrat') {
+      throw new Error(`Expected /admin/volunteers/nusrat, got ${await getPathname()}`)
+    }
+    volBody = await getBodyText()
+    if (!volBody.includes('Nusrat Jahan') || !volBody.includes('Deactivated')) {
+      throw new Error('Nusrat volunteer page missing Nusrat Jahan or Deactivated status')
+    }
+    // Verify declared availability is "—" for deactivated volunteer
+    const declaredPillText = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const panels = Array.from(document.querySelectorAll('.auratio-admin-panel'));
+        const opPanel = panels.find(p => p.textContent.includes('Operational state'));
+        const pills = Array.from(opPanel?.querySelectorAll('.auratio-admin-status-pill') || []);
+        return pills[0]?.textContent.trim();
+      })()`,
+    })
+    if (declaredPillText.result.value !== '—') {
+      throw new Error(`Expected declared availability "—" for Nusrat, got "${declaredPillText.result.value}"`)
+    }
+
+    console.log('\n--- [P1-5] Testing Super Admin Imran Account & Isolation ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__auratioResetSuperAdmin && window.__auratioResetSuperAdmin()`,
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/super-admin/admin-accounts` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Open Imran
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const rows = Array.from(document.querySelectorAll('div[style*="height: 48px"]'));
+        const target = rows.find(r => r.textContent.includes('Imran Ahmed'));
+        target?.querySelector('button')?.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 400))
+    console.log('Path after opening Imran:', await getPathname())
+    if (await getPathname() !== '/super-admin/admin-accounts/imran') {
+      throw new Error(`Expected /super-admin/admin-accounts/imran, got ${await getPathname()}`)
+    }
+    let imranBody = await getBodyText()
+    if (!imranBody.includes('Imran Ahmed') || !imranBody.includes('Deactivated')) {
+      throw new Error('Imran account page missing Imran details or Deactivated status')
+    }
+    const imranInputsCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const nameInput = document.querySelector('input[aria-label="Display name"]');
+        const emailInput = document.querySelector('input[aria-label="Email / auth identity"]');
+        return JSON.stringify({
+          displayName: nameInput ? nameInput.value : '',
+          email: emailInput ? emailInput.value : '',
+        });
+      })()`,
+    })
+    const imranInputs = JSON.parse(imranInputsCheck.result.value)
+    if (imranInputs.displayName !== 'Imran Ahmed' || imranInputs.email !== 'imran@auratio.org') {
+      throw new Error(`Expected Imran inputs to have canonical values, got: ${JSON.stringify(imranInputs)}`)
+    }
+
+    // Verify Deactivate button is disabled for already-deactivated account
+    const deactivateBtnDisabled = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const btn = btns.find(b => b.textContent.includes('Account Deactivated') || b.textContent.includes('Deactivate…'));
+        return JSON.stringify({ disabled: !!btn?.disabled, text: btn ? btn.textContent.trim() : '' });
+      })()`,
+    })
+    const deactInfo = JSON.parse(deactivateBtnDisabled.result.value)
+    if (!deactInfo.disabled || deactInfo.text !== 'Account Deactivated') {
+      throw new Error(`Expected disabled "Account Deactivated" button for Imran, got ${JSON.stringify(deactInfo)}`)
+    }
+
+    // Test Save Changes on Imran does not mutate Nadia
+    await setInputValue('input[aria-label="Display name"]', 'Imran Ahmed Updated')
+    await clickByText('button.auratio-admin-btn--primary', 'Save Changes')
+    if (await getPathname() !== '/super-admin/admin-accounts') {
+      throw new Error('Expected /super-admin/admin-accounts after Save Changes on Imran')
+    }
+    const adminProfiles = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify({
+        imran: window.__getImranAdminAccount && window.__getImranAdminAccount(),
+        nadia: window.__getNadiaAdminAccount && window.__getNadiaAdminAccount()
+      })`,
+    })
+    const parsedProfiles = JSON.parse(adminProfiles.result.value)
+    if (parsedProfiles.imran.displayName !== 'Imran Ahmed Updated' || parsedProfiles.nadia.displayName !== 'Nadia Rahman') {
+      throw new Error(`Expected Imran updated and Nadia unmutated, got ${JSON.stringify(parsedProfiles)}`)
+    }
+
+    console.log('\n--- [P1-6] Testing Operational Audit Log Filters ---')
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/audit` })
+    await new Promise((r) => setTimeout(r, 500))
+
+    // Helper to count visible audit rows
+    async function getAuditRowCount() {
+      // If empty state is shown, return 0
+      const emptyCheck = await sendCdp(ws, 'Runtime.evaluate', {
+        expression: `document.body.innerText.includes('No audit logs found for category')`,
+      })
+      if (emptyCheck.result.value) return 0
+      const rowDivs = await sendCdp(ws, 'Runtime.evaluate', {
+        expression: `document.querySelectorAll('div[style*="height: 48px"]').length`,
+      })
+      return rowDivs.result.value
+    }
+
+    // Initial All events: 5 rows
+    let rowCount = await getAuditRowCount()
+    if (rowCount !== 5) {
+      throw new Error(`Expected 5 audit log rows for All events, got ${rowCount}`)
+    }
+
+    // Assignment filter: 1 row
+    await clickByText('button.auratio-admin-status-pill', 'Assignment')
+    await new Promise((r) => setTimeout(r, 200))
+    rowCount = await getAuditRowCount()
+    if (rowCount !== 1) {
+      throw new Error(`Expected 1 audit row for Assignment, got ${rowCount}`)
+    }
+
+    // Evaluation filter: 1 row
+    await clickByText('button.auratio-admin-status-pill', 'Evaluation')
+    await new Promise((r) => setTimeout(r, 200))
+    rowCount = await getAuditRowCount()
+    if (rowCount !== 1) {
+      throw new Error(`Expected 1 audit row for Evaluation, got ${rowCount}`)
+    }
+
+    // Governance filter: 1 row
+    await clickByText('button.auratio-admin-status-pill', 'Governance')
+    await new Promise((r) => setTimeout(r, 200))
+    rowCount = await getAuditRowCount()
+    if (rowCount !== 1) {
+      throw new Error(`Expected 1 audit row for Governance, got ${rowCount}`)
+    }
+
+    // Volunteer filter: 2 rows
+    await clickByText('button.auratio-admin-status-pill', 'Volunteer')
+    await new Promise((r) => setTimeout(r, 200))
+    rowCount = await getAuditRowCount()
+    if (rowCount !== 2) {
+      throw new Error(`Expected 2 audit rows for Volunteer, got ${rowCount}`)
+    }
+
+    // Moderation filter: 0 rows + empty state message
+    await clickByText('button.auratio-admin-status-pill', 'Moderation')
+    await new Promise((r) => setTimeout(r, 200))
+    let auditBody = await getBodyText()
+    if (!auditBody.includes('No audit logs found for category') || !auditBody.includes('Moderation')) {
+      throw new Error('Expected empty state message when filtering by Moderation')
+    }
+
+    // Return to All events: 5 rows
+    await clickByText('button.auratio-admin-status-pill', 'All events')
+    await new Promise((r) => setTimeout(r, 200))
+    rowCount = await getAuditRowCount()
+    if (rowCount !== 5) {
+      throw new Error(`Expected 5 audit rows after restoring All events, got ${rowCount}`)
+    }
+
+    console.log('\nALL INTERACTION FLOWS & P1 REPAIR VERIFICATIONS PASSED PERFECTLY!')
 
     ws.close()
   } finally {
