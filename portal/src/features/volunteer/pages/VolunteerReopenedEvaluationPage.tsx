@@ -32,7 +32,7 @@ export function VolunteerReopenedEvaluationPage() {
         {submissionId} — Reopened Evaluation
       </h2>
       <p className="auratio-volunteer-page-subtitle" style={{ top: '78px' }}>
-        {assignment?.track || 'Business Pitch / Sales Pitch'} • formal re-review work (Version {priorVersion + 1})
+        {assignment?.track || prior?.track || 'Business Pitch / Sales Pitch'} • formal re-review work (Version {priorVersion + 1})
       </p>
 
       {/* Header Pill */}

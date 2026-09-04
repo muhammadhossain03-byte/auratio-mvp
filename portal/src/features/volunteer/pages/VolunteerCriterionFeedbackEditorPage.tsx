@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import {
@@ -8,6 +8,8 @@ import {
   saveCriterionScoreData,
   getCriteriaForTrack,
   isValidTimestamp,
+  isEvaluationSubmitted,
+  getCompletedRouteForSubmission,
   type QualitativeAnchor,
 } from '../data/mockVolunteerData'
 
@@ -23,12 +25,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
 
   const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
   const assignment = getVolunteerAssignment(submissionId)
-
-  useEffect(() => {
-    if (!assignment) {
-      navigate(portalRoutePaths.volunteer.assignments, { replace: true })
-    }
-  }, [assignment, navigate])
+  const isSubmitted = isEvaluationSubmitted(submissionId)
 
   const trackSlug = assignment?.trackSlug || 'business-pitch'
   const allCriteria = getCriteriaForTrack(trackSlug)
@@ -62,6 +59,22 @@ export function VolunteerCriterionFeedbackEditorPage() {
 
   const currentKey = `${submissionId}_${activeCriterion.id}`
   const [prevKey, setPrevKey] = useState(currentKey)
+
+  useEffect(() => {
+    if (isSubmitted) {
+      navigate(getCompletedRouteForSubmission(submissionId), { replace: true })
+    } else if (!assignment) {
+      navigate(portalRoutePaths.volunteer.assignments, { replace: true })
+    }
+  }, [isSubmitted, assignment, navigate, submissionId])
+
+  if (isSubmitted) {
+    return <Navigate to={getCompletedRouteForSubmission(submissionId)} replace />
+  }
+
+  if (!assignment) {
+    return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
+  }
 
   if (prevKey !== currentKey) {
     setPrevKey(currentKey)

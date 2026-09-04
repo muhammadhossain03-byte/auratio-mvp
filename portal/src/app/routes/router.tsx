@@ -204,6 +204,10 @@ export const router = createBrowserRouter([
     element: <VolunteerCompletedProcessingPage />,
   },
   {
+    path: '/volunteer/completed/:submissionId',
+    element: <VolunteerCompletedPendingModerationPage />,
+  },
+  {
     path: portalRoutePaths.volunteer.reopenedEvaluation,
     element: <VolunteerReopenedEvaluationPage />,
   },

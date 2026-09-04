@@ -190,14 +190,7 @@ export function saveVolunteerAssignments(assignments: ActiveAssignment[]): void 
 export function getVolunteerAssignment(submissionId: string): ActiveAssignment | null {
   const normalizedId = submissionId.toUpperCase()
   const assignments = getVolunteerAssignments()
-  const found = assignments.find((a) => a.id.toUpperCase() === normalizedId)
-  if (found) return found
-
-  // Check if it exists in canonical
-  const canonical = CANONICAL_ACTIVE_ASSIGNMENTS.find((a) => a.id.toUpperCase() === normalizedId)
-  if (canonical) return canonical
-
-  return null
+  return assignments.find((a) => a.id.toUpperCase() === normalizedId) ?? null
 }
 
 export function updateAssignmentStatus(submissionId: string, status: ActiveAssignment['assignmentStatus']): void {
@@ -216,16 +209,6 @@ export function isValidTimestamp(ts: string | null | undefined): boolean {
   const trimmed = ts.trim()
   const match = /^(\d{2,}):([0-5]\d)$/.exec(trimmed)
   return match !== null
-}
-
-export function getAnchorScoreRange(anchor: QualitativeAnchor, maxPoints: number): { min: number; max: number } {
-  if (anchor === 'Low') {
-    return maxPoints === 5 ? { min: 0, max: 1 } : { min: 0, max: 3 }
-  } else if (anchor === 'Competent') {
-    return maxPoints === 5 ? { min: 2, max: 3 } : { min: 4, max: 7 }
-  } else {
-    return maxPoints === 5 ? { min: 4, max: 5 } : { min: 8, max: 10 }
-  }
 }
 
 export function isCriterionComplete(criterion: CriterionScoreData): boolean {
@@ -310,7 +293,16 @@ export function getScoringDraft(submissionId: string): VolunteerSubmissionScorin
 
 export function saveScoringDraft(draft: VolunteerSubmissionScoringDraft): void {
   try {
-    window.sessionStorage?.setItem(`${DRAFT_PREFIX}${draft.submissionId.toUpperCase()}`, JSON.stringify(draft))
+    const normalizedId = draft.submissionId.toUpperCase()
+    const raw = window.sessionStorage?.getItem(`${DRAFT_PREFIX}${normalizedId}`)
+    if (raw) {
+      const existing = JSON.parse(raw) as VolunteerSubmissionScoringDraft
+      // If existing draft is locked/submitted, prevent mutation unless draft is a strictly higher version
+      if (existing.isSubmitted && draft.version <= existing.version) {
+        return
+      }
+    }
+    window.sessionStorage?.setItem(`${DRAFT_PREFIX}${normalizedId}`, JSON.stringify(draft))
   } catch {}
 }
 
@@ -320,7 +312,7 @@ export function saveCriterionScoreData(
   data: Partial<CriterionScoreData>
 ): VolunteerSubmissionScoringDraft | null {
   const draft = getScoringDraft(submissionId)
-  if (!draft) return null
+  if (!draft || draft.isSubmitted) return null
 
   if (draft.criteria[criterionId]) {
     draft.criteria[criterionId] = {
@@ -329,6 +321,18 @@ export function saveCriterionScoreData(
     }
     saveScoringDraft(draft)
   }
+  return draft
+}
+
+export function saveOverallSummary(
+  submissionId: string,
+  summary: string
+): VolunteerSubmissionScoringDraft | null {
+  const draft = getScoringDraft(submissionId)
+  if (!draft || draft.isSubmitted) return null
+
+  draft.overallSummary = summary
+  saveScoringDraft(draft)
   return draft
 }
 
@@ -401,6 +405,11 @@ export function submitEvaluation(submissionId: string): { success: boolean; draf
   const draft = getScoringDraft(normalizedId)
   if (!draft) return { success: false, draft: null }
 
+  // Locked invariant: already-submitted evaluation cannot be submitted again
+  if (draft.isSubmitted) {
+    return { success: false, draft }
+  }
+
   const totals = calculateDraftTotals(draft)
   if (totals.isReady !== true) {
     return { success: false, draft }
@@ -454,7 +463,7 @@ export function getPreservedLockedSubmission(submissionId: string, version = 1):
 
 export function reopenEvaluation(submissionId: string): VolunteerSubmissionScoringDraft | null {
   const normalizedId = submissionId.toUpperCase()
-  const prior = getScoringDraft(normalizedId)
+  const prior = getPreservedLockedSubmission(normalizedId) || getScoringDraft(normalizedId)
 
   // Increment version, clone prior data so evaluator can edit without mutating prior locked version
   const newVersion = (prior?.version || 1) + 1
@@ -491,6 +500,49 @@ export function reopenEvaluation(submissionId: string): VolunteerSubmissionScori
   return newDraft
 }
 
+export function isEvaluationSubmitted(submissionId: string): boolean {
+  const normalizedId = submissionId.toUpperCase()
+  const draft = getScoringDraft(normalizedId)
+
+  if (draft?.isSubmitted) {
+    return true
+  }
+
+  const activeAssignment = getVolunteerAssignment(normalizedId)
+  if (activeAssignment) {
+    return false
+  }
+
+  const completedHistory = getCompletedHistory()
+  if (completedHistory.some((c) => c.id.toUpperCase() === normalizedId)) {
+    return true
+  }
+
+  const locked = getPreservedLockedSubmission(normalizedId)
+  if (locked?.isSubmitted) {
+    return true
+  }
+
+  return false
+}
+
+export function getCompletedRouteForSubmission(submissionId: string): string {
+  const normalizedId = submissionId.toUpperCase()
+  const lowerId = submissionId.toLowerCase()
+
+  const history = getCompletedHistory()
+  const record = history.find((c) => c.id.toUpperCase() === normalizedId)
+  if (record?.route) {
+    return record.route
+  }
+
+  if (['sub-8821', 'sub-8792', 'sub-8755', 'sub-8741'].includes(lowerId)) {
+    return `/volunteer/completed/${lowerId}`
+  }
+
+  return '/volunteer/completed'
+}
+
 export function resetVolunteerState(): void {
   try {
     window.sessionStorage?.removeItem(ASSIGNMENTS_KEY)
@@ -513,4 +565,9 @@ if (typeof window !== 'undefined') {
   win.__resetVolunteerState = resetVolunteerState
   win.__submitVolunteerEvaluation = submitEvaluation
   win.__getVolunteerScoringDraft = getScoringDraft
+  win.__saveCriterionScoreData = saveCriterionScoreData
+  win.__saveOverallSummary = saveOverallSummary
+  win.__reopenEvaluation = reopenEvaluation
+  win.__getVolunteerAssignment = getVolunteerAssignment
+  win.__isEvaluationSubmitted = isEvaluationSubmitted
 }

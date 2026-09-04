@@ -1,10 +1,14 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useNavigate, useParams, Navigate } from 'react-router-dom'
+import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import {
   getVolunteerAssignment,
   getScoringDraft,
   calculateDraftTotals,
   submitEvaluation,
+  isEvaluationSubmitted,
+  getCompletedRouteForSubmission,
 } from '../data/mockVolunteerData'
 
 export function VolunteerFinalSubmissionPage() {
@@ -13,6 +17,23 @@ export function VolunteerFinalSubmissionPage() {
   const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
 
   const assignment = getVolunteerAssignment(submissionId)
+  const isSubmitted = isEvaluationSubmitted(submissionId)
+
+  useEffect(() => {
+    if (isSubmitted) {
+      navigate(getCompletedRouteForSubmission(submissionId), { replace: true })
+    } else if (!assignment) {
+      navigate(portalRoutePaths.volunteer.assignments, { replace: true })
+    }
+  }, [isSubmitted, assignment, navigate, submissionId])
+
+  if (isSubmitted) {
+    return <Navigate to={getCompletedRouteForSubmission(submissionId)} replace />
+  }
+
+  if (!assignment) {
+    return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
+  }
   const draft = getScoringDraft(submissionId)
   const totals = draft
     ? calculateDraftTotals(draft)

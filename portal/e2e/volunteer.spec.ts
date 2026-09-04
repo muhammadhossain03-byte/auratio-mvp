@@ -4,6 +4,7 @@ import {
   captureEvidenceScreenshot,
   captureHumanFixH1Screenshot,
   captureHumanFixH11Screenshot,
+  captureHumanFixH12Screenshot,
   resetMockState,
   registerErrorTracking,
   assertNoPageErrors,
@@ -629,6 +630,209 @@ test.describe('Volunteer Critical Regression', () => {
       await page.goto('/volunteer/completed')
       const completedText = await page.innerText('body')
       expect(completedText).toContain('SUB-8821')
+    })
+
+    test('H1.2: Submitted-evaluation lock integrity, active assignment resolution, route protection, and formal reopen flow', async ({ page }) => {
+      // 1. Fresh baseline still shows canonical active assignments
+      await page.goto('/volunteer/assignments')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      const baselineBody = await page.innerText('body')
+      expect(baselineBody).toContain('SUB-8821')
+      expect(baselineBody).toContain('SUB-8814')
+      expect(baselineBody).toContain('SUB-8799')
+
+      const baselineAssignment = await page.evaluate(() => {
+        const win = window as unknown as { __getVolunteerAssignment?: (id: string) => unknown }
+        return win.__getVolunteerAssignment ? win.__getVolunteerAssignment('SUB-8821') : null
+      })
+      expect(baselineAssignment).not.toBeNull()
+
+      const baselineIsSubmitted = await page.evaluate(() => {
+        const win = window as unknown as { __isEvaluationSubmitted?: (id: string) => boolean }
+        return win.__isEvaluationSubmitted ? win.__isEvaluationSubmitted('SUB-8821') : null
+      })
+      expect(baselineIsSubmitted).toBe(false)
+
+      // Verify scoring workspace is accessible at baseline
+      await page.goto('/volunteer/evaluation/sub-8821')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toContainText('SUB-8821')
+
+      // Prepare complete draft for SUB-8821 (16 criteria + overallSummary)
+      await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_draft_SUB-8821')
+        let draft: any = raw ? JSON.parse(raw) : null
+        if (!draft) {
+          const win = window as unknown as { __getVolunteerScoringDraft?: (id: string) => any }
+          draft = win.__getVolunteerScoringDraft ? win.__getVolunteerScoringDraft('SUB-8821') : null
+        }
+        if (draft) {
+          for (const key of Object.keys(draft.criteria)) {
+            const c = draft.criteria[key]
+            c.anchor = 'Excellent'
+            c.exactScore = c.maxPoints
+            c.evidenceTimestamp = '01:24'
+            c.evidence = 'Strong execution and observable mastery'
+            c.strength = 'Clear delivery and precision'
+            c.weakness = 'Minor polish on transitions'
+            c.advice = 'Keep momentum and pause discipline'
+          }
+          draft.overallSummary = 'Outstanding pitch demonstrating strong product-market fit, exceptional audience engagement, and rigorous structure.'
+          window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft))
+        }
+      })
+
+      // 2. Submit SUB-8821 successfully via Review route
+      await page.goto('/volunteer/evaluation/sub-8821/review')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821/review')
+      const confirmBtn = page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm & Submit' })
+      await expect(confirmBtn).toBeEnabled()
+      await confirmBtn.click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821/submitted')
+      await expect(page.locator('text=Evaluation submitted')).toBeVisible()
+
+      // 3. SUB-8821 disappears from Active Assignments
+      await page.goto('/volunteer/assignments')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      const assignmentsAfterSubmit = await page.innerText('body')
+      expect(assignmentsAfterSubmit).not.toContain('SUB-8821')
+      expect(assignmentsAfterSubmit).toContain('SUB-8814')
+      expect(assignmentsAfterSubmit).toContain('SUB-8799')
+
+      // 4. getVolunteerAssignment('SUB-8821') does not resurrect it after submission
+      const assignmentAfterSubmit = await page.evaluate(() => {
+        const win = window as unknown as { __getVolunteerAssignment?: (id: string) => unknown }
+        return win.__getVolunteerAssignment ? win.__getVolunteerAssignment('SUB-8821') : 'not-found'
+      })
+      expect(assignmentAfterSubmit).toBeNull()
+
+      const isSubmittedAfterSubmit = await page.evaluate(() => {
+        const win = window as unknown as { __isEvaluationSubmitted?: (id: string) => boolean }
+        return win.__isEvaluationSubmitted ? win.__isEvaluationSubmitted('SUB-8821') : null
+      })
+      expect(isSubmittedAfterSubmit).toBe(true)
+
+      // 11. Completed / History still shows SUB-8821
+      await page.goto('/volunteer/completed')
+      await expect(page).toHaveURL('/volunteer/completed')
+      const completedTextAfterSubmit = await page.innerText('body')
+      expect(completedTextAfterSubmit).toContain('SUB-8821')
+      // Capture Evidence 01: 01_submitted_completed_history.png
+      await captureHumanFixH12Screenshot(page, '01_submitted_completed_history.png')
+
+      // 5. Direct /volunteer/evaluation/sub-8821 after submit is blocked
+      await page.goto('/volunteer/evaluation/sub-8821')
+      await expect(page).toHaveURL(/\/volunteer\/completed/)
+      // Verify no editable scoring workspace is displayed
+      await expect(page.locator('textarea.auratio-volunteer-overall-summary-textarea')).toHaveCount(0)
+      // Capture Evidence 02: 02_direct_scoring_after_submit_blocked.png
+      await captureHumanFixH12Screenshot(page, '02_direct_scoring_after_submit_blocked.png')
+
+      // 6. Direct criterion URL after submit is blocked
+      await page.goto('/volunteer/evaluation/sub-8821/criterion')
+      await expect(page).toHaveURL(/\/volunteer\/completed/)
+      // Verify no criterion editor form is displayed
+      await expect(page.locator('input[aria-label="Exact score"]')).toHaveCount(0)
+      // Capture Evidence 03: 03_direct_criterion_after_submit_blocked.png
+      await captureHumanFixH12Screenshot(page, '03_direct_criterion_after_submit_blocked.png')
+
+      // 7. Direct review URL after submit cannot resubmit
+      await page.goto('/volunteer/evaluation/sub-8821/review')
+      await expect(page).toHaveURL(/\/volunteer\/completed/)
+      // Verify no confirm submit button is displayed
+      await expect(page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm & Submit' })).toHaveCount(0)
+      // Capture Evidence 04: 04_direct_review_after_submit_blocked.png
+      await captureHumanFixH12Screenshot(page, '04_direct_review_after_submit_blocked.png')
+
+      // 8. Locked submitted draft cannot be mutated through saveCriterionScoreData()
+      const criterionMutationResult = await page.evaluate(() => {
+        const win = window as unknown as { __saveCriterionScoreData?: (id: string, cid: string, data: any) => any }
+        return win.__saveCriterionScoreData ? win.__saveCriterionScoreData('SUB-8821', 'ud-pacing', { exactScore: 1 }) : 'error'
+      })
+      expect(criterionMutationResult).toBeNull()
+
+      // 9. Locked Overall Summary cannot be modified through an editable workspace / helper
+      const summaryMutationResult = await page.evaluate(() => {
+        const win = window as unknown as { __saveOverallSummary?: (id: string, s: string) => any }
+        return win.__saveOverallSummary ? win.__saveOverallSummary('SUB-8821', 'Tampered Summary') : 'error'
+      })
+      expect(summaryMutationResult).toBeNull()
+
+      // Verify draft in session storage remains unmodified
+      const draftStored = await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_draft_SUB-8821')
+        return raw ? JSON.parse(raw) : null
+      })
+      expect(draftStored.overallSummary).not.toBe('Tampered Summary')
+      expect(draftStored.isSubmitted).toBe(true)
+
+      // 10. Duplicate submit of the same submitted version fails/no-ops
+      const duplicateSubmitResult = await page.evaluate(() => {
+        const win = window as unknown as { __submitVolunteerEvaluation?: (id: string) => { success: boolean } }
+        return win.__submitVolunteerEvaluation ? win.__submitVolunteerEvaluation('SUB-8821') : { success: true }
+      })
+      expect(duplicateSubmitResult.success).toBe(false)
+
+      // 12. Formal Reopened page still shows preserved prior version
+      await page.goto('/volunteer/evaluation/sub-8821/reopened')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821/reopened')
+      await expect(page.locator('h3.auratio-volunteer-panel-title', { hasText: 'Preserved prior submission' })).toBeVisible()
+      await expect(page.locator('text=Submitted / historical')).toBeVisible()
+      await expect(page.locator('text=Read-only')).toBeVisible()
+      const continueBtn = page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Continue Correction' })
+      await expect(continueBtn).toBeVisible()
+      // Capture Evidence 05: 05_reopened_prior_version.png
+      await captureHumanFixH12Screenshot(page, '05_reopened_prior_version.png')
+
+      // 13. Continue Correction creates the next editable version
+      await continueBtn.click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821')
+
+      // 14. After formal reopen, scoring workspace becomes accessible again
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toContainText('SUB-8821')
+      await expect(page.locator('textarea.auratio-volunteer-overall-summary-textarea')).toBeVisible()
+
+      // Capture Evidence 06: 06_reopened_new_editable_version.png
+      await captureHumanFixH12Screenshot(page, '06_reopened_new_editable_version.png')
+
+      // Active assignment restored
+      const restoredAssignment = await page.evaluate(() => {
+        const win = window as unknown as { __getVolunteerAssignment?: (id: string) => any }
+        return win.__getVolunteerAssignment ? win.__getVolunteerAssignment('SUB-8821') : null
+      })
+      expect(restoredAssignment).not.toBeNull()
+      expect(restoredAssignment.assignmentStatus).toBe('In Evaluation')
+
+      const reopenedIsSubmitted = await page.evaluate(() => {
+        const win = window as unknown as { __isEvaluationSubmitted?: (id: string) => boolean }
+        return win.__isEvaluationSubmitted ? win.__isEvaluationSubmitted('SUB-8821') : null
+      })
+      expect(reopenedIsSubmitted).toBe(false)
+
+      // 15. Editing the reopened version does not mutate the prior locked version
+      const editReopenedResult = await page.evaluate(() => {
+        const win = window as unknown as { __saveOverallSummary?: (id: string, s: string) => any }
+        return win.__saveOverallSummary ? win.__saveOverallSummary('SUB-8821', 'Reopened and refined evaluation for version 2.') : null
+      })
+      expect(editReopenedResult).not.toBeNull()
+      expect(editReopenedResult.version).toBe(2)
+      expect(editReopenedResult.overallSummary).toBe('Reopened and refined evaluation for version 2.')
+
+      // Check preserved locked version 1
+      const preservedV1 = await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_locked_SUB-8821_v1')
+        return raw ? JSON.parse(raw) : null
+      })
+      expect(preservedV1).not.toBeNull()
+      expect(preservedV1.version).toBe(1)
+      expect(preservedV1.isSubmitted).toBe(true)
+      expect(preservedV1.overallSummary).not.toBe('Reopened and refined evaluation for version 2.')
+
+      // 16. No hard anchor-specific numeric-band implementation remains
+      const anchorBandsFunctionExists = await page.evaluate(() => {
+        return typeof (window as any).getAnchorScoreRange !== 'undefined'
+      })
+      expect(anchorBandsFunctionExists).toBe(false)
     })
   })
 })

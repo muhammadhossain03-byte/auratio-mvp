@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import {
   getVolunteerAssignment,
   getScoringDraft,
   saveScoringDraft,
+  isEvaluationSubmitted,
+  getCompletedRouteForSubmission,
   calculateDraftTotals,
   isCriterionComplete,
   UNIVERSAL_DELIVERY_CRITERIA,
@@ -21,12 +23,15 @@ export function VolunteerScoringWorkspacePage() {
   const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
 
   const assignment = getVolunteerAssignment(submissionId)
+  const isSubmitted = isEvaluationSubmitted(submissionId)
 
   useEffect(() => {
-    if (!assignment) {
+    if (isSubmitted) {
+      navigate(getCompletedRouteForSubmission(submissionId), { replace: true })
+    } else if (!assignment) {
       navigate(portalRoutePaths.volunteer.assignments, { replace: true })
     }
-  }, [assignment, navigate])
+  }, [isSubmitted, assignment, navigate, submissionId])
 
   const [prevSubmissionId, setPrevSubmissionId] = useState(submissionId)
   const [draft, setDraft] = useState<VolunteerSubmissionScoringDraft | null>(() => {
@@ -38,13 +43,18 @@ export function VolunteerScoringWorkspacePage() {
     setDraft(getScoringDraft(submissionId))
   }
 
+  if (isSubmitted) {
+    return <Navigate to={getCompletedRouteForSubmission(submissionId)} replace />
+  }
+
   if (!assignment || !draft) {
-    return null
+    return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
   }
 
   const totals = calculateDraftTotals(draft)
 
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (draft.isSubmitted) return
     const nextSummary = e.target.value
     const updated: VolunteerSubmissionScoringDraft = {
       ...draft,
