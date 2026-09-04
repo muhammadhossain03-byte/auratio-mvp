@@ -1,9 +1,11 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 
 export function VolunteerEvaluationSubmittedPage() {
   const navigate = useNavigate()
+  const { submissionId: routeSubmissionId } = useParams<{ submissionId?: string }>()
+  const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
 
   return (
     <VolunteerLayout
@@ -15,7 +17,7 @@ export function VolunteerEvaluationSubmittedPage() {
         Evaluation submitted
       </h2>
       <p className="auratio-volunteer-page-subtitle" style={{ top: '78px' }}>
-        SUB-8821 • evaluator work complete
+        {submissionId} • evaluator work complete
       </p>
 
       {/* Header Status Pill */}

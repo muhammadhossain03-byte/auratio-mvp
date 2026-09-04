@@ -1,16 +1,30 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import { getVolunteerAssignment, updateAssignmentStatus } from '../data/mockVolunteerData'
 
 export function VolunteerAssignedTaskPage() {
   const navigate = useNavigate()
+  const { submissionId: paramId } = useParams<{ submissionId?: string }>()
+  const submissionId = (paramId || 'SUB-8821').toUpperCase()
+  const assignment = getVolunteerAssignment(submissionId)
+
+  // Unknown submission IDs must redirect safely to /volunteer/assignments
+  if (!assignment) {
+    return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
+  }
 
   function handleAccept() {
-    navigate(portalRoutePaths.volunteer.scoringWorkspace)
+    if (!assignment) return
+    if (assignment.assignmentStatus === 'Assigned') {
+      updateAssignmentStatus(assignment.id, 'In Evaluation')
+    }
+    navigate(`/volunteer/evaluation/${assignment.id.toLowerCase()}`)
   }
 
   function handleDecline() {
-    navigate(portalRoutePaths.volunteer.declineAssignment)
+    if (!assignment) return
+    navigate(`/volunteer/assignments/${assignment.id.toLowerCase()}/decline`)
   }
 
   return (
@@ -19,14 +33,20 @@ export function VolunteerAssignedTaskPage() {
       topbarTitle="Human Evaluation Assignment"
       activeNav="assignments"
     >
-      <h2 className="auratio-volunteer-page-title">SUB-8821</h2>
+      <h2 className="auratio-volunteer-page-title">{assignment.id}</h2>
       <p className="auratio-volunteer-page-subtitle">
         Assigned Human Evaluation task • Accept or Decline required
       </p>
 
       {/* Header Status Pill */}
       <div
-        className="auratio-volunteer-pill auratio-volunteer-pill--assigned"
+        className={`auratio-volunteer-pill ${
+          assignment.assignmentStatus === 'Accepted'
+            ? 'auratio-volunteer-pill--accepted'
+            : assignment.assignmentStatus === 'In Evaluation'
+            ? 'auratio-volunteer-pill--in-evaluation-table'
+            : 'auratio-volunteer-pill--assigned'
+        }`}
         style={{
           position: 'absolute',
           left: '920px',
@@ -35,7 +55,7 @@ export function VolunteerAssignedTaskPage() {
           height: '34px',
         }}
       >
-        Assigned
+        {assignment.assignmentStatus}
       </div>
 
       {/* Left Column: Assignment context */}
@@ -79,7 +99,7 @@ export function VolunteerAssignedTaskPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          SUB-8821
+          {assignment.id}
         </span>
 
         <span
@@ -111,7 +131,7 @@ export function VolunteerAssignedTaskPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          Business Pitch / Sales Pitch
+          {assignment.track}
         </span>
 
         <span
@@ -143,7 +163,7 @@ export function VolunteerAssignedTaskPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          Assigned
+          {assignment.assignmentStatus}
         </span>
 
         <span
@@ -175,7 +195,7 @@ export function VolunteerAssignedTaskPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          Processing
+          {assignment.publicationStatus}
         </span>
       </div>
 

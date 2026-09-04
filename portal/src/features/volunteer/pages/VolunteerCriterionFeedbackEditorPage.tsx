@@ -1,36 +1,207 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import {
+  getVolunteerAssignment,
+  getScoringDraft,
+  saveCriterionScoreData,
+  getCriteriaForTrack,
+  getAnchorScoreRange,
+  type QualitativeAnchor,
+} from '../data/mockVolunteerData'
 
 export function VolunteerCriterionFeedbackEditorPage() {
   const navigate = useNavigate()
+  const { submissionId: routeSubmissionId, criterionId: pathCriterionId } = useParams<{
+    submissionId?: string
+    criterionId?: string
+  }>()
+  const [searchParams] = useSearchParams()
+  const queryCriterionId = searchParams.get('criterionId')
+  const requestedCriterionId = pathCriterionId || queryCriterionId
 
-  const [evidence, setEvidence] = useState('At 01:38, benefits are concrete and differentiated.')
-  const [strength, setStrength] = useState('Value is clear and differentiated.')
-  const [weakness, setWeakness] = useState('Pricing proof is not yet quantified.')
-  const [advice, setAdvice] = useState('Add one quantified customer or pricing outcome.')
+  const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
+  const assignment = getVolunteerAssignment(submissionId)
+
+  useEffect(() => {
+    if (!assignment) {
+      navigate(portalRoutePaths.volunteer.assignments, { replace: true })
+    }
+  }, [assignment, navigate])
+
+  const trackSlug = assignment?.trackSlug || 'business-pitch'
+  const allCriteria = getCriteriaForTrack(trackSlug)
+
+  const activeCriterion =
+    allCriteria.find((c) => c.id === requestedCriterionId) ||
+    allCriteria[0] || {
+      id: 'ud-pacing',
+      name: 'Pacing, WPM calibration, and pause placement',
+      category: 'Universal Delivery',
+      maxPoints: 5,
+    }
+
+  const draft = getScoringDraft(submissionId)
+  const initialData = draft?.criteria[activeCriterion.id]
+
+  const [anchor, setAnchor] = useState<QualitativeAnchor | null>(initialData?.anchor || null)
+  const [exactScore, setExactScore] = useState<string>(
+    initialData?.exactScore !== null && initialData?.exactScore !== undefined
+      ? String(initialData.exactScore)
+      : ''
+  )
+  const [evidenceTimestamp, setEvidenceTimestamp] = useState<string>(
+    initialData?.evidenceTimestamp || ''
+  )
+  const [evidence, setEvidence] = useState<string>(initialData?.evidence || '')
+  const [strength, setStrength] = useState<string>(initialData?.strength || '')
+  const [weakness, setWeakness] = useState<string>(initialData?.weakness || '')
+  const [advice, setAdvice] = useState<string>(initialData?.advice || '')
+  const [errorMessage, setErrorMessage] = useState<string>('')
+
+  const currentKey = `${submissionId}_${activeCriterion.id}`
+  const [prevKey, setPrevKey] = useState(currentKey)
+
+  if (prevKey !== currentKey) {
+    setPrevKey(currentKey)
+    const currentDraft = getScoringDraft(submissionId)
+    const cData = currentDraft?.criteria[activeCriterion.id]
+    if (cData) {
+      setAnchor(cData.anchor)
+      setExactScore(cData.exactScore !== null && cData.exactScore !== undefined ? String(cData.exactScore) : '')
+      setEvidenceTimestamp(cData.evidenceTimestamp || '')
+      setEvidence(cData.evidence || '')
+      setStrength(cData.strength || '')
+      setWeakness(cData.weakness || '')
+      setAdvice(cData.advice || '')
+    } else {
+      setAnchor(null)
+      setExactScore('')
+      setEvidenceTimestamp('')
+      setEvidence('')
+      setStrength('')
+      setWeakness('')
+      setAdvice('')
+    }
+    setErrorMessage('')
+  }
+
+  if (!assignment) {
+    return null
+  }
+
+  const lowRange = getAnchorScoreRange('Low', activeCriterion.maxPoints)
+  const compRange = getAnchorScoreRange('Competent', activeCriterion.maxPoints)
+  const excRange = getAnchorScoreRange('Excellent', activeCriterion.maxPoints)
+
+  const activeRange = anchor ? getAnchorScoreRange(anchor, activeCriterion.maxPoints) : null
+
+  const parsedScore = exactScore === '' ? null : Number(exactScore)
+  const isScoreValid =
+    anchor !== null &&
+    parsedScore !== null &&
+    !isNaN(parsedScore) &&
+    activeRange !== null &&
+    parsedScore >= activeRange.min &&
+    parsedScore <= activeRange.max &&
+    parsedScore <= activeCriterion.maxPoints
 
   const evidenceComplete = evidence.trim().length > 0
   const strengthComplete = strength.trim().length > 0
   const weaknessComplete = weakness.trim().length > 0
   const adviceComplete = advice.trim().length > 0
 
-  const feedbackComplete =
-    evidenceComplete &&
-    strengthComplete &&
-    weaknessComplete &&
-    adviceComplete
+  const handleAnchorChange = (newAnchor: QualitativeAnchor) => {
+    setAnchor(newAnchor)
+    setErrorMessage('')
+    // If current score is outside new anchor range, clear or update score
+    if (parsedScore !== null) {
+      const newRange = getAnchorScoreRange(newAnchor, activeCriterion.maxPoints)
+      if (parsedScore < newRange.min || parsedScore > newRange.max) {
+        setExactScore('')
+      }
+    }
+  }
+
+  const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    if (!anchor) return
+
+    if (val === '') {
+      setExactScore('')
+      setErrorMessage('')
+      return
+    }
+
+    const num = Number(val)
+    if (isNaN(num)) return
+
+    if (activeRange && (num < 0 || num > activeCriterion.maxPoints || num > activeRange.max)) {
+      setErrorMessage(
+        `Score cannot exceed ${Math.min(activeCriterion.maxPoints, activeRange.max)} for anchor ${anchor}.`
+      )
+    } else {
+      setErrorMessage('')
+    }
+
+    setExactScore(val)
+  }
 
   const handleBackToScores = () => {
-    navigate(portalRoutePaths.volunteer.scoringWorkspace)
+    navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}`)
   }
 
   const handleSave = () => {
-    if (!feedbackComplete) {
+    if (!anchor) {
+      setErrorMessage('Please select an anchor level first.')
       return
     }
-    navigate(portalRoutePaths.volunteer.scoringWorkspace)
+
+    if (!isScoreValid || parsedScore === null) {
+      if (parsedScore !== null && activeRange && (parsedScore < activeRange.min || parsedScore > activeRange.max)) {
+        setErrorMessage(
+          `Score must be between ${activeRange.min} and ${activeRange.max} for anchor ${anchor}.`
+        )
+      } else {
+        setErrorMessage('Please enter a valid numeric score.')
+      }
+      return
+    }
+
+    if (!evidenceComplete) {
+      setErrorMessage('Timestamped evidence is required.')
+      return
+    }
+
+    if (!strengthComplete) {
+      setErrorMessage('Strength observation is required.')
+      return
+    }
+
+    if (!weaknessComplete) {
+      setErrorMessage('Weakness observation is required.')
+      return
+    }
+
+    if (!adviceComplete) {
+      setErrorMessage('Actionable improvement advice is required.')
+      return
+    }
+
+    // Save to draft
+    setErrorMessage('')
+    saveCriterionScoreData(submissionId, activeCriterion.id, {
+      anchor,
+      exactScore: parsedScore,
+      evidenceTimestamp: evidenceTimestamp.trim() || '01:00',
+      evidence: evidence.trim(),
+      strength: strength.trim(),
+      weakness: weakness.trim(),
+      advice: advice.trim(),
+    })
+
+    navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}`)
   }
 
   return (
@@ -41,10 +212,10 @@ export function VolunteerCriterionFeedbackEditorPage() {
       activeNav="assignments"
     >
       <h2 className="auratio-volunteer-page-title" style={{ top: '32px' }}>
-        Criterion Feedback — Value proposition clarity
+        Criterion Feedback — {activeCriterion.name}
       </h2>
       <p className="auratio-volunteer-page-subtitle" style={{ top: '74px' }}>
-        Business Pitch / Sales Pitch • Track Specialisation • 10 points
+        {assignment.track} • {activeCriterion.category} • {activeCriterion.maxPoints} points
       </p>
 
       {/* Header Status Pill */}
@@ -68,110 +239,244 @@ export function VolunteerCriterionFeedbackEditorPage() {
           left: '30px',
           top: '118px',
           width: '1076px',
-          height: '112px',
+          height: '130px',
           borderRadius: '14px',
         }}
       >
         <h3 className="auratio-volunteer-panel-title">Scoring context</h3>
 
+        {/* Criterion Selector Dropdown */}
+        <div style={{ position: 'absolute', right: '18px', top: '16px' }}>
+          <label
+            htmlFor="criterion-select"
+            style={{
+              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+              fontSize: '12px',
+              fontWeight: 500,
+              color: 'var(--auratio-neutral-600)',
+              marginRight: '8px',
+            }}
+          >
+            Criterion:
+          </label>
+          <select
+            id="criterion-select"
+            aria-label="Select criterion"
+            value={activeCriterion.id}
+            onChange={(e) =>
+              navigate(
+                `/volunteer/evaluation/${submissionId.toLowerCase()}/criterion?criterionId=${encodeURIComponent(
+                  e.target.value
+                )}`
+              )
+            }
+            style={{
+              padding: '4px 8px',
+              borderRadius: '6px',
+              border: '1px solid var(--auratio-neutral-300)',
+              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+              fontSize: '12px',
+              color: 'var(--auratio-neutral-800)',
+            }}
+          >
+            {allCriteria.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.category}: {c.name} ({c.maxPoints} pts)
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Anchor options */}
         <span
           style={{
             position: 'absolute',
             left: '18px',
-            top: '54px',
-            width: '160px',
+            top: '52px',
             fontFamily: 'var(--auratio-font-family-inter), sans-serif',
             fontSize: '12px',
-            fontWeight: 400,
+            fontWeight: 600,
             lineHeight: '18px',
             color: 'var(--auratio-neutral-500)',
           }}
         >
-          Anchor
+          Anchor Level
         </span>
-        <span
+        <div
           style={{
             position: 'absolute',
-            left: '106px',
-            top: '50px',
-            width: '140px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '18px',
-            fontWeight: 600,
-            lineHeight: '26px',
-            color: 'var(--auratio-neutral-900)',
+            left: '110px',
+            top: '48px',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center',
           }}
         >
-          Excellent
-        </span>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--auratio-neutral-900)',
+            }}
+          >
+            <input
+              type="radio"
+              name="anchor"
+              value="Low"
+              checked={anchor === 'Low'}
+              onChange={() => handleAnchorChange('Low')}
+            />
+            Low ({lowRange.min}–{lowRange.max} pts)
+          </label>
 
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--auratio-neutral-900)',
+            }}
+          >
+            <input
+              type="radio"
+              name="anchor"
+              value="Competent"
+              checked={anchor === 'Competent'}
+              onChange={() => handleAnchorChange('Competent')}
+            />
+            Competent ({compRange.min}–{compRange.max} pts)
+          </label>
+
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--auratio-neutral-900)',
+            }}
+          >
+            <input
+              type="radio"
+              name="anchor"
+              value="Excellent"
+              checked={anchor === 'Excellent'}
+              onChange={() => handleAnchorChange('Excellent')}
+            />
+            Excellent ({excRange.min}–{excRange.max} pts)
+          </label>
+        </div>
+
+        {/* Exact score input */}
         <span
           style={{
             position: 'absolute',
-            left: '288px',
-            top: '54px',
-            width: '160px',
+            left: '560px',
+            top: '52px',
             fontFamily: 'var(--auratio-font-family-inter), sans-serif',
             fontSize: '12px',
-            fontWeight: 400,
+            fontWeight: 600,
             lineHeight: '18px',
             color: 'var(--auratio-neutral-500)',
           }}
         >
           Exact score
         </span>
+        <input
+          type="number"
+          aria-label="Exact score"
+          disabled={!anchor}
+          value={exactScore}
+          onChange={handleScoreChange}
+          placeholder={anchor ? `${activeRange?.min}–${activeRange?.max}` : 'Select anchor'}
+          min={activeRange?.min ?? 0}
+          max={activeCriterion.maxPoints}
+          style={{
+            position: 'absolute',
+            left: '640px',
+            top: '44px',
+            width: '100px',
+            height: '32px',
+            boxSizing: 'border-box',
+            padding: '4px 8px',
+            border: '1px solid var(--auratio-neutral-300)',
+            borderRadius: '6px',
+            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'var(--auratio-neutral-900)',
+            backgroundColor: anchor ? 'var(--auratio-surface-default)' : 'var(--auratio-neutral-100)',
+            cursor: anchor ? 'text' : 'not-allowed',
+          }}
+        />
         <span
           style={{
             position: 'absolute',
-            left: '376px',
+            left: '748px',
             top: '50px',
-            width: '140px',
             fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '18px',
-            fontWeight: 600,
-            lineHeight: '26px',
-            color: 'var(--auratio-neutral-900)',
+            fontSize: '13px',
+            fontWeight: 500,
+            color: 'var(--auratio-neutral-600)',
           }}
         >
-          9 / 10
+          / {activeCriterion.maxPoints} pts
         </span>
 
+        {/* Evidence timestamp input */}
         <span
           style={{
             position: 'absolute',
-            left: '818px',
-            top: '54px',
-            width: '118px',
+            left: '840px',
+            top: '52px',
             fontFamily: 'var(--auratio-font-family-inter), sans-serif',
             fontSize: '12px',
-            fontWeight: 400,
+            fontWeight: 600,
             lineHeight: '18px',
             color: 'var(--auratio-neutral-500)',
           }}
         >
-          Evidence timestamp
+          Timestamp
         </span>
-        <span
+        <input
+          type="text"
+          aria-label="Evidence timestamp"
+          value={evidenceTimestamp}
+          onChange={(e) => setEvidenceTimestamp(e.target.value)}
+          placeholder="e.g. 01:24"
           style={{
             position: 'absolute',
-            left: '938px',
-            top: '50px',
-            width: '140px',
+            left: '920px',
+            top: '44px',
+            width: '120px',
+            height: '32px',
+            boxSizing: 'border-box',
+            padding: '4px 8px',
+            border: '1px solid var(--auratio-neutral-300)',
+            borderRadius: '6px',
             fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '18px',
-            fontWeight: 600,
-            lineHeight: '26px',
+            fontSize: '14px',
             color: 'var(--auratio-neutral-900)',
           }}
-        >
-          01:38
-        </span>
+        />
 
         <p
           style={{
             position: 'absolute',
             left: '18px',
-            top: '84px',
+            top: '92px',
             width: '1000px',
             margin: 0,
             fontFamily: 'var(--auratio-font-family-inter), sans-serif',
@@ -181,7 +486,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
             color: 'var(--auratio-neutral-600)',
           }}
         >
-          Anchor must be selected before the exact numeric score. These scoring values remain separate from feedback fields.
+          Anchor must be selected before the exact numeric score. Exact score is disabled until an anchor level is selected.
         </p>
       </div>
 
@@ -249,7 +554,11 @@ export function VolunteerCriterionFeedbackEditorPage() {
           aria-label="Timestamped evidence"
           className="auratio-volunteer-feedback-textarea auratio-volunteer-feedback-textarea--evidence"
           value={evidence}
-          onChange={(e) => setEvidence(e.target.value)}
+          onChange={(e) => {
+            setEvidence(e.target.value)
+            setErrorMessage('')
+          }}
+          placeholder="e.g. At 01:24, speaker provides clear problem framing..."
           style={{
             position: 'absolute',
             left: '16px',
@@ -264,7 +573,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
             fontSize: '14px',
             fontWeight: 400,
             lineHeight: '20px',
-            color: 'var(--auratio-neutral-600)',
+            color: 'var(--auratio-neutral-800)',
             backgroundColor: 'var(--auratio-surface-default)',
             resize: 'none',
             outline: 'none',
@@ -316,7 +625,11 @@ export function VolunteerCriterionFeedbackEditorPage() {
           aria-label="Strength"
           className="auratio-volunteer-feedback-textarea auratio-volunteer-feedback-textarea--strength"
           value={strength}
-          onChange={(e) => setStrength(e.target.value)}
+          onChange={(e) => {
+            setStrength(e.target.value)
+            setErrorMessage('')
+          }}
+          placeholder="What the speaker did effectively for this criterion..."
           style={{
             position: 'absolute',
             left: '16px',
@@ -331,7 +644,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
             fontSize: '14px',
             fontWeight: 400,
             lineHeight: '20px',
-            color: 'var(--auratio-neutral-600)',
+            color: 'var(--auratio-neutral-800)',
             backgroundColor: 'var(--auratio-surface-default)',
             resize: 'none',
             outline: 'none',
@@ -383,7 +696,11 @@ export function VolunteerCriterionFeedbackEditorPage() {
           aria-label="Weakness"
           className="auratio-volunteer-feedback-textarea auratio-volunteer-feedback-textarea--weakness"
           value={weakness}
-          onChange={(e) => setWeakness(e.target.value)}
+          onChange={(e) => {
+            setWeakness(e.target.value)
+            setErrorMessage('')
+          }}
+          placeholder="Specific limitation or gap; avoid generic criticism..."
           style={{
             position: 'absolute',
             left: '16px',
@@ -398,7 +715,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
             fontSize: '14px',
             fontWeight: 400,
             lineHeight: '20px',
-            color: 'var(--auratio-neutral-600)',
+            color: 'var(--auratio-neutral-800)',
             backgroundColor: 'var(--auratio-surface-default)',
             resize: 'none',
             outline: 'none',
@@ -450,7 +767,11 @@ export function VolunteerCriterionFeedbackEditorPage() {
           aria-label="Actionable improvement advice"
           className="auratio-volunteer-feedback-textarea auratio-volunteer-feedback-textarea--advice"
           value={advice}
-          onChange={(e) => setAdvice(e.target.value)}
+          onChange={(e) => {
+            setAdvice(e.target.value)
+            setErrorMessage('')
+          }}
+          placeholder="Concrete next action the speaker can apply on the next attempt..."
           style={{
             position: 'absolute',
             left: '16px',
@@ -465,7 +786,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
             fontSize: '14px',
             fontWeight: 400,
             lineHeight: '20px',
-            color: 'var(--auratio-neutral-600)',
+            color: 'var(--auratio-neutral-800)',
             backgroundColor: 'var(--auratio-surface-default)',
             resize: 'none',
             outline: 'none',
@@ -531,11 +852,11 @@ export function VolunteerCriterionFeedbackEditorPage() {
             color: 'var(--auratio-amber-700)',
           }}
         >
-          Anchor ✓&nbsp;&nbsp;&nbsp;Exact score ✓&nbsp;&nbsp;&nbsp;Timestamped evidence {evidenceComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Strength {strengthComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Weakness {weaknessComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Actionable advice {adviceComplete ? '✓' : '—'}
+          Anchor {anchor ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Exact score {isScoreValid ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Timestamped evidence {evidenceComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Strength {strengthComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Weakness {weaknessComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Actionable advice {adviceComplete ? '✓' : '—'}
         </span>
       </div>
 
-      {/* Buttons */}
+      {/* Buttons & Error Message */}
       <button
         type="button"
         onClick={handleBackToScores}
@@ -567,6 +888,23 @@ export function VolunteerCriterionFeedbackEditorPage() {
       >
         Save Criterion Feedback
       </button>
+
+      {errorMessage && (
+        <span
+          role="alert"
+          style={{
+            position: 'absolute',
+            left: '450px',
+            top: '784px',
+            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+            fontSize: '13px',
+            fontWeight: 500,
+            color: '#b91c1c',
+          }}
+        >
+          {errorMessage}
+        </span>
+      )}
     </VolunteerLayout>
   )
 }

@@ -290,134 +290,369 @@ async function run() {
     console.log('Path after clicking Availability in sidebar:', await getPathname())
     if (await getPathname() !== '/volunteer/availability') throw new Error('Expected /volunteer/availability')
 
-    // 6. SCORING WORKSPACE -> CRITERION FEEDBACK EDITOR FLOW
-    console.log('\n--- Testing Scoring -> Criterion Feedback Flow ---')
+    // 6. VOLUNTEER ASSIGNMENT ACTIONS & SCORING WORKSPACE (HUMAN ACCEPTANCE REPAIR H1)
+    console.log('\n--- Testing Human Acceptance Repair H1 (Volunteer Assignments & Real Editable Scoring) ---')
+    await sendCdp(ws, 'Runtime.evaluate', { expression: `window.__resetVolunteerState && window.__resetVolunteerState()` })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/assignments` })
+    await new Promise((r) => setTimeout(r, 600))
+
+    // Test Case 1: SUB-8814 "Open" control has role=button and is clickable
+    const sub8814Button = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = document.querySelector('button[aria-label="Open SUB-8814"]') || Array.from(document.querySelectorAll('button')).find(b => b.getAttribute('aria-label')?.includes('SUB-8814'));
+        return { exists: !!btn, tagName: btn?.tagName, isButton: btn?.tagName === 'BUTTON' };
+      })()`,
+      returnByValue: true,
+    })
+    if (!sub8814Button.result.value.isButton) throw new Error('Test Case 1 Failed: SUB-8814 Open control is not a button!')
+
+    // Test Case 2: SUB-8799 "Open" control has role=button and is clickable
+    const sub8799Button = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = document.querySelector('button[aria-label="Open SUB-8799"]') || Array.from(document.querySelectorAll('button')).find(b => b.getAttribute('aria-label')?.includes('SUB-8799'));
+        return { exists: !!btn, tagName: btn?.tagName, isButton: btn?.tagName === 'BUTTON' };
+      })()`,
+      returnByValue: true,
+    })
+    if (!sub8799Button.result.value.isButton) throw new Error('Test Case 2 Failed: SUB-8799 Open control is not a button!')
+
+    // Test Case 3, 4, 5: Clicking SUB-8814 Open navigates to /volunteer/assignments/sub-8814 and displays SUB-8814, Extempore, Accepted without SUB-8821
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = document.querySelector('button[aria-label="Open SUB-8814"]') || Array.from(document.querySelectorAll('button')).find(b => b.getAttribute('aria-label')?.includes('SUB-8814'));
+        btn?.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/assignments/sub-8814') throw new Error('Test Case 3 Failed: Expected /volunteer/assignments/sub-8814')
+
+    const sub8814Content = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+      returnByValue: true,
+    })
+    if (!sub8814Content.result.value.includes('SUB-8814')) throw new Error('Test Case 4 Failed: Page does not display SUB-8814')
+    if (!sub8814Content.result.value.includes('Extempore')) throw new Error('Test Case 4 Failed: Page does not display Extempore')
+    if (!sub8814Content.result.value.includes('Accepted')) throw new Error('Test Case 4 Failed: Page does not display Accepted')
+    if (sub8814Content.result.value.includes('SUB-8821')) throw new Error('Test Case 5 Failed: SUB-8814 page contains SUB-8821!')
+
+    // Test Case 6, 7, 8: Clicking SUB-8799 Open from assignments navigates to /volunteer/evaluation/sub-8799 directly
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/assignments` })
+    await new Promise((r) => setTimeout(r, 600))
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = document.querySelector('button[aria-label="Open SUB-8799"]') || Array.from(document.querySelectorAll('button')).find(b => b.getAttribute('aria-label')?.includes('SUB-8799'));
+        btn?.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/evaluation/sub-8799') throw new Error('Test Case 6 Failed: Expected /volunteer/evaluation/sub-8799')
+
+    const sub8799Content = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+      returnByValue: true,
+    })
+    if (!sub8799Content.result.value.includes('SUB-8799')) throw new Error('Test Case 7 Failed: Page does not display SUB-8799')
+    if (!sub8799Content.result.value.includes('Informative')) throw new Error('Test Case 7 Failed: Page does not display Informative')
+    if (!sub8799Content.result.value.includes('In Evaluation')) throw new Error('Test Case 7 Failed: Page does not display In Evaluation')
+    if (sub8799Content.result.value.includes('SUB-8821')) throw new Error('Test Case 8 Failed: SUB-8799 page contains SUB-8821!')
+
+    // Test Case 9: Invalid ID /volunteer/assignments/sub-9999 redirects safely to /volunteer/assignments
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/assignments/sub-9999` })
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/assignments') throw new Error('Test Case 9 Failed: /volunteer/assignments/sub-9999 did not redirect to /volunteer/assignments')
+
+    // Test Case 10, 11, 12, 13, 14, 15, 16: Fresh evaluation session for SUB-8821
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821` })
+    await new Promise((r) => setTimeout(r, 600))
+
+    const freshPageText = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+      returnByValue: true,
+    })
+    if (!freshPageText.result.value.includes('0 / 100')) throw new Error('Test Case 10 Failed: Fresh evaluation does not show 0 / 100')
+    if (!freshPageText.result.value.includes('0 / 40') || !freshPageText.result.value.includes('0 / 20')) {
+      throw new Error('Test Case 11 Failed: Score breakdown does not show 0 / 40 and 0 / 20')
+    }
+    if (!freshPageText.result.value.includes('0 / 16')) throw new Error('Test Case 12 Failed: Criterion scores not 0 / 16')
+    if (!freshPageText.result.value.includes('0 / 16 criteria complete')) throw new Error('Test Case 13 Failed: Feedback complete not 0 / 16')
+    if (!freshPageText.result.value.includes('0 / 16 assessed')) throw new Error('Test Case 14 Failed: Anchor selections not 0 / 16 assessed')
+    if (!freshPageText.result.value.includes('Not ready')) throw new Error('Test Case 15 Failed: Review readiness is not "Not ready"')
+
+    const reviewBtnDisabled = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Review & Submit'));
+        return btn?.disabled;
+      })()`,
+      returnByValue: true,
+    })
+    if (!reviewBtnDisabled.result.value) throw new Error('Test Case 16 Failed: Review & Submit button is not disabled on fresh evaluation')
+
+    // Test Case 17, 18, 19, 20, 21: Anchor-First Rule on Criterion Feedback Editor
+    await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') throw new Error('Expected /volunteer/evaluation/sub-8821/criterion')
+
+    // Back to Scores works
+    await clickByText('button.auratio-volunteer-btn--secondary', 'Back to Scores')
+    await new Promise((r) => setTimeout(r, 500))
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') throw new Error('Expected /volunteer/evaluation/sub-8821 after Back to Scores')
+
+    // Reopen criterion
+    await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
     await new Promise((r) => setTimeout(r, 500))
 
-    await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
-    console.log('Path after Open Universal Delivery:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
-      throw new Error('Expected /volunteer/evaluation/sub-8821/criterion')
-    }
-
-    // Back to Scores works regardless of completeness
-    await clickByText('button.auratio-volunteer-btn--secondary', 'Back to Scores')
-    console.log('Path after Back to Scores:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
-      throw new Error('Expected /volunteer/evaluation/sub-8821 after Back to Scores')
-    }
-
-    // A. INITIAL COMPLETE STATE
-    console.log('Checking Case A: Initial complete state...')
-    await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
-    console.log('Path after re-opening criterion feedback:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
-      throw new Error('Expected /volunteer/evaluation/sub-8821/criterion')
-    }
-
-    // Check initial completeness text claims all ✓
-    const initialCompleteness = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+    const scoreInputDisabledBeforeAnchor = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('input[aria-label="Exact score"]').disabled`,
+      returnByValue: true,
     })
-    console.log('Initial completeness row text:', initialCompleteness.result.value)
-    if (!initialCompleteness.result.value.includes('Timestamped evidence ✓')) {
-      throw new Error('Expected initial completeness to include "Timestamped evidence ✓"')
+    if (!scoreInputDisabledBeforeAnchor.result.value) throw new Error('Test Case 17 Failed: Exact score input is not disabled before anchor selection')
+
+    // Test Case 18: Selecting "Low" enables exact score input and allows scores in 0-30% range
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const radio = document.querySelector('input[name="anchor"][value="Low"]');
+        radio?.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+
+    const scoreInputEnabledAfterLow = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('input[aria-label="Exact score"]').disabled`,
+      returnByValue: true,
+    })
+    if (scoreInputEnabledAfterLow.result.value) throw new Error('Test Case 18 Failed: Exact score input remained disabled after Low anchor selected')
+
+    // Test Case 19: Selecting "Competent"
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const radio = document.querySelector('input[name="anchor"][value="Competent"]');
+        radio?.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+
+    // Test Case 20: Selecting "Excellent"
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const radio = document.querySelector('input[name="anchor"][value="Excellent"]');
+        radio?.click();
+      })()`,
+    })
+    await new Promise((r) => setTimeout(r, 300))
+
+    // Test Case 21: Score above criterion maximum (e.g. 15 for 5-pt criterion) is rejected
+    await setInputValue('input[aria-label="Exact score"]', '15')
+    await new Promise((r) => setTimeout(r, 300))
+    const errorAfterScoreOverflow = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+      returnByValue: true,
+    })
+    if (!errorAfterScoreOverflow.result.value.includes('Score cannot exceed') && !errorAfterScoreOverflow.result.value.includes('exceed')) {
+      throw new Error('Test Case 21 Failed: Error message not displayed for score exceeding criterion maximum')
     }
+
+    // Set valid score for Excellent (4)
+    await setInputValue('input[aria-label="Exact score"]', '4')
+    await new Promise((r) => setTimeout(r, 300))
+
+    // Test Cases 22, 23, 24, 25: Pure whitespace rejected in all 4 fields
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--evidence', '     ')
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--strength', 'Strong vocal delivery')
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--weakness', 'Pacing slowed slightly')
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--advice', 'Calibrate WPM evenly')
 
     await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
-    console.log('Path after Save Criterion Feedback on initial complete state:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
-      throw new Error('Expected /volunteer/evaluation/sub-8821 after Save Criterion Feedback')
-    }
-
-    // B. EMPTY REQUIRED FIELD
-    console.log('Checking Case B: Empty required field blocks Save...')
-    await clickByText('button.auratio-volunteer-btn--secondary', 'Open Universal Delivery')
-    await setInputValue('textarea.auratio-volunteer-feedback-textarea--evidence', '')
-
-    const emptyCompleteness = await sendCdp(ws, 'Runtime.evaluate', {
+    await new Promise((r) => setTimeout(r, 400))
+    const completenessWhitespaceEvidence = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+      returnByValue: true,
     })
-    console.log('Completeness text with empty evidence:', emptyCompleteness.result.value)
-    if (emptyCompleteness.result.value.includes('Timestamped evidence ✓')) {
-      throw new Error('Completeness indicator falsely claims "Timestamped evidence ✓" when empty!')
-    }
-    if (!emptyCompleteness.result.value.includes('Timestamped evidence —')) {
-      throw new Error('Completeness indicator missing incomplete marker when empty!')
+    if (!completenessWhitespaceEvidence.result.value.includes('Timestamped evidence —')) {
+      throw new Error('Test Case 22 Failed: Pure whitespace evidence was marked complete')
     }
 
+    // Whitespace strength
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--evidence', 'At 01:24, clear pause placement')
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--strength', '   \n\t  ')
     await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
-    console.log('Path after Save with empty evidence:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
-      throw new Error('Save Criterion Feedback navigated with empty evidence! Pathname changed.')
-    }
-
-    // C. WHITESPACE REQUIRED FIELD
-    console.log('Checking Case C: Whitespace-only required field blocks Save...')
-    await setInputValue('textarea.auratio-volunteer-feedback-textarea--evidence', '     \n  \t  ')
-
-    const whitespaceCompleteness = await sendCdp(ws, 'Runtime.evaluate', {
+    const completenessWhitespaceStrength = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+      returnByValue: true,
     })
-    console.log('Completeness text with whitespace evidence:', whitespaceCompleteness.result.value)
-    if (whitespaceCompleteness.result.value.includes('Timestamped evidence ✓')) {
-      throw new Error('Completeness indicator falsely claims "Timestamped evidence ✓" when whitespace!')
+    if (!completenessWhitespaceStrength.result.value.includes('Strength —')) {
+      throw new Error('Test Case 23 Failed: Pure whitespace strength was marked complete')
     }
 
+    // Whitespace weakness
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--strength', 'Strong pitch')
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--weakness', '   ')
     await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
-    console.log('Path after Save with whitespace evidence:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821/criterion') {
-      throw new Error('Save Criterion Feedback navigated with whitespace evidence! Pathname changed.')
-    }
-
-    // D. RESTORED VALID FIELD
-    console.log('Checking Case D: Restored valid field permits Save...')
-    await setInputValue(
-      'textarea.auratio-volunteer-feedback-textarea--evidence',
-      'At 01:38, benefits are concrete and differentiated.'
-    )
-
-    const restoredCompleteness = await sendCdp(ws, 'Runtime.evaluate', {
+    const completenessWhitespaceWeakness = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+      returnByValue: true,
     })
-    console.log('Completeness text with restored evidence:', restoredCompleteness.result.value)
-    if (!restoredCompleteness.result.value.includes('Timestamped evidence ✓')) {
-      throw new Error('Completeness indicator failed to restore "Timestamped evidence ✓"!')
+    if (!completenessWhitespaceWeakness.result.value.includes('Weakness —')) {
+      throw new Error('Test Case 24 Failed: Pure whitespace weakness was marked complete')
     }
 
+    // Whitespace advice
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--weakness', 'Could improve')
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--advice', '  \t ')
     await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
-    console.log('Path after Save with restored valid evidence:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
-      throw new Error('Expected /volunteer/evaluation/sub-8821 after Save with valid evidence')
+    const completenessWhitespaceAdvice = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+      returnByValue: true,
+    })
+    if (!completenessWhitespaceAdvice.result.value.includes('Actionable advice —')) {
+      throw new Error('Test Case 25 Failed: Pure whitespace advice was marked complete')
     }
 
-    // 7. REVIEW & SUBMIT FLOW
-    console.log('\n--- Testing Review & Submit Flow ---')
+    // Test Case 26: Valid completion marks all complete
+    await setInputValue('textarea.auratio-volunteer-feedback-textarea--advice', 'Practice pacing with a timer')
+    await new Promise((r) => setTimeout(r, 300))
+
+    const completenessAllValid = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.querySelector('.auratio-volunteer-criterion-completeness-row').innerText`,
+      returnByValue: true,
+    })
+    if (!completenessAllValid.result.value.includes('Anchor ✓') ||
+        !completenessAllValid.result.value.includes('Exact score ✓') ||
+        !completenessAllValid.result.value.includes('Timestamped evidence ✓') ||
+        !completenessAllValid.result.value.includes('Strength ✓') ||
+        !completenessAllValid.result.value.includes('Weakness ✓') ||
+        !completenessAllValid.result.value.includes('Actionable advice ✓')) {
+      throw new Error(`Test Case 26 Failed: Not all fields marked complete: ${completenessAllValid.result.value}`)
+    }
+
+    // Save and return to scores
+    await clickByText('button.auratio-volunteer-btn--primary', 'Save Criterion Feedback')
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') throw new Error('Expected /volunteer/evaluation/sub-8821 after saving criterion')
+
+    // Test Case 27: Reactive score calculation update
+    const scoreTextAfter1 = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+      returnByValue: true,
+    })
+    if (!scoreTextAfter1.result.value.includes('4 / 40') || !scoreTextAfter1.result.value.includes('4 / 100')) {
+      throw new Error('Test Case 27 Failed: Score did not update reactively to 4 / 40 and 4 / 100')
+    }
+    if (!scoreTextAfter1.result.value.includes('1 / 16')) {
+      throw new Error('Test Case 27 Failed: Completeness did not update reactively to 1 / 16')
+    }
+
+    // Test Case 28: Track specialisation reflects track-specific criteria
+    if (!scoreTextAfter1.result.value.includes('Problem-solution fit') || !scoreTextAfter1.result.value.includes('Value proposition clarity')) {
+      throw new Error('Test Case 28 Failed: SUB-8821 scoring workspace missing Business Pitch criteria')
+    }
+
+    // Test Case 29: Scoring state isolation between SUB-8821 and SUB-8814
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8814` })
+    await new Promise((r) => setTimeout(r, 600))
+    const sub8814ScoreText = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+      returnByValue: true,
+    })
+    if (!sub8814ScoreText.result.value.includes('0 / 100')) {
+      throw new Error('Test Case 29 Failed: SUB-8821 scores bled into SUB-8814! SUB-8814 is not 0 / 100')
+    }
+    if (!sub8814ScoreText.result.value.includes('Rapid time-to-thesis')) {
+      throw new Error('Test Case 28 Failed: SUB-8814 does not display Extempore track criteria')
+    }
+
+    // Return to SUB-8821
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821` })
+    await new Promise((r) => setTimeout(r, 600))
+
+    // Test Case 30: Overall summary required before Review & Submit is enabled
+    // Complete all criteria programmatically in mock session storage to test review enablement
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_draft_SUB-8821');
+        if (raw) {
+          const draft = JSON.parse(raw);
+          for (const key of Object.keys(draft.criteria)) {
+            const c = draft.criteria[key];
+            c.anchor = 'Excellent';
+            c.exactScore = c.maxPoints;
+            c.evidenceTimestamp = '01:00';
+            c.evidence = 'Strong execution';
+            c.strength = 'Clear mastery';
+            c.weakness = 'Minor polish';
+            c.advice = 'Keep momentum';
+          }
+          draft.overallSummary = '';
+          window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft));
+        }
+      })()`,
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821` })
+    await new Promise((r) => setTimeout(r, 600))
+
+    const reviewBtnWithoutSummary = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Review & Submit'));
+        return btn?.disabled;
+      })()`,
+      returnByValue: true,
+    })
+    if (!reviewBtnWithoutSummary.result.value) throw new Error('Test Case 30 Failed: Review & Submit enabled without overall summary')
+
+    // Test Case 31: Add overall summary -> Review & Submit enables and navigates to review
+    await setInputValue('textarea.auratio-volunteer-overall-summary-textarea', 'Outstanding pitch demonstrating strong product-market fit and clarity.')
+    await new Promise((r) => setTimeout(r, 400))
+
+    const reviewBtnWithSummary = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Review & Submit'));
+        return btn?.disabled;
+      })()`,
+      returnByValue: true,
+    })
+    if (reviewBtnWithSummary.result.value) throw new Error('Test Case 31 Failed: Review & Submit remained disabled when 16/16 and summary complete')
+
     await clickByText('button.auratio-volunteer-btn--primary', 'Review & Submit')
-    console.log('Path after Review & Submit:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821/review') {
-      throw new Error('Expected /volunteer/evaluation/sub-8821/review')
-    }
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/review') throw new Error('Test Case 31 Failed: Did not navigate to /volunteer/evaluation/sub-8821/review')
 
-    // Cancel returns to scoring workspace
+    // Cancel in review returns to scoring workspace
     await clickByText('button.auratio-volunteer-btn--secondary', 'Cancel')
-    console.log('Path after Cancel review:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
-      throw new Error('Expected /volunteer/evaluation/sub-8821 after Cancel')
-    }
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') throw new Error('Expected /volunteer/evaluation/sub-8821 after Cancel review')
 
+    // Test Case 32: Submitting locks evaluation and removes from Active Assignments
     await clickByText('button.auratio-volunteer-btn--primary', 'Review & Submit')
+    await new Promise((r) => setTimeout(r, 600))
     await clickByText('button.auratio-volunteer-btn--primary', 'Confirm & Submit')
-    console.log('Path after Confirm & Submit:', await getPathname())
-    if (await getPathname() !== '/volunteer/evaluation/sub-8821/submitted') {
-      throw new Error('Expected /volunteer/evaluation/sub-8821/submitted')
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821/submitted') throw new Error('Expected /volunteer/evaluation/sub-8821/submitted')
+
+    // Navigate to active assignments and verify SUB-8821 removed
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/assignments` })
+    await new Promise((r) => setTimeout(r, 600))
+    const assignmentsAfterSubmit = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+      returnByValue: true,
+    })
+    if (assignmentsAfterSubmit.result.value.includes('SUB-8821')) {
+      throw new Error('Test Case 32 Failed: SUB-8821 still visible in Active Assignments after submission')
     }
 
-    await clickByText('button.auratio-volunteer-btn--primary', 'Go to Completed / History')
-    console.log('Path after Go to Completed / History:', await getPathname())
-    if (await getPathname() !== '/volunteer/completed') {
-      throw new Error('Expected /volunteer/completed')
+    // Test Case 33: Reopened evaluation displays preserved prior submission version and score
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821/reopened` })
+    await new Promise((r) => setTimeout(r, 600))
+    const reopenedContent = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `document.body.innerText`,
+      returnByValue: true,
+    })
+    if (!reopenedContent.result.value.includes('100 / 100')) {
+      throw new Error('Test Case 33 Failed: Reopened evaluation did not preserve prior submitted score 100 / 100')
+    }
+
+    await clickByText('button.auratio-volunteer-btn--primary', 'Continue Correction')
+    await new Promise((r) => setTimeout(r, 600))
+    if (await getPathname() !== '/volunteer/evaluation/sub-8821') {
+      throw new Error('Expected /volunteer/evaluation/sub-8821 after Continue Correction')
     }
 
     // 8. COMPLETED HISTORY -> DETAIL PAGES

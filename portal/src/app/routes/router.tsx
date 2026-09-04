@@ -124,7 +124,15 @@ export const router = createBrowserRouter([
     element: <VolunteerAssignedTaskPage />,
   },
   {
+    path: '/volunteer/assignments/:submissionId',
+    element: <VolunteerAssignedTaskPage />,
+  },
+  {
     path: portalRoutePaths.volunteer.declineAssignment,
+    element: <VolunteerDeclineAssignmentPage />,
+  },
+  {
+    path: '/volunteer/assignments/:submissionId/decline',
     element: <VolunteerDeclineAssignmentPage />,
   },
   {
@@ -144,7 +152,19 @@ export const router = createBrowserRouter([
     element: <VolunteerScoringWorkspacePage />,
   },
   {
+    path: '/volunteer/evaluation/:submissionId',
+    element: <VolunteerScoringWorkspacePage />,
+  },
+  {
     path: portalRoutePaths.volunteer.criterionFeedback,
+    element: <VolunteerCriterionFeedbackEditorPage />,
+  },
+  {
+    path: '/volunteer/evaluation/:submissionId/criterion',
+    element: <VolunteerCriterionFeedbackEditorPage />,
+  },
+  {
+    path: '/volunteer/evaluation/:submissionId/criterion/:criterionId',
     element: <VolunteerCriterionFeedbackEditorPage />,
   },
   {
@@ -152,7 +172,15 @@ export const router = createBrowserRouter([
     element: <VolunteerFinalSubmissionPage />,
   },
   {
+    path: '/volunteer/evaluation/:submissionId/review',
+    element: <VolunteerFinalSubmissionPage />,
+  },
+  {
     path: portalRoutePaths.volunteer.evaluationSubmitted,
+    element: <VolunteerEvaluationSubmittedPage />,
+  },
+  {
+    path: '/volunteer/evaluation/:submissionId/submitted',
     element: <VolunteerEvaluationSubmittedPage />,
   },
   {
@@ -177,6 +205,10 @@ export const router = createBrowserRouter([
   },
   {
     path: portalRoutePaths.volunteer.reopenedEvaluation,
+    element: <VolunteerReopenedEvaluationPage />,
+  },
+  {
+    path: '/volunteer/evaluation/:submissionId/reopened',
     element: <VolunteerReopenedEvaluationPage />,
   },
   {

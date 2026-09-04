@@ -4,6 +4,7 @@ import * as path from 'node:path'
 
 export const EVIDENCE_DIR = path.resolve('capture_output', 'playwright')
 export const REPAIRS_P2_DIR = path.resolve('capture_output', 'repairs_p2')
+export const HUMAN_FIX_H1_DIR = path.resolve('capture_output', 'human_fix_h1')
 
 export async function captureEvidenceScreenshot(page: Page, filename: string): Promise<string> {
   if (!fs.existsSync(EVIDENCE_DIR)) {
@@ -23,6 +24,15 @@ export async function captureRepairsP2Screenshot(page: Page, filename: string): 
   return filePath
 }
 
+export async function captureHumanFixH1Screenshot(page: Page, filename: string): Promise<string> {
+  if (!fs.existsSync(HUMAN_FIX_H1_DIR)) {
+    fs.mkdirSync(HUMAN_FIX_H1_DIR, { recursive: true })
+  }
+  const filePath = path.join(HUMAN_FIX_H1_DIR, filename)
+  await page.screenshot({ path: filePath, fullPage: false })
+  return filePath
+}
+
 export async function resetMockState(page: Page): Promise<void> {
   await page.evaluate(() => {
     try {
@@ -32,6 +42,7 @@ export async function resetMockState(page: Page): Promise<void> {
 
     const win = window as unknown as Record<string, unknown>
 
+    if (typeof win.__resetVolunteerState === 'function') win.__resetVolunteerState()
     if (typeof win.__resetHE0142Reassignment === 'function') win.__resetHE0142Reassignment()
     if (typeof win.__resetSub8821Moderation === 'function') win.__resetSub8821Moderation()
     if (typeof win.__resetFarhanaAvailabilityOverride === 'function') win.__resetFarhanaAvailabilityOverride()

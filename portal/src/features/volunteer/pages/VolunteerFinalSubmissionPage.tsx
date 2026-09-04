@@ -1,9 +1,36 @@
-import { useNavigate } from 'react-router-dom'
-import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { useNavigate, useParams } from 'react-router-dom'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import {
+  getVolunteerAssignment,
+  getScoringDraft,
+  calculateDraftTotals,
+  submitEvaluation,
+} from '../data/mockVolunteerData'
 
 export function VolunteerFinalSubmissionPage() {
   const navigate = useNavigate()
+  const { submissionId: routeSubmissionId } = useParams<{ submissionId?: string }>()
+  const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
+
+  const assignment = getVolunteerAssignment(submissionId)
+  const draft = getScoringDraft(submissionId)
+  const totals = draft
+    ? calculateDraftTotals(draft)
+    : {
+        universalDelivery: 0,
+        structuralFlow: 0,
+        trackSpecialisation: 0,
+        submissionScore: 0,
+      }
+
+  const handleCancel = () => {
+    navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}`)
+  }
+
+  const handleConfirmSubmit = () => {
+    submitEvaluation(submissionId)
+    navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}/submitted`)
+  }
 
   return (
     <VolunteerLayout
@@ -12,10 +39,10 @@ export function VolunteerFinalSubmissionPage() {
       activeNav="assignments"
     >
       <h2 className="auratio-volunteer-page-title" style={{ top: '34px' }}>
-        SUB-8821
+        {submissionId}
       </h2>
       <p className="auratio-volunteer-page-subtitle" style={{ top: '78px' }}>
-        Ready for final evaluator submission
+        {assignment?.track ? `${assignment.track} • ` : ''}Ready for final evaluator submission
       </p>
 
       {/* Header Status Pill */}
@@ -74,7 +101,7 @@ export function VolunteerFinalSubmissionPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          34 / 40
+          {totals.universalDelivery} / 40
         </span>
 
         <span
@@ -107,7 +134,7 @@ export function VolunteerFinalSubmissionPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          17 / 20
+          {totals.structuralFlow} / 20
         </span>
 
         <span
@@ -140,7 +167,7 @@ export function VolunteerFinalSubmissionPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          34 / 40
+          {totals.trackSpecialisation} / 40
         </span>
 
         {/* Divider */}
@@ -185,7 +212,7 @@ export function VolunteerFinalSubmissionPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          85 / 100
+          {totals.submissionScore} / 100
         </span>
       </div>
 
@@ -288,7 +315,7 @@ export function VolunteerFinalSubmissionPage() {
 
       <button
         type="button"
-        onClick={() => navigate(portalRoutePaths.volunteer.scoringWorkspace)}
+        onClick={handleCancel}
         className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
         style={{
           position: 'absolute',
@@ -304,7 +331,7 @@ export function VolunteerFinalSubmissionPage() {
 
       <button
         type="button"
-        onClick={() => navigate(portalRoutePaths.volunteer.evaluationSubmitted)}
+        onClick={handleConfirmSubmit}
         className="auratio-volunteer-btn auratio-volunteer-btn--primary"
         style={{
           position: 'absolute',

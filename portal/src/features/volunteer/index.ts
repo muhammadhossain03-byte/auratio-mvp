@@ -15,3 +15,4 @@ export { VolunteerCompletedRejectedPage } from './pages/VolunteerCompletedReject
 export { VolunteerCompletedProcessingPage } from './pages/VolunteerCompletedProcessingPage'
 export { VolunteerReopenedEvaluationPage } from './pages/VolunteerReopenedEvaluationPage'
 export { VolunteerLayout } from './components/VolunteerLayout'
+export * from './data/mockVolunteerData'

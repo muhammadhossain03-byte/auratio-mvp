@@ -1,9 +1,26 @@
-import { useNavigate } from 'react-router-dom'
-import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { useNavigate, useParams } from 'react-router-dom'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import {
+  getVolunteerAssignment,
+  getPreservedLockedSubmission,
+  reopenEvaluation,
+  calculateDraftTotals,
+} from '../data/mockVolunteerData'
 
 export function VolunteerReopenedEvaluationPage() {
   const navigate = useNavigate()
+  const { submissionId: routeSubmissionId } = useParams<{ submissionId?: string }>()
+  const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
+
+  const assignment = getVolunteerAssignment(submissionId)
+  const prior = getPreservedLockedSubmission(submissionId)
+  const priorScore = prior ? calculateDraftTotals(prior).submissionScore : 85
+  const priorVersion = prior?.version || 1
+
+  const handleContinueCorrection = () => {
+    reopenEvaluation(submissionId)
+    navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}`)
+  }
 
   return (
     <VolunteerLayout
@@ -12,10 +29,10 @@ export function VolunteerReopenedEvaluationPage() {
       activeNav="assignments"
     >
       <h2 className="auratio-volunteer-page-title" style={{ top: '34px' }}>
-        SUB-8821 — Reopened Evaluation
+        {submissionId} — Reopened Evaluation
       </h2>
       <p className="auratio-volunteer-page-subtitle" style={{ top: '78px' }}>
-        Business Pitch / Sales Pitch • formal re-review work
+        {assignment?.track || 'Business Pitch / Sales Pitch'} • formal re-review work (Version {priorVersion + 1})
       </p>
 
       {/* Header Pill */}
@@ -105,7 +122,7 @@ export function VolunteerReopenedEvaluationPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          85 / 100
+          {priorScore} / 100
         </span>
 
         <span
@@ -410,7 +427,7 @@ export function VolunteerReopenedEvaluationPage() {
       {/* Action Button: Continue Correction */}
       <button
         type="button"
-        onClick={() => navigate(portalRoutePaths.volunteer.scoringWorkspace)}
+        onClick={handleContinueCorrection}
         className="auratio-volunteer-btn auratio-volunteer-btn--primary"
         style={{
           position: 'absolute',

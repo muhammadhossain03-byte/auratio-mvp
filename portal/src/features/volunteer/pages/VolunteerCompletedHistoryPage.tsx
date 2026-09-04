@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom'
-import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import { getCompletedHistory } from '../data/mockVolunteerData'
 
 export function VolunteerCompletedHistoryPage() {
   const navigate = useNavigate()
+  const historyItems = getCompletedHistory()
 
   return (
     <VolunteerLayout
@@ -67,7 +68,7 @@ export function VolunteerCompletedHistoryPage() {
           left: '30px',
           top: '202px',
           width: '1076px',
-          height: '386px',
+          height: `${Math.max(386, 76 + historyItems.length * 76)}px`,
         }}
       >
         {/* Table Headers */}
@@ -152,332 +153,113 @@ export function VolunteerCompletedHistoryPage() {
           Action
         </span>
 
-        {/* Row 1: SUB-8821 Pending Moderation */}
-        <span
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '66px',
-            width: '145px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          SUB-8821
-        </span>
-        <span
-          style={{
-            position: 'absolute',
-            left: '185px',
-            top: '66px',
-            width: '250px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          Business Pitch / Sales Pitch
-        </span>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--assigned"
-          style={{
-            position: 'absolute',
-            left: '460px',
-            top: '59px',
-            width: '160px',
-            height: '34px',
-          }}
-        >
-          Submitted
-        </div>
-        <div
-          className="auratio-volunteer-pill"
-          style={{
-            position: 'absolute',
-            left: '660px',
-            top: '59px',
-            width: '180px',
-            height: '34px',
-            backgroundColor: 'var(--auratio-amber-50)',
-            color: 'var(--auratio-amber-700)',
-          }}
-        >
-          Pending Moderation
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate(portalRoutePaths.volunteer.completedPendingModeration)}
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
-          style={{
-            position: 'absolute',
-            left: '900px',
-            top: '55px',
-            width: '120px',
-            height: '44px',
-            borderRadius: '10px',
-          }}
-        >
-          Open
-        </button>
+        {historyItems.map((item, index) => {
+          const rowTop = 55 + index * 76
+          const dividerTop = 114 + index * 76
+          let pubBg = 'var(--auratio-brand-blue-50)'
+          let pubColor = 'var(--auratio-brand-blue-700)'
+          if (item.publicationStatus === 'Pending Moderation') {
+            pubBg = 'var(--auratio-amber-50)'
+            pubColor = 'var(--auratio-amber-700)'
+          } else if (item.publicationStatus === 'Approved') {
+            pubBg = '#f0fdf4'
+            pubColor = '#15803d'
+          } else if (item.publicationStatus === 'Rejected') {
+            pubBg = '#fef2f2'
+            pubColor = '#b91c1c'
+          }
 
-        {/* Divider 1 */}
-        <div
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '114px',
-            width: '1040px',
-            height: '1px',
-            backgroundColor: 'var(--auratio-neutral-200)',
-          }}
-        />
+          return (
+            <div key={item.id}>
+              <span
+                style={{
+                  position: 'absolute',
+                  left: '18px',
+                  top: `${rowTop + 11}px`,
+                  width: '145px',
+                  fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 400,
+                  lineHeight: '20px',
+                  color: 'var(--auratio-neutral-900)',
+                }}
+              >
+                {item.id}
+              </span>
+              <span
+                style={{
+                  position: 'absolute',
+                  left: '185px',
+                  top: `${rowTop + 11}px`,
+                  width: '250px',
+                  fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 400,
+                  lineHeight: '20px',
+                  color: 'var(--auratio-neutral-900)',
+                }}
+              >
+                {item.track}
+              </span>
+              <div
+                className="auratio-volunteer-pill auratio-volunteer-pill--assigned"
+                style={{
+                  position: 'absolute',
+                  left: '460px',
+                  top: `${rowTop + 4}px`,
+                  width: '160px',
+                  height: '34px',
+                }}
+              >
+                {item.assignmentStatus}
+              </div>
+              <div
+                className="auratio-volunteer-pill"
+                style={{
+                  position: 'absolute',
+                  left: '660px',
+                  top: `${rowTop + 4}px`,
+                  width: '180px',
+                  height: '34px',
+                  backgroundColor: pubBg,
+                  color: pubColor,
+                }}
+              >
+                {item.publicationStatus}
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(item.route)}
+                className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
+                style={{
+                  position: 'absolute',
+                  left: '900px',
+                  top: `${rowTop}px`,
+                  width: '120px',
+                  height: '44px',
+                  borderRadius: '10px',
+                }}
+              >
+                Open
+              </button>
 
-        {/* Row 2: SUB-8792 Approved */}
-        <span
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '142px',
-            width: '145px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          SUB-8792
-        </span>
-        <span
-          style={{
-            position: 'absolute',
-            left: '185px',
-            top: '142px',
-            width: '250px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          Extempore
-        </span>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--assigned"
-          style={{
-            position: 'absolute',
-            left: '460px',
-            top: '135px',
-            width: '160px',
-            height: '34px',
-          }}
-        >
-          Submitted
-        </div>
-        <div
-          className="auratio-volunteer-pill"
-          style={{
-            position: 'absolute',
-            left: '660px',
-            top: '135px',
-            width: '180px',
-            height: '34px',
-            backgroundColor: 'var(--auratio-green-50)',
-            color: 'var(--auratio-green-700)',
-          }}
-        >
-          Approved
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate(portalRoutePaths.volunteer.completedApproved)}
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
-          style={{
-            position: 'absolute',
-            left: '900px',
-            top: '131px',
-            width: '120px',
-            height: '44px',
-            borderRadius: '10px',
-          }}
-        >
-          Open
-        </button>
-
-        {/* Divider 2 */}
-        <div
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '190px',
-            width: '1040px',
-            height: '1px',
-            backgroundColor: 'var(--auratio-neutral-200)',
-          }}
-        />
-
-        {/* Row 3: SUB-8755 Rejected */}
-        <span
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '218px',
-            width: '145px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          SUB-8755
-        </span>
-        <span
-          style={{
-            position: 'absolute',
-            left: '185px',
-            top: '218px',
-            width: '250px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          Informative
-        </span>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--assigned"
-          style={{
-            position: 'absolute',
-            left: '460px',
-            top: '211px',
-            width: '160px',
-            height: '34px',
-          }}
-        >
-          Submitted
-        </div>
-        <div
-          className="auratio-volunteer-pill"
-          style={{
-            position: 'absolute',
-            left: '660px',
-            top: '211px',
-            width: '180px',
-            height: '34px',
-            backgroundColor: 'var(--auratio-red-50)',
-            color: 'var(--auratio-red-700)',
-          }}
-        >
-          Rejected
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate(portalRoutePaths.volunteer.completedRejected)}
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
-          style={{
-            position: 'absolute',
-            left: '900px',
-            top: '207px',
-            width: '120px',
-            height: '44px',
-            borderRadius: '10px',
-          }}
-        >
-          Open
-        </button>
-
-        {/* Divider 3 */}
-        <div
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '266px',
-            width: '1040px',
-            height: '1px',
-            backgroundColor: 'var(--auratio-neutral-200)',
-          }}
-        />
-
-        {/* Row 4: SUB-8741 Processing */}
-        <span
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '294px',
-            width: '145px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          SUB-8741
-        </span>
-        <span
-          style={{
-            position: 'absolute',
-            left: '185px',
-            top: '294px',
-            width: '250px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          Motivational
-        </span>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--assigned"
-          style={{
-            position: 'absolute',
-            left: '460px',
-            top: '287px',
-            width: '160px',
-            height: '34px',
-          }}
-        >
-          Submitted
-        </div>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--processing"
-          style={{
-            position: 'absolute',
-            left: '660px',
-            top: '287px',
-            width: '180px',
-            height: '34px',
-          }}
-        >
-          Processing
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate(portalRoutePaths.volunteer.completedProcessing)}
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
-          style={{
-            position: 'absolute',
-            left: '900px',
-            top: '283px',
-            width: '120px',
-            height: '44px',
-            borderRadius: '10px',
-          }}
-        >
-          Open
-        </button>
+              {index < historyItems.length - 1 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '18px',
+                    top: `${dividerTop}px`,
+                    width: '1040px',
+                    height: '1px',
+                    backgroundColor: 'var(--auratio-neutral-200)',
+                  }}
+                />
+              )}
+            </div>
+          )
+        })}
       </div>
+
 
       {/* Bottom Panel: History boundary */}
       <div

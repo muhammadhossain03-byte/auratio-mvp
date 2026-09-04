@@ -1,13 +1,25 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import { getVolunteerAssignments, type ActiveAssignment } from '../data/mockVolunteerData'
 
 export function VolunteerActiveAssignmentsPage() {
   const navigate = useNavigate()
+  const [assignments] = useState<ActiveAssignment[]>(() =>
+    getVolunteerAssignments().filter((a) => a.assignmentStatus !== 'Submitted')
+  )
 
-  function handleOpenSub8821() {
-    navigate(portalRoutePaths.volunteer.assignedTask)
+  function handleOpen(assignment: ActiveAssignment) {
+    if (assignment.assignmentStatus === 'In Evaluation') {
+      navigate(`/volunteer/evaluation/${assignment.id.toLowerCase()}`)
+    } else {
+      navigate(`/volunteer/assignments/${assignment.id.toLowerCase()}`)
+    }
   }
+
+  const sub8821 = assignments.find((a) => a.id.toUpperCase() === 'SUB-8821')
+  const sub8814 = assignments.find((a) => a.id.toUpperCase() === 'SUB-8814')
+  const sub8799 = assignments.find((a) => a.id.toUpperCase() === 'SUB-8799')
 
   return (
     <VolunteerLayout
@@ -157,74 +169,85 @@ export function VolunteerActiveAssignmentsPage() {
         </span>
 
         {/* Row 1: SUB-8821 */}
-        <span
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '68px',
-            width: '150px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          SUB-8821
-        </span>
-        <span
-          style={{
-            position: 'absolute',
-            left: '190px',
-            top: '68px',
-            width: '260px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          Business Pitch / Sales Pitch
-        </span>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--assigned"
-          style={{
-            position: 'absolute',
-            left: '485px',
-            top: '61px',
-            width: '170px',
-            height: '34px',
-          }}
-        >
-          Assigned
-        </div>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--processing"
-          style={{
-            position: 'absolute',
-            left: '700px',
-            top: '61px',
-            width: '170px',
-            height: '34px',
-          }}
-        >
-          Processing
-        </div>
-        <button
-          type="button"
-          onClick={handleOpenSub8821}
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
-          style={{
-            position: 'absolute',
-            left: '920px',
-            top: '57px',
-            width: '120px',
-            height: '44px',
-          }}
-        >
-          Open
-        </button>
+        {sub8821 && (
+          <>
+            <span
+              style={{
+                position: 'absolute',
+                left: '18px',
+                top: '68px',
+                width: '150px',
+                fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                fontSize: '14px',
+                fontWeight: 400,
+                lineHeight: '20px',
+                color: 'var(--auratio-neutral-900)',
+              }}
+            >
+              {sub8821.id}
+            </span>
+            <span
+              style={{
+                position: 'absolute',
+                left: '190px',
+                top: '68px',
+                width: '260px',
+                fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                fontSize: '14px',
+                fontWeight: 400,
+                lineHeight: '20px',
+                color: 'var(--auratio-neutral-900)',
+              }}
+            >
+              {sub8821.track}
+            </span>
+            <div
+              className={`auratio-volunteer-pill ${
+                sub8821.assignmentStatus === 'Accepted'
+                  ? 'auratio-volunteer-pill--accepted'
+                  : sub8821.assignmentStatus === 'In Evaluation'
+                  ? 'auratio-volunteer-pill--in-evaluation-table'
+                  : 'auratio-volunteer-pill--assigned'
+              }`}
+              style={{
+                position: 'absolute',
+                left: '485px',
+                top: '61px',
+                width: '170px',
+                height: '34px',
+              }}
+            >
+              {sub8821.assignmentStatus}
+            </div>
+            <div
+              className="auratio-volunteer-pill auratio-volunteer-pill--processing"
+              style={{
+                position: 'absolute',
+                left: '700px',
+                top: '61px',
+                width: '170px',
+                height: '34px',
+              }}
+            >
+              {sub8821.publicationStatus}
+            </div>
+            <button
+              type="button"
+              aria-label={`Open ${sub8821.id}`}
+              onClick={() => handleOpen(sub8821)}
+              className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
+              style={{
+                position: 'absolute',
+                left: '920px',
+                top: '57px',
+                width: '120px',
+                height: '44px',
+              }}
+            >
+              Open
+            </button>
+          </>
+        )}
 
         {/* Divider 1 */}
         <div
@@ -239,74 +262,83 @@ export function VolunteerActiveAssignmentsPage() {
         />
 
         {/* Row 2: SUB-8814 */}
-        <span
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '160px',
-            width: '150px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          SUB-8814
-        </span>
-        <span
-          style={{
-            position: 'absolute',
-            left: '190px',
-            top: '160px',
-            width: '260px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          Extempore
-        </span>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--accepted"
-          style={{
-            position: 'absolute',
-            left: '485px',
-            top: '153px',
-            width: '170px',
-            height: '34px',
-          }}
-        >
-          Accepted
-        </div>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--processing"
-          style={{
-            position: 'absolute',
-            left: '700px',
-            top: '153px',
-            width: '170px',
-            height: '34px',
-          }}
-        >
-          Processing
-        </div>
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary auratio-volunteer-btn--presentation"
-          style={{
-            position: 'absolute',
-            left: '920px',
-            top: '149px',
-            width: '120px',
-            height: '44px',
-          }}
-        >
-          Open
-        </div>
+        {sub8814 && (
+          <>
+            <span
+              style={{
+                position: 'absolute',
+                left: '18px',
+                top: '160px',
+                width: '150px',
+                fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                fontSize: '14px',
+                fontWeight: 400,
+                lineHeight: '20px',
+                color: 'var(--auratio-neutral-900)',
+              }}
+            >
+              {sub8814.id}
+            </span>
+            <span
+              style={{
+                position: 'absolute',
+                left: '190px',
+                top: '160px',
+                width: '260px',
+                fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                fontSize: '14px',
+                fontWeight: 400,
+                lineHeight: '20px',
+                color: 'var(--auratio-neutral-900)',
+              }}
+            >
+              {sub8814.track}
+            </span>
+            <div
+              className={`auratio-volunteer-pill ${
+                sub8814.assignmentStatus === 'In Evaluation'
+                  ? 'auratio-volunteer-pill--in-evaluation-table'
+                  : 'auratio-volunteer-pill--accepted'
+              }`}
+              style={{
+                position: 'absolute',
+                left: '485px',
+                top: '153px',
+                width: '170px',
+                height: '34px',
+              }}
+            >
+              {sub8814.assignmentStatus}
+            </div>
+            <div
+              className="auratio-volunteer-pill auratio-volunteer-pill--processing"
+              style={{
+                position: 'absolute',
+                left: '700px',
+                top: '153px',
+                width: '170px',
+                height: '34px',
+              }}
+            >
+              {sub8814.publicationStatus}
+            </div>
+            <button
+              type="button"
+              aria-label={`Open ${sub8814.id}`}
+              onClick={() => handleOpen(sub8814)}
+              className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
+              style={{
+                position: 'absolute',
+                left: '920px',
+                top: '149px',
+                width: '120px',
+                height: '44px',
+              }}
+            >
+              Open
+            </button>
+          </>
+        )}
 
         {/* Divider 2 */}
         <div
@@ -321,74 +353,79 @@ export function VolunteerActiveAssignmentsPage() {
         />
 
         {/* Row 3: SUB-8799 */}
-        <span
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '252px',
-            width: '150px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          SUB-8799
-        </span>
-        <span
-          style={{
-            position: 'absolute',
-            left: '190px',
-            top: '252px',
-            width: '260px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          Informative
-        </span>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--in-evaluation-table"
-          style={{
-            position: 'absolute',
-            left: '485px',
-            top: '245px',
-            width: '170px',
-            height: '34px',
-          }}
-        >
-          In Evaluation
-        </div>
-        <div
-          className="auratio-volunteer-pill auratio-volunteer-pill--processing"
-          style={{
-            position: 'absolute',
-            left: '700px',
-            top: '245px',
-            width: '170px',
-            height: '34px',
-          }}
-        >
-          Processing
-        </div>
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary auratio-volunteer-btn--presentation"
-          style={{
-            position: 'absolute',
-            left: '920px',
-            top: '241px',
-            width: '120px',
-            height: '44px',
-          }}
-        >
-          Open
-        </div>
+        {sub8799 && (
+          <>
+            <span
+              style={{
+                position: 'absolute',
+                left: '18px',
+                top: '252px',
+                width: '150px',
+                fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                fontSize: '14px',
+                fontWeight: 400,
+                lineHeight: '20px',
+                color: 'var(--auratio-neutral-900)',
+              }}
+            >
+              {sub8799.id}
+            </span>
+            <span
+              style={{
+                position: 'absolute',
+                left: '190px',
+                top: '252px',
+                width: '260px',
+                fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                fontSize: '14px',
+                fontWeight: 400,
+                lineHeight: '20px',
+                color: 'var(--auratio-neutral-900)',
+              }}
+            >
+              {sub8799.track}
+            </span>
+            <div
+              className="auratio-volunteer-pill auratio-volunteer-pill--in-evaluation-table"
+              style={{
+                position: 'absolute',
+                left: '485px',
+                top: '245px',
+                width: '170px',
+                height: '34px',
+              }}
+            >
+              {sub8799.assignmentStatus}
+            </div>
+            <div
+              className="auratio-volunteer-pill auratio-volunteer-pill--processing"
+              style={{
+                position: 'absolute',
+                left: '700px',
+                top: '245px',
+                width: '170px',
+                height: '34px',
+              }}
+            >
+              {sub8799.publicationStatus}
+            </div>
+            <button
+              type="button"
+              aria-label={`Open ${sub8799.id}`}
+              onClick={() => handleOpen(sub8799)}
+              className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
+              style={{
+                position: 'absolute',
+                left: '920px',
+                top: '241px',
+                width: '120px',
+                height: '44px',
+              }}
+            >
+              Open
+            </button>
+          </>
+        )}
       </div>
 
       {/* Queue boundary Panel */}
