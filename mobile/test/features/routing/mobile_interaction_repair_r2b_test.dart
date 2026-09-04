@@ -11,6 +11,7 @@ import 'package:auratio_mobile/features/onboarding/domain/auratio_path.dart';
 import 'package:auratio_mobile/features/progress/presentation/screens/approved_evaluation_history_screen.dart';
 import 'package:auratio_mobile/features/tracks/presentation/screens/tracks_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -848,6 +849,133 @@ void main() {
           );
 
           semantics.dispose();
+        },
+      );
+    });
+
+    group('7. Events Filter Label Readability & Non-Truncation at 390x844', () {
+      testWidgets(
+        'Default canonical filter labels and state selections fit without ellipsis or truncation',
+        (tester) async {
+          final router = await pumpAuratioApp(tester);
+          await openAuratioRoute(tester, router, AppRoutePaths.events);
+
+          // 1. Default canonical state: Dhaka Division, All Paths, Upcoming
+          final divPara = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterDivisionKey),
+              matching: find.byType(RichText),
+            ),
+          );
+          expect(divPara.didExceedMaxLines, isFalse);
+
+          final pathPara = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterPathKey),
+              matching: find.byType(RichText),
+            ),
+          );
+          expect(pathPara.didExceedMaxLines, isFalse);
+
+          final datePara = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterDateKey),
+              matching: find.byType(RichText),
+            ),
+          );
+          expect(datePara.didExceedMaxLines, isFalse);
+
+          // 2. Select Public Speaking path -> fits cleanly without truncation
+          await tester.tap(find.byKey(EventsDiscoveryScreen.filterPathKey));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Public Speaking'));
+          await tester.pumpAndSettle();
+
+          final pubSpeakingPara = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterPathKey),
+              matching: find.byType(RichText),
+            ),
+          );
+          expect(pubSpeakingPara.didExceedMaxLines, isFalse);
+          expect(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterPathKey),
+              matching: find.text('Public Speaking'),
+            ),
+            findsOneWidget,
+          );
+
+          // 3. Select Professional Presenting path -> concise unambiguous label fits cleanly
+          await tester.tap(find.byKey(EventsDiscoveryScreen.filterPathKey));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Professional Presenting'));
+          await tester.pumpAndSettle();
+
+          final profPresPara = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterPathKey),
+              matching: find.byType(RichText),
+            ),
+          );
+          expect(profPresPara.didExceedMaxLines, isFalse);
+          expect(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterPathKey),
+              matching: find.text('Prof. Presenting'),
+            ),
+            findsOneWidget,
+          );
+          // Semantics still announces full authoritative name
+          expect(
+            tester.getSemantics(
+              find.byKey(EventsDiscoveryScreen.filterPathKey),
+            ),
+            isSemantics(
+              label: 'Path: Professional Presenting',
+              isButton: true,
+              hasEnabledState: true,
+              isEnabled: true,
+            ),
+          );
+
+          // Reset path to All Paths
+          await tester.tap(find.byKey(EventsDiscoveryScreen.filterPathKey));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('All Paths'));
+          await tester.pumpAndSettle();
+
+          // 4. Select Chattogram Division -> fits cleanly without truncation
+          await tester.tap(find.byKey(EventsDiscoveryScreen.filterDivisionKey));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Chattogram Division'));
+          await tester.pumpAndSettle();
+
+          final chattogramPara = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterDivisionKey),
+              matching: find.byType(RichText),
+            ),
+          );
+          expect(chattogramPara.didExceedMaxLines, isFalse);
+          expect(
+            find.descendant(
+              of: find.byKey(EventsDiscoveryScreen.filterDivisionKey),
+              matching: find.text('Chattogram Division'),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            tester.getSemantics(
+              find.byKey(EventsDiscoveryScreen.filterDivisionKey),
+            ),
+            isSemantics(
+              label: 'Division: Chattogram Division',
+              isButton: true,
+              hasEnabledState: true,
+              isEnabled: true,
+            ),
+          );
         },
       );
     });

@@ -68,6 +68,50 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
   String _selectedPathFilter = 'All Paths';
   String _selectedDateFilter = 'Upcoming';
 
+  static (double, double, double) _calculatePillWidths({
+    required String division,
+    required String path,
+    required String date,
+  }) {
+    final isLongDivision = division != 'Dhaka Division';
+    final isSpecificPath = path != 'All Paths';
+
+    if (!isLongDivision && !isSpecificPath) {
+      // Default canonical state: exact Figma metadata 102.0 each
+      return (102.0, 102.0, 102.0);
+    }
+
+    if (isLongDivision && !isSpecificPath) {
+      // Long division expands, short path and date contract
+      return (136.0, 84.0, 86.0);
+    }
+
+    if (!isLongDivision && isSpecificPath) {
+      // Specific path expands, date contracts, division stays 102
+      return (102.0, 114.0, 90.0);
+    }
+
+    // Both long division and specific path:
+    return (112.0, 110.0, 84.0);
+  }
+
+  static String _pathDisplayLabel(String path) {
+    if (path == 'Professional Presenting') {
+      return 'Prof. Presenting';
+    }
+    return path;
+  }
+
+  static String _divisionDisplayLabel(
+    String division, {
+    required bool isCombined,
+  }) {
+    if (isCombined && division.endsWith(' Division')) {
+      return '${division.substring(0, division.length - 9)} Div.';
+    }
+    return division;
+  }
+
   Future<void> _showOptionSelector({
     required String title,
     required List<String> options,
@@ -180,6 +224,15 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
       return true;
     }).toList();
 
+    final isCombined =
+        _selectedDivision != 'Dhaka Division' &&
+        _selectedPathFilter != 'All Paths';
+    final (divWidth, pathWidth, dateWidth) = _calculatePillWidths(
+      division: _selectedDivision,
+      path: _selectedPathFilter,
+      date: _selectedDateFilter,
+    );
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: EventsDiscoveryScreen.screenKey,
       value: EventsDiscoveryScreen._overlayStyle,
@@ -269,11 +322,15 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
                               const SizedBox(height: 10),
                               Row(
                                 children: [
-                                  // Division Filter (Rect(34, 278, 102, 40))
+                                  // Division Filter (Rect(34, 278, 102, 40) at default)
                                   _FilterPill(
                                     key:
                                         EventsDiscoveryScreen.filterDivisionKey,
-                                    label: _selectedDivision,
+                                    width: divWidth,
+                                    label: _divisionDisplayLabel(
+                                      _selectedDivision,
+                                      isCombined: isCombined,
+                                    ),
                                     semanticLabel:
                                         'Division: $_selectedDivision',
                                     onTap: () => _showOptionSelector(
@@ -288,10 +345,13 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
                                   ),
                                   const SizedBox(width: 8),
 
-                                  // Path Filter (Rect(144, 278, 102, 40))
+                                  // Path Filter (Rect(144, 278, 102, 40) at default)
                                   _FilterPill(
                                     key: EventsDiscoveryScreen.filterPathKey,
-                                    label: _selectedPathFilter,
+                                    width: pathWidth,
+                                    label: _pathDisplayLabel(
+                                      _selectedPathFilter,
+                                    ),
                                     semanticLabel: 'Path: $_selectedPathFilter',
                                     onTap: () => _showOptionSelector(
                                       title: 'Select Path',
@@ -305,9 +365,10 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
                                   ),
                                   const SizedBox(width: 8),
 
-                                  // Date Filter (Rect(254, 278, 102, 40))
+                                  // Date Filter (Rect(254, 278, 102, 40) at default)
                                   _FilterPill(
                                     key: EventsDiscoveryScreen.filterDateKey,
+                                    width: dateWidth,
                                     label: _selectedDateFilter,
                                     semanticLabel: 'Date: $_selectedDateFilter',
                                     onTap: () => _showOptionSelector(
@@ -486,12 +547,14 @@ class _FilterPill extends StatelessWidget {
     required this.label,
     this.semanticLabel,
     this.onTap,
+    this.width,
     super.key,
   });
 
   final String label;
   final String? semanticLabel;
   final VoidCallback? onTap;
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
@@ -504,9 +567,9 @@ class _FilterPill extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          width: 102,
+          width: width ?? 102,
           height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.fromLTRB(6, 0, 4, 0),
           alignment: Alignment.centerLeft,
           decoration: BoxDecoration(
             color: AuratioColors.surfaceDefault,
@@ -526,10 +589,11 @@ class _FilterPill extends StatelessWidget {
                     fontSize: 11,
                     height: 16 / 11,
                     fontWeight: FontWeight.w500,
+                    letterSpacing: -0.1,
                   ),
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
               const _DropdownTriangle(),
             ],
           ),
