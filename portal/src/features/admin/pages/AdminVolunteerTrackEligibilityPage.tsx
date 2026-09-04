@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
+import { portalRoutePaths } from '../../../app/routes/routePaths'
 import {
-  getFarhanaTrackEligibility,
+  getAdminVolunteerById,
   getInviteVolunteerTrackDraft,
-  saveFarhanaTrackEligibility,
+  getVolunteerTrackEligibility,
   saveInviteVolunteerTrackDraft,
+  saveVolunteerTrackEligibility,
 } from '../data/mockAdminData'
 
 const PUBLIC_SPEAKING_TRACKS = [
@@ -33,11 +35,20 @@ const CONTENT_CREATION_TRACKS = [
 export function AdminVolunteerTrackEligibilityPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { volunteerId: paramId } = useParams<{ volunteerId?: string }>()
   const isInviteMode = (location.state as { mode?: string } | null)?.mode === 'invite'
-
+  const pathMatch = location.pathname.match(/\/admin\/volunteers\/([^/]+)/)
+  const resolvedId = (paramId || (pathMatch ? pathMatch[1] : 'farhana')).toLowerCase()
+  const volunteer = isInviteMode ? undefined : getAdminVolunteerById(resolvedId)
   const [selectedTracks, setSelectedTracks] = useState<string[]>(() =>
-    isInviteMode ? getInviteVolunteerTrackDraft() : getFarhanaTrackEligibility(),
+    isInviteMode ? getInviteVolunteerTrackDraft() : (getVolunteerTrackEligibility(resolvedId) || []),
   )
+
+  if (!isInviteMode && (!volunteer || volunteer.lifecycle !== 'Active')) {
+    return <Navigate to={portalRoutePaths.admin.volunteers} replace />
+  }
+
+  const volunteerName = volunteer?.name || 'Volunteer Evaluator'
 
   const handleToggleTrack = (track: string) => {
     setSelectedTracks((prev) => {
@@ -56,14 +67,19 @@ export function AdminVolunteerTrackEligibilityPage() {
   const handleSave = () => {
     if (isInviteMode) {
       saveInviteVolunteerTrackDraft(selectedTracks)
+      navigate(-1)
     } else {
-      saveFarhanaTrackEligibility(selectedTracks)
+      saveVolunteerTrackEligibility(resolvedId, selectedTracks)
+      navigate(`/admin/volunteers/${resolvedId}`)
     }
-    navigate(-1)
   }
 
   const handleCancel = () => {
-    navigate(-1)
+    if (isInviteMode) {
+      navigate(-1)
+    } else {
+      navigate(`/admin/volunteers/${resolvedId}`)
+    }
   }
 
   const renderTrackItem = (track: string, isLast: boolean) => {
@@ -127,7 +143,7 @@ export function AdminVolunteerTrackEligibilityPage() {
       >
         {isInviteMode
           ? 'Choose Volunteer Evaluator track eligibility'
-          : 'Manage Farhana Islam’s track eligibility'}
+          : `Manage ${volunteerName}’s track eligibility`}
       </h2>
       <p
         className="auratio-admin-page-subtitle"

@@ -288,6 +288,14 @@ export const router = createBrowserRouter([
     element: <AdminVolunteerAccountPage />,
   },
   {
+    path: '/admin/volunteers/:volunteerId/tracks',
+    element: <AdminVolunteerTrackEligibilityPage />,
+  },
+  {
+    path: '/admin/volunteers/:volunteerId/availability',
+    element: <AdminAvailabilityOverridePage />,
+  },
+  {
     path: portalRoutePaths.admin.events,
     element: <AdminEventManagementPage />,
   },

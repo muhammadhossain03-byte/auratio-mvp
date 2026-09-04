@@ -1,32 +1,50 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getFarhanaAvailabilityState, getFarhanaTrackEligibility, getAdminVolunteerById } from '../data/mockAdminData'
+import {
+  getVolunteerAvailabilityState,
+  getVolunteerTrackEligibility,
+  getAdminVolunteerById,
+} from '../data/mockAdminData'
 
 export function AdminVolunteerAccountPage() {
   const navigate = useNavigate()
-  const { volunteerId } = useParams<{ volunteerId?: string }>()
-  const isFarhana = !volunteerId || volunteerId.toLowerCase() === 'farhana'
-  const volunteer = getAdminVolunteerById(volunteerId || 'farhana')
+  const { volunteerId: paramId } = useParams<{ volunteerId?: string }>()
+  const resolvedId = (paramId || 'farhana').toLowerCase()
+  const volunteer = getAdminVolunteerById(resolvedId)
 
-  if (!isFarhana && !volunteer) {
+  if (!volunteer) {
     return <Navigate to={portalRoutePaths.admin.volunteers} replace />
   }
-  const farhanaState = getFarhanaAvailabilityState()
-  const farhanaTracks = getFarhanaTrackEligibility()
 
-  const displayName = isFarhana ? 'Farhana Islam' : (volunteer?.name || 'Volunteer Evaluator')
-  const lifecycle = isFarhana ? 'Active' : (volunteer?.lifecycle || 'Invited')
-  const effectiveAvailability = isFarhana ? farhanaState.effectiveAvailability : (volunteer?.effectiveAvailability || 'Available')
-  const declaredAvailability = isFarhana
-    ? 'Available'
-    : (lifecycle === 'Deactivated' || lifecycle === 'Invited' ? '—' : 'Available')
-  const overrideReason = isFarhana ? farhanaState.overrideReason : 'None'
-  const tracksDisplay = isFarhana
-    ? farhanaTracks.join(' • ')
-    : (volunteer?.selectedTracks && volunteer.selectedTracks.length > 0
-        ? volunteer.selectedTracks.join(' • ')
-        : (volunteer?.tracks || '0 tracks'))
+  const isActive = volunteer.lifecycle === 'Active'
+  const isDeactivated = volunteer.lifecycle === 'Deactivated'
+  const isInvited = volunteer.lifecycle === 'Invited'
+
+  const availabilityState = getVolunteerAvailabilityState(resolvedId)
+  const volunteerTracks = getVolunteerTrackEligibility(resolvedId) ?? volunteer.selectedTracks ?? []
+
+  const displayName = volunteer.name
+  const lifecycle = volunteer.lifecycle
+  const effectiveAvailability = availabilityState ? availabilityState.effectiveAvailability : volunteer.effectiveAvailability
+  const declaredAvailability = availabilityState
+    ? availabilityState.declaredAvailability
+    : (isDeactivated || isInvited ? '—' : 'Available')
+  const overrideReason = availabilityState ? availabilityState.overrideReason : 'None'
+  const tracksDisplay = volunteerTracks.length > 0
+    ? volunteerTracks.join(' • ')
+    : (volunteer.tracks || '0 tracks')
+
+  const canManage = isActive
+  const trackPath = `/admin/volunteers/${resolvedId}/tracks`
+  const availabilityPath = `/admin/volunteers/${resolvedId}/availability`
+
+  const disabledTrackTitle = isDeactivated
+    ? 'Track management is unavailable for deactivated accounts.'
+    : 'Track management is available once volunteer completes account activation.'
+  const disabledOverrideTitle = isDeactivated
+    ? 'Availability override is unavailable for deactivated accounts.'
+    : 'Availability override is available once volunteer completes account activation.'
 
   return (
     <AdminLayout
@@ -141,10 +159,10 @@ export function AdminVolunteerAccountPage() {
 
         <button
           type="button"
-          disabled={!isFarhana}
-          onClick={isFarhana ? () => navigate(portalRoutePaths.admin.volunteerTrackEligibility) : undefined}
-          className={`auratio-admin-btn ${isFarhana ? 'auratio-admin-btn--primary' : 'auratio-admin-btn--disabled'}`}
-          title={isFarhana ? undefined : (lifecycle === 'Deactivated' ? 'Track management is unavailable for deactivated accounts.' : 'Track management is available once volunteer completes account activation.')}
+          disabled={!canManage}
+          onClick={canManage ? () => navigate(trackPath) : undefined}
+          className={`auratio-admin-btn ${canManage ? 'auratio-admin-btn--primary' : 'auratio-admin-btn--disabled'}`}
+          title={canManage ? undefined : disabledTrackTitle}
           style={{ width: '230px', height: '44px', fontSize: '14px', fontWeight: 600, marginTop: '30px' }}
         >
           Manage Track Eligibility
@@ -177,9 +195,9 @@ export function AdminVolunteerAccountPage() {
           </div>
           <div
             className={`auratio-admin-status-pill ${
-              declaredAvailability === '—'
-                ? 'auratio-admin-status-pill--disabled'
-                : 'auratio-admin-status-pill--active'
+              declaredAvailability === 'Available'
+                ? 'auratio-admin-status-pill--active'
+                : 'auratio-admin-status-pill--disabled'
             }`}
             style={{ width: '150px', height: '34px' }}
           >
@@ -193,9 +211,9 @@ export function AdminVolunteerAccountPage() {
           </div>
           <div
             className={`auratio-admin-status-pill ${
-              effectiveAvailability === 'Unavailable'
-                ? 'auratio-admin-status-pill--disabled'
-                : 'auratio-admin-status-pill--active'
+              effectiveAvailability === 'Available'
+                ? 'auratio-admin-status-pill--active'
+                : 'auratio-admin-status-pill--disabled'
             }`}
             style={{ width: '150px', height: '34px' }}
           >
@@ -218,7 +236,7 @@ export function AdminVolunteerAccountPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: '32px', color: '#111827' }}>
-              {isFarhana ? '2' : (volunteer?.activeAssignments || '0')}
+              {volunteer.activeAssignments}
             </div>
             <div style={{ fontSize: '11px', lineHeight: '16px', color: '#6B788A', marginLeft: '16px' }}>
               Informational workload only — no automatic cap.
@@ -228,10 +246,10 @@ export function AdminVolunteerAccountPage() {
 
         <button
           type="button"
-          disabled={!isFarhana}
-          onClick={isFarhana ? () => navigate(portalRoutePaths.admin.availabilityOverride) : undefined}
-          className={`auratio-admin-btn ${isFarhana ? 'auratio-admin-btn--primary' : 'auratio-admin-btn--disabled'}`}
-          title={isFarhana ? undefined : (lifecycle === 'Deactivated' ? 'Availability override is unavailable for deactivated accounts.' : 'Availability override is available once volunteer completes account activation.')}
+          disabled={!canManage}
+          onClick={canManage ? () => navigate(availabilityPath) : undefined}
+          className={`auratio-admin-btn ${canManage ? 'auratio-admin-btn--primary' : 'auratio-admin-btn--disabled'}`}
+          title={canManage ? undefined : disabledOverrideTitle}
           style={{ width: '210px', height: '44px', fontSize: '14px', fontWeight: 600, marginTop: '28px' }}
         >
           Override Availability

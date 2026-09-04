@@ -247,6 +247,8 @@ export function resetAdminVolunteers(): void {
       window.sessionStorage?.removeItem(VOLUNTEERS_STORAGE_KEY)
     } catch {}
   }
+  resetVolunteerTrackEligibility()
+  resetVolunteerAvailabilityOverride()
 }
 
 export function addAdminVolunteer(params: {
@@ -575,30 +577,18 @@ let moderationEntitiesState: Record<string, ModerationEntityState> = {
   'SUB-8730': { ...INITIAL_MODERATION_ENTITIES['SUB-8730'] },
 }
 
-export function getModerationEntityState(rawId: string): ModerationEntityState {
+export function getModerationEntityState(rawId: string): ModerationEntityState | undefined {
   const id = rawId.toUpperCase()
   if (!moderationEntitiesState[id]) {
-    moderationEntitiesState[id] = {
-      id,
-      track: 'Extempore',
-      evaluator: 'Assigned Human evaluator',
-      scoreDisplay: 'Recorded in submission',
-      universalDelivery: 'Included in submission',
-      structuralFlow: 'Included in submission',
-      trackSpecialisation: 'Included in submission',
-      docxStatus: 'Not generated while pending',
-      trigger: 'Publication review required',
-      baseline: 'Running track baseline',
-      publicationStatus: 'Pending Moderation',
-      rejectionReason: '',
-    }
+    return undefined
   }
   return { ...moderationEntitiesState[id] }
 }
 
-export function approveModerationEntity(rawId: string): ModerationEntityState {
+export function approveModerationEntity(rawId: string): ModerationEntityState | undefined {
   const id = rawId.toUpperCase()
   const current = getModerationEntityState(id)
+  if (!current) return undefined
   moderationEntitiesState[id] = { ...current, publicationStatus: 'Approved' }
   const queueIdx = adminModerationQueueItems.findIndex((item) => item.id === id)
   if (queueIdx >= 0) {
@@ -607,9 +597,10 @@ export function approveModerationEntity(rawId: string): ModerationEntityState {
   return { ...moderationEntitiesState[id] }
 }
 
-export function rejectModerationEntity(rawId: string, reason: string): ModerationEntityState {
+export function rejectModerationEntity(rawId: string, reason: string): ModerationEntityState | undefined {
   const id = rawId.toUpperCase()
   const current = getModerationEntityState(id)
+  if (!current) return undefined
   moderationEntitiesState[id] = { ...current, publicationStatus: 'Rejected', rejectionReason: reason }
   const queueIdx = adminModerationQueueItems.findIndex((item) => item.id === id)
   if (queueIdx >= 0) {
@@ -618,9 +609,10 @@ export function rejectModerationEntity(rawId: string, reason: string): Moderatio
   return { ...moderationEntitiesState[id] }
 }
 
-export function requestReReviewModerationEntity(rawId: string): ModerationEntityState {
+export function requestReReviewModerationEntity(rawId: string): ModerationEntityState | undefined {
   const id = rawId.toUpperCase()
   const current = getModerationEntityState(id)
+  if (!current) return undefined
   moderationEntitiesState[id] = { ...current, publicationStatus: 'Reopened' }
   const queueIdx = adminModerationQueueItems.findIndex((item) => item.id === id)
   if (queueIdx >= 0) {
@@ -643,8 +635,8 @@ export function resetAllModeration(): void {
 export function getSub8821ModerationState() {
   const s = getModerationEntityState('SUB-8821')
   return {
-    publicationStatus: s.publicationStatus,
-    rejectionReason: s.rejectionReason,
+    publicationStatus: s?.publicationStatus || 'Pending Moderation',
+    rejectionReason: s?.rejectionReason || '',
   }
 }
 
@@ -664,54 +656,249 @@ export function resetSub8821Moderation() {
   resetAllModeration()
 }
 
-// In-memory Farhana availability override state
-let farhanaEffectiveAvailability = 'Available'
-let farhanaOverrideReason = 'None'
+// In-memory Volunteer Management state (isolated per volunteer)
+export interface VolunteerAvailabilityState {
+  declaredAvailability: string
+  effectiveAvailability: string
+  overrideReason: string
+}
 
-export function getFarhanaAvailabilityState() {
-  return {
-    declaredAvailability: 'Available',
-    effectiveAvailability: farhanaEffectiveAvailability,
-    overrideReason: farhanaOverrideReason,
+export interface VolunteerManagementState {
+  tracks: string[]
+  availability: VolunteerAvailabilityState
+}
+
+const INITIAL_VOLUNTEER_MANAGEMENT_STATE: Record<string, VolunteerManagementState> = {
+  farhana: {
+    tracks: ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch'],
+    availability: {
+      declaredAvailability: 'Available',
+      effectiveAvailability: 'Available',
+      overrideReason: 'None',
+    },
+  },
+  rakib: {
+    tracks: ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch', 'Extempore', 'Motivational'],
+    availability: {
+      declaredAvailability: 'Available',
+      effectiveAvailability: 'Available',
+      overrideReason: 'None',
+    },
+  },
+  mehnaz: {
+    tracks: ['Informative', 'Persuasive'],
+    availability: {
+      declaredAvailability: 'Unavailable',
+      effectiveAvailability: 'Unavailable',
+      overrideReason: 'None',
+    },
+  },
+  nusrat: {
+    tracks: [],
+    availability: {
+      declaredAvailability: '—',
+      effectiveAvailability: '—',
+      overrideReason: 'None',
+    },
+  },
+}
+
+let volunteerManagementState: Record<string, VolunteerManagementState> = {
+  farhana: {
+    tracks: [...INITIAL_VOLUNTEER_MANAGEMENT_STATE.farhana.tracks],
+    availability: { ...INITIAL_VOLUNTEER_MANAGEMENT_STATE.farhana.availability },
+  },
+  rakib: {
+    tracks: [...INITIAL_VOLUNTEER_MANAGEMENT_STATE.rakib.tracks],
+    availability: { ...INITIAL_VOLUNTEER_MANAGEMENT_STATE.rakib.availability },
+  },
+  mehnaz: {
+    tracks: [...INITIAL_VOLUNTEER_MANAGEMENT_STATE.mehnaz.tracks],
+    availability: { ...INITIAL_VOLUNTEER_MANAGEMENT_STATE.mehnaz.availability },
+  },
+  nusrat: {
+    tracks: [...INITIAL_VOLUNTEER_MANAGEMENT_STATE.nusrat.tracks],
+    availability: { ...INITIAL_VOLUNTEER_MANAGEMENT_STATE.nusrat.availability },
+  },
+}
+
+const VOLUNTEER_MGMT_STORAGE_KEY = 'auratio_volunteer_mgmt'
+
+function loadVolunteerManagementState(): Record<string, VolunteerManagementState> {
+  if (typeof window === 'undefined') {
+    return volunteerManagementState
+  }
+  try {
+    const raw = window.sessionStorage?.getItem(VOLUNTEER_MGMT_STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      for (const k of Object.keys(INITIAL_VOLUNTEER_MANAGEMENT_STATE)) {
+        if (parsed[k]) {
+          volunteerManagementState[k] = parsed[k]
+        }
+      }
+    }
+  } catch {}
+  return volunteerManagementState
+}
+
+function saveVolunteerManagementState(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage?.setItem(VOLUNTEER_MGMT_STORAGE_KEY, JSON.stringify(volunteerManagementState))
+  } catch {}
+}
+
+export function getVolunteerTrackEligibility(rawId: string): string[] | undefined {
+  loadVolunteerManagementState()
+  const id = rawId.toLowerCase()
+  const v = volunteerManagementState[id]
+  if (!v) return undefined
+  return [...v.tracks]
+}
+
+export function saveVolunteerTrackEligibility(rawId: string, tracks: string[]): string[] | undefined {
+  loadVolunteerManagementState()
+  const id = rawId.toLowerCase()
+  const v = volunteerManagementState[id]
+  if (!v) return undefined
+  if (tracks.length > 0) {
+    v.tracks = [...tracks]
+    const vol = adminVolunteers.find((item) => item.id === id)
+    if (vol) {
+      vol.selectedTracks = [...tracks]
+      vol.tracks = `${tracks.length} track${tracks.length === 1 ? '' : 's'}`
+    }
+    saveVolunteerManagementState()
+  }
+  return [...v.tracks]
+}
+
+export function resetVolunteerTrackEligibility(rawId?: string): void {
+  loadVolunteerManagementState()
+  if (rawId) {
+    const id = rawId.toLowerCase()
+    if (INITIAL_VOLUNTEER_MANAGEMENT_STATE[id]) {
+      volunteerManagementState[id].tracks = [...INITIAL_VOLUNTEER_MANAGEMENT_STATE[id].tracks]
+      const vol = adminVolunteers.find((item) => item.id === id)
+      if (vol) {
+        vol.selectedTracks = [...INITIAL_VOLUNTEER_MANAGEMENT_STATE[id].tracks]
+        vol.tracks = vol.selectedTracks.length > 0 ? `${vol.selectedTracks.length} tracks` : 'History retained'
+      }
+    }
+  } else {
+    for (const id of Object.keys(INITIAL_VOLUNTEER_MANAGEMENT_STATE)) {
+      volunteerManagementState[id].tracks = [...INITIAL_VOLUNTEER_MANAGEMENT_STATE[id].tracks]
+      const vol = adminVolunteers.find((item) => item.id === id)
+      if (vol) {
+        vol.selectedTracks = [...INITIAL_VOLUNTEER_MANAGEMENT_STATE[id].tracks]
+        vol.tracks = vol.selectedTracks.length > 0 ? `${vol.selectedTracks.length} tracks` : 'History retained'
+      }
+    }
+  }
+  if (!rawId && typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.removeItem(VOLUNTEER_MGMT_STORAGE_KEY)
+    } catch {}
+  } else {
+    saveVolunteerManagementState()
   }
 }
 
+export function getVolunteerAvailabilityState(rawId: string): VolunteerAvailabilityState | undefined {
+  loadVolunteerManagementState()
+  const id = rawId.toLowerCase()
+  const v = volunteerManagementState[id]
+  if (!v) return undefined
+  return { ...v.availability }
+}
+
+export function applyVolunteerAvailabilityOverride(
+  rawId: string,
+  effectiveStatus: string,
+  reason: string,
+): VolunteerAvailabilityState | undefined {
+  loadVolunteerManagementState()
+  const id = rawId.toLowerCase()
+  const v = volunteerManagementState[id]
+  if (!v) return undefined
+  v.availability.effectiveAvailability = effectiveStatus
+  v.availability.overrideReason = reason || 'Operational coverage / scheduling reason'
+  const vol = adminVolunteers.find((item) => item.id === id)
+  if (vol) {
+    vol.effectiveAvailability = effectiveStatus
+  }
+  saveVolunteerManagementState()
+  return { ...v.availability }
+}
+
+export function resetVolunteerAvailabilityOverride(rawId?: string): void {
+  loadVolunteerManagementState()
+  if (rawId) {
+    const id = rawId.toLowerCase()
+    if (INITIAL_VOLUNTEER_MANAGEMENT_STATE[id]) {
+      volunteerManagementState[id].availability = { ...INITIAL_VOLUNTEER_MANAGEMENT_STATE[id].availability }
+      const vol = adminVolunteers.find((item) => item.id === id)
+      if (vol) {
+        vol.effectiveAvailability = INITIAL_VOLUNTEER_MANAGEMENT_STATE[id].availability.effectiveAvailability
+      }
+    }
+  } else {
+    for (const id of Object.keys(INITIAL_VOLUNTEER_MANAGEMENT_STATE)) {
+      volunteerManagementState[id].availability = { ...INITIAL_VOLUNTEER_MANAGEMENT_STATE[id].availability }
+      const vol = adminVolunteers.find((item) => item.id === id)
+      if (vol) {
+        vol.effectiveAvailability = INITIAL_VOLUNTEER_MANAGEMENT_STATE[id].availability.effectiveAvailability
+      }
+    }
+  }
+  if (!rawId && typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.removeItem(VOLUNTEER_MGMT_STORAGE_KEY)
+    } catch {}
+  } else {
+    saveVolunteerManagementState()
+  }
+}
+
+// Backward-compatible Farhana wrappers
+export function getFarhanaAvailabilityState() {
+  return (
+    getVolunteerAvailabilityState('farhana') || {
+      declaredAvailability: 'Available',
+      effectiveAvailability: 'Available',
+      overrideReason: 'None',
+    }
+  )
+}
+
 export function applyFarhanaAvailabilityOverride(effectiveStatus: string, reason: string) {
-  farhanaEffectiveAvailability = effectiveStatus
-  farhanaOverrideReason = reason || 'Operational coverage / scheduling reason'
-  return getFarhanaAvailabilityState()
+  return applyVolunteerAvailabilityOverride('farhana', effectiveStatus, reason) || getFarhanaAvailabilityState()
 }
 
 export function resetFarhanaAvailabilityOverride() {
-  farhanaEffectiveAvailability = 'Available'
-  farhanaOverrideReason = 'None'
+  resetVolunteerAvailabilityOverride('farhana')
 }
 
-// In-memory Farhana track eligibility state
 export const INITIAL_FARHANA_TRACKS = [
   'Informative',
   'Persuasive',
   'Business Pitch / Sales Pitch',
 ]
 
-let farhanaTracksState: string[] = [...INITIAL_FARHANA_TRACKS]
-
 export function getFarhanaTrackEligibility(): string[] {
-  return [...farhanaTracksState]
+  return getVolunteerTrackEligibility('farhana') || [...INITIAL_FARHANA_TRACKS]
 }
 
 export function saveFarhanaTrackEligibility(tracks: string[]): string[] {
-  if (tracks.length > 0) {
-    farhanaTracksState = [...tracks]
-  }
-  return getFarhanaTrackEligibility()
+  return saveVolunteerTrackEligibility('farhana', tracks) || getFarhanaTrackEligibility()
 }
 
 export function resetFarhanaTrackEligibility() {
-  farhanaTracksState = [...INITIAL_FARHANA_TRACKS]
+  resetVolunteerTrackEligibility('farhana')
 }
 
-// In-memory Volunteer Invite track draft state (isolated from Farhana)
+// In-memory Volunteer Invite track draft state (isolated from Farhana & canonical volunteers)
 export const INITIAL_INVITE_VOLUNTEER_TRACKS = [
   'Informative',
   'Persuasive',
@@ -757,4 +944,10 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __rejectModerationEntity: typeof rejectModerationEntity }).__rejectModerationEntity = rejectModerationEntity
   ;(window as unknown as { __requestReReviewModerationEntity: typeof requestReReviewModerationEntity }).__requestReReviewModerationEntity = requestReReviewModerationEntity
   ;(window as unknown as { __resetAllModeration: typeof resetAllModeration }).__resetAllModeration = resetAllModeration
+  ;(window as unknown as { __getVolunteerTrackEligibility: typeof getVolunteerTrackEligibility }).__getVolunteerTrackEligibility = getVolunteerTrackEligibility
+  ;(window as unknown as { __saveVolunteerTrackEligibility: typeof saveVolunteerTrackEligibility }).__saveVolunteerTrackEligibility = saveVolunteerTrackEligibility
+  ;(window as unknown as { __resetVolunteerTrackEligibility: typeof resetVolunteerTrackEligibility }).__resetVolunteerTrackEligibility = resetVolunteerTrackEligibility
+  ;(window as unknown as { __getVolunteerAvailabilityState: typeof getVolunteerAvailabilityState }).__getVolunteerAvailabilityState = getVolunteerAvailabilityState
+  ;(window as unknown as { __applyVolunteerAvailabilityOverride: typeof applyVolunteerAvailabilityOverride }).__applyVolunteerAvailabilityOverride = applyVolunteerAvailabilityOverride
+  ;(window as unknown as { __resetVolunteerAvailabilityOverride: typeof resetVolunteerAvailabilityOverride }).__resetVolunteerAvailabilityOverride = resetVolunteerAvailabilityOverride
 }

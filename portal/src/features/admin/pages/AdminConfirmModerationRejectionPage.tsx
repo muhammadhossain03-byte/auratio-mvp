@@ -1,14 +1,19 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { rejectModerationEntity } from '../data/mockAdminData'
+import { getModerationEntityState, rejectModerationEntity } from '../data/mockAdminData'
 
 export function AdminConfirmModerationRejectionPage() {
   const navigate = useNavigate()
   const { submissionId: paramId } = useParams<{ submissionId?: string }>()
   const resolvedId = (paramId || 'sub-8821').toUpperCase()
+  const modItem = getModerationEntityState(resolvedId)
   const [reason, setReason] = useState('')
+
+  if (!modItem) {
+    return <Navigate to={portalRoutePaths.admin.moderation} replace />
+  }
 
   const handleConfirm = () => {
     if (reason.trim().length === 0) {

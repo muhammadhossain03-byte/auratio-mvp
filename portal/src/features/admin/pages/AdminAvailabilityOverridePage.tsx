@@ -1,16 +1,40 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { applyFarhanaAvailabilityOverride } from '../data/mockAdminData'
+import {
+  applyVolunteerAvailabilityOverride,
+  getAdminVolunteerById,
+  getVolunteerAvailabilityState,
+} from '../data/mockAdminData'
 
 export function AdminAvailabilityOverridePage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { volunteerId: paramId } = useParams<{ volunteerId?: string }>()
+  const pathMatch = location.pathname.match(/\/admin\/volunteers\/([^/]+)/)
+  const resolvedId = (paramId || (pathMatch ? pathMatch[1] : 'farhana')).toLowerCase()
+  const volunteer = getAdminVolunteerById(resolvedId)
   const [reason, setReason] = useState('')
 
+  if (!volunteer || volunteer.lifecycle !== 'Active') {
+    return <Navigate to={portalRoutePaths.admin.volunteers} replace />
+  }
+
+  const volunteerName = volunteer.name
+  const availabilityState = getVolunteerAvailabilityState(resolvedId)
+  const currentEffective = availabilityState?.effectiveAvailability ?? volunteer.effectiveAvailability
+  const currentDeclared = availabilityState?.declaredAvailability ?? (volunteer.lifecycle === 'Active' ? 'Available' : '—')
+
+  const targetOverrideStatus = currentEffective === 'Available' ? 'Unavailable' : 'Available'
+
   const handleApply = () => {
-    applyFarhanaAvailabilityOverride('Unavailable', reason)
-    navigate(portalRoutePaths.admin.volunteerAccount)
+    applyVolunteerAvailabilityOverride(resolvedId, targetOverrideStatus, reason)
+    navigate(`/admin/volunteers/${resolvedId}`)
+  }
+
+  const handleCancel = () => {
+    navigate(`/admin/volunteers/${resolvedId}`)
   }
 
   return (
@@ -24,13 +48,13 @@ export function AdminAvailabilityOverridePage() {
         className="auratio-admin-page-title"
         style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
       >
-        Override Farhana Islam’s availability
+        {`Override ${volunteerName}’s availability`}
       </h2>
       <p
         className="auratio-admin-page-subtitle"
         style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
       >
-        Current volunteer-declared status: Available
+        {`Current volunteer-declared status: ${currentDeclared}`}
       </p>
 
       {/* Center Card */}
@@ -71,7 +95,7 @@ export function AdminAvailabilityOverridePage() {
               color: '#111827',
             }}
           >
-            Unavailable
+            {targetOverrideStatus}
           </div>
         </div>
 
@@ -120,7 +144,7 @@ export function AdminAvailabilityOverridePage() {
               marginTop: '8px',
             }}
           >
-            Effective availability becomes Unavailable while the recorded volunteer-declared status remains Available.
+            {`Effective availability becomes ${targetOverrideStatus} while the recorded volunteer-declared status remains ${currentDeclared}.`}
           </div>
         </div>
 
@@ -135,7 +159,7 @@ export function AdminAvailabilityOverridePage() {
           </button>
           <button
             type="button"
-            onClick={() => navigate(portalRoutePaths.admin.volunteerAccount)}
+            onClick={handleCancel}
             className="auratio-admin-btn auratio-admin-btn--secondary"
             style={{ width: '120px', height: '44px', fontSize: '14px', fontWeight: 600, marginLeft: '18px' }}
           >

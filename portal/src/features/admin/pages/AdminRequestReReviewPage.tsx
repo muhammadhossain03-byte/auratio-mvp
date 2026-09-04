@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { getModerationEntityState, requestReReviewModerationEntity } from '../data/mockAdminData'
@@ -10,6 +10,10 @@ export function AdminRequestReReviewPage() {
   const resolvedId = (paramId || 'sub-8821').toUpperCase()
   const modItem = getModerationEntityState(resolvedId)
   const [adminNote, setAdminNote] = useState('')
+
+  if (!modItem) {
+    return <Navigate to={portalRoutePaths.admin.moderation} replace />
+  }
 
   const handleConfirm = () => {
     requestReReviewModerationEntity(resolvedId)

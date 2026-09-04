@@ -409,6 +409,15 @@
   line-height: 16px;
 }
 
+.auratio-admin-status-pill--disabled,
+.auratio-admin-status-pill--deactivated {
+  background-color: #EEF2F7;
+  color: #6B788A;
+  border-radius: 17px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
 .auratio-admin-input {
   box-sizing: border-box;
   background-color: #FFFFFF;

@@ -1840,7 +1840,309 @@ async function run() {
       throw new Error(`Expected 5 audit rows after restoring All events, got ${rowCount}`)
     }
 
-    console.log('\nALL INTERACTION FLOWS & P1 REPAIR VERIFICATIONS PASSED PERFECTLY!')
+    // =================================================================
+    // [P1.1] RESIDUAL INTEGRITY CORRECTIONS VERIFICATION
+    // =================================================================
+    console.log('\n--- [P1.1-1] Testing Unknown Moderation Route Safe Redirects & Store Isolation ---')
+
+    // 1. Direct review unknown ID
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation/sub-9999` })
+    await new Promise((r) => setTimeout(r, 600))
+    let p11Path = await getPathname()
+    if (p11Path !== '/admin/moderation') {
+      throw new Error(`Expected safe redirect to /admin/moderation from /admin/moderation/sub-9999, got ${p11Path}`)
+    }
+
+    // 2. Approve unknown ID
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation/sub-9999/approve` })
+    await new Promise((r) => setTimeout(r, 600))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/moderation') {
+      throw new Error(`Expected safe redirect to /admin/moderation from /admin/moderation/sub-9999/approve, got ${p11Path}`)
+    }
+
+    // 3. Reject unknown ID
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation/sub-9999/reject` })
+    await new Promise((r) => setTimeout(r, 600))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/moderation') {
+      throw new Error(`Expected safe redirect to /admin/moderation from /admin/moderation/sub-9999/reject, got ${p11Path}`)
+    }
+
+    // 4. Re-review unknown ID
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation/sub-9999/re-review` })
+    await new Promise((r) => setTimeout(r, 600))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/moderation') {
+      throw new Error(`Expected safe redirect to /admin/moderation from /admin/moderation/sub-9999/re-review, got ${p11Path}`)
+    }
+
+    // 5. Verify SUB-9999 was NOT synthesized in mock data store
+    const modStoreCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify({
+        hasSub9999: window.__getModerationEntityState && window.__getModerationEntityState('SUB-9999') !== undefined,
+        sub8821: window.__getModerationEntityState && window.__getModerationEntityState('SUB-8821'),
+        sub8730: window.__getModerationEntityState && window.__getModerationEntityState('SUB-8730'),
+      })`,
+    })
+    const modStore = JSON.parse(modStoreCheck.result.value)
+    if (modStore.hasSub9999) {
+      throw new Error('SUB-9999 was improperly synthesized in moderationEntitiesState!')
+    }
+    if (!modStore.sub8821 || modStore.sub8821.id !== 'SUB-8821') {
+      throw new Error('Canonical SUB-8821 is missing or malformed in moderation state')
+    }
+    if (!modStore.sub8730 || modStore.sub8730.id !== 'SUB-8730') {
+      throw new Error('Canonical SUB-8730 is missing or malformed in moderation state')
+    }
+
+    console.log('\n--- [P1.1-2] Testing Active Volunteer Management for Rakib & Mehnaz ---')
+
+    // Reset volunteer state before test
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__resetAdminVolunteers && window.__resetAdminVolunteers()`,
+    })
+
+    // 1. Visit Rakib Hasan account
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/rakib` })
+    await new Promise((r) => setTimeout(r, 600))
+    if ((await getPathname()) !== '/admin/volunteers/rakib') {
+      throw new Error(`Expected /admin/volunteers/rakib, got ${await getPathname()}`)
+    }
+
+    // Verify Rakib buttons are enabled
+    const rakibBtnsCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const btns = Array.from(document.querySelectorAll('button.auratio-admin-btn'));
+        const trackBtn = btns.find(b => b.innerText.includes('Manage Track Eligibility'));
+        const overrideBtn = btns.find(b => b.innerText.includes('Override Availability'));
+        return {
+          trackDisabled: trackBtn ? trackBtn.disabled : true,
+          overrideDisabled: overrideBtn ? overrideBtn.disabled : true,
+        };
+      })())`,
+    })
+    const rakibBtns = JSON.parse(rakibBtnsCheck.result.value)
+    if (rakibBtns.trackDisabled || rakibBtns.overrideDisabled) {
+      throw new Error('Expected Manage Track Eligibility and Override Availability to be ENABLED for Rakib!')
+    }
+
+    // 2. Click Manage Track Eligibility for Rakib
+    await clickByText('button.auratio-admin-btn--primary', 'Manage Track Eligibility')
+    await new Promise((r) => setTimeout(r, 500))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers/rakib/tracks') {
+      throw new Error(`Expected /admin/volunteers/rakib/tracks after clicking Manage Track Eligibility, got ${p11Path}`)
+    }
+
+    // Verify heading for Rakib
+    let p11BodyText = await getBodyText()
+    if (!p11BodyText.includes('Manage Rakib Hasan’s track eligibility')) {
+      throw new Error(`Expected heading "Manage Rakib Hasan’s track eligibility", got: ${p11BodyText}`)
+    }
+
+    // Toggle off Extempore for Rakib
+    await clickByText('button[role="checkbox"]', 'Extempore')
+    await new Promise((r) => setTimeout(r, 300))
+
+    // Click Save Eligibility -> back to /admin/volunteers/rakib
+    await clickByText('button.auratio-admin-btn--primary', 'Save Eligibility')
+    await new Promise((r) => setTimeout(r, 500))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers/rakib') {
+      throw new Error(`Expected /admin/volunteers/rakib after Save Eligibility, got ${p11Path}`)
+    }
+
+    // 3. Verify Track Isolation between Rakib and Farhana/Mehnaz
+    const trackIsolationCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify({
+        rakibTracks: window.__getVolunteerTrackEligibility('rakib'),
+        farhanaTracks: window.__getVolunteerTrackEligibility('farhana'),
+        mehnazTracks: window.__getVolunteerTrackEligibility('mehnaz'),
+      })`,
+    })
+    const tracksIsolated = JSON.parse(trackIsolationCheck.result.value)
+    if (tracksIsolated.rakibTracks.includes('Extempore')) {
+      throw new Error('Expected Rakib tracks NOT to include Extempore after removing it!')
+    }
+    if (tracksIsolated.farhanaTracks.length !== 3 || tracksIsolated.farhanaTracks.includes('Extempore')) {
+      throw new Error('Farhana tracks were corrupted by Rakib edit!')
+    }
+    if (tracksIsolated.mehnazTracks.length !== 2) {
+      throw new Error('Mehnaz tracks were corrupted by Rakib edit!')
+    }
+
+    // 4. Click Override Availability for Rakib
+    await clickByText('button.auratio-admin-btn--primary', 'Override Availability')
+    await new Promise((r) => setTimeout(r, 500))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers/rakib/availability') {
+      throw new Error(`Expected /admin/volunteers/rakib/availability, got ${p11Path}`)
+    }
+
+    p11BodyText = await getBodyText()
+    if (!p11BodyText.includes('Override Rakib Hasan’s availability')) {
+      throw new Error(`Expected heading "Override Rakib Hasan’s availability", got: ${p11BodyText}`)
+    }
+    if (!p11BodyText.includes('Current volunteer-declared status: Available')) {
+      throw new Error(`Expected declared status Available for Rakib, got: ${p11BodyText}`)
+    }
+
+    // Enter reason and apply override
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const ta = document.querySelector('textarea.auratio-admin-textarea');
+        if (ta) {
+          ta.value = 'Operational coverage reason for Rakib';
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      })()`,
+    })
+    await clickByText('button.auratio-admin-btn--primary', 'Apply Override')
+    await new Promise((r) => setTimeout(r, 500))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers/rakib') {
+      throw new Error(`Expected /admin/volunteers/rakib after Apply Override, got ${p11Path}`)
+    }
+
+    // 5. Test Mehnaz Karim management and Availability Override
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/mehnaz` })
+    await new Promise((r) => setTimeout(r, 600))
+    if ((await getPathname()) !== '/admin/volunteers/mehnaz') {
+      throw new Error(`Expected /admin/volunteers/mehnaz, got ${await getPathname()}`)
+    }
+
+    // Verify Mehnaz buttons are enabled
+    const mehnazBtnsCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const btns = Array.from(document.querySelectorAll('button.auratio-admin-btn'));
+        const trackBtn = btns.find(b => b.innerText.includes('Manage Track Eligibility'));
+        const overrideBtn = btns.find(b => b.innerText.includes('Override Availability'));
+        return {
+          trackDisabled: trackBtn ? trackBtn.disabled : true,
+          overrideDisabled: overrideBtn ? overrideBtn.disabled : true,
+        };
+      })())`,
+    })
+    const mehnazBtns = JSON.parse(mehnazBtnsCheck.result.value)
+    if (mehnazBtns.trackDisabled || mehnazBtns.overrideDisabled) {
+      throw new Error('Expected Manage Track Eligibility and Override Availability to be ENABLED for Mehnaz!')
+    }
+
+    // Click Override Availability for Mehnaz
+    await clickByText('button.auratio-admin-btn--primary', 'Override Availability')
+    await new Promise((r) => setTimeout(r, 500))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers/mehnaz/availability') {
+      throw new Error(`Expected /admin/volunteers/mehnaz/availability, got ${p11Path}`)
+    }
+
+    p11BodyText = await getBodyText()
+    if (!p11BodyText.includes('Override Mehnaz Karim’s availability')) {
+      throw new Error(`Expected heading "Override Mehnaz Karim’s availability", got: ${p11BodyText}`)
+    }
+    if (!p11BodyText.includes('Current volunteer-declared status: Unavailable')) {
+      throw new Error(`Expected declared status Unavailable for Mehnaz, got: ${p11BodyText}`)
+    }
+
+    // Apply Override for Mehnaz -> sets to Available
+    await clickByText('button.auratio-admin-btn--primary', 'Apply Override')
+    await new Promise((r) => setTimeout(r, 500))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers/mehnaz') {
+      throw new Error(`Expected /admin/volunteers/mehnaz after Apply Override, got ${p11Path}`)
+    }
+
+    // 6. Verify Availability Isolation across Farhana, Rakib, and Mehnaz
+    const availIsolationCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify({
+        farhana: window.__getVolunteerAvailabilityState('farhana'),
+        rakib: window.__getVolunteerAvailabilityState('rakib'),
+        mehnaz: window.__getVolunteerAvailabilityState('mehnaz'),
+      })`,
+    })
+    const availIsolated = JSON.parse(availIsolationCheck.result.value)
+    if (availIsolated.farhana.effectiveAvailability !== 'Available') {
+      throw new Error(`Expected Farhana effective availability to remain Available, got: ${availIsolated.farhana.effectiveAvailability}`)
+    }
+    if (availIsolated.rakib.effectiveAvailability !== 'Unavailable') {
+      throw new Error(`Expected Rakib effective availability to be Unavailable, got: ${availIsolated.rakib.effectiveAvailability}`)
+    }
+    if (availIsolated.mehnaz.effectiveAvailability !== 'Available') {
+      throw new Error(`Expected Mehnaz effective availability to be Available, got: ${availIsolated.mehnaz.effectiveAvailability}`)
+    }
+
+    console.log('\n--- [P1.1-3] Testing Deactivated Nusrat Controls & Safe Redirects ---')
+
+    // 1. Visit Nusrat account
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/nusrat` })
+    await new Promise((r) => setTimeout(r, 600))
+    if ((await getPathname()) !== '/admin/volunteers/nusrat') {
+      throw new Error(`Expected /admin/volunteers/nusrat, got ${await getPathname()}`)
+    }
+
+    // Verify Nusrat controls are disabled and pills are neutral
+    const nusratCheck = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const btns = Array.from(document.querySelectorAll('button.auratio-admin-btn'));
+        const trackBtn = btns.find(b => b.innerText.includes('Manage Track Eligibility'));
+        const overrideBtn = btns.find(b => b.innerText.includes('Override Availability'));
+        const pills = Array.from(document.querySelectorAll('.auratio-admin-status-pill'));
+        const hasDeactivatedClass = pills.some(p => p.className.includes('deactivated'));
+        const hasDisabledClass = pills.some(p => p.className.includes('disabled'));
+        return {
+          trackDisabled: trackBtn ? trackBtn.disabled : false,
+          overrideDisabled: overrideBtn ? overrideBtn.disabled : false,
+          hasDeactivatedClass,
+          hasDisabledClass,
+        };
+      })())`,
+    })
+    const nusratRes = JSON.parse(nusratCheck.result.value)
+    if (!nusratRes.trackDisabled || !nusratRes.overrideDisabled) {
+      throw new Error('Expected Manage Track Eligibility and Override Availability to be DISABLED for Nusrat!')
+    }
+    if (!nusratRes.hasDeactivatedClass || !nusratRes.hasDisabledClass) {
+      throw new Error('Expected Nusrat status pills to have deactivated / disabled neutral styling classes!')
+    }
+
+    // 2. Direct navigation to Nusrat tracks route must safely redirect to /admin/volunteers
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/nusrat/tracks` })
+    await new Promise((r) => setTimeout(r, 600))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers') {
+      throw new Error(`Expected safe redirect to /admin/volunteers from /admin/volunteers/nusrat/tracks, got ${p11Path}`)
+    }
+
+    // 3. Direct navigation to Nusrat availability route must safely redirect to /admin/volunteers
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/nusrat/availability` })
+    await new Promise((r) => setTimeout(r, 600))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers') {
+      throw new Error(`Expected safe redirect to /admin/volunteers from /admin/volunteers/nusrat/availability, got ${p11Path}`)
+    }
+
+    // 4. Direct navigation to unknown volunteer route must safely redirect to /admin/volunteers
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/fake-vol/tracks` })
+    await new Promise((r) => setTimeout(r, 600))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers') {
+      throw new Error(`Expected safe redirect to /admin/volunteers from /admin/volunteers/fake-vol/tracks, got ${p11Path}`)
+    }
+
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/volunteers/fake-vol/availability` })
+    await new Promise((r) => setTimeout(r, 600))
+    p11Path = await getPathname()
+    if (p11Path !== '/admin/volunteers') {
+      throw new Error(`Expected safe redirect to /admin/volunteers from /admin/volunteers/fake-vol/availability, got ${p11Path}`)
+    }
+
+    // Reset volunteer state after tests
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__resetAdminVolunteers && window.__resetAdminVolunteers()`,
+    })
+
+    console.log('\nALL INTERACTION FLOWS, P1, & P1.1 REPAIR VERIFICATIONS PASSED PERFECTLY!')
 
     ws.close()
   } finally {
