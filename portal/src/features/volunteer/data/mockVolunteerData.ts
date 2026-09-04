@@ -211,6 +211,13 @@ export function updateAssignmentStatus(submissionId: string, status: ActiveAssig
   saveVolunteerAssignments(assignments)
 }
 
+export function isValidTimestamp(ts: string | null | undefined): boolean {
+  if (!ts) return false
+  const trimmed = ts.trim()
+  const match = /^(\d{2,}):([0-5]\d)$/.exec(trimmed)
+  return match !== null
+}
+
 export function getAnchorScoreRange(anchor: QualitativeAnchor, maxPoints: number): { min: number; max: number } {
   if (anchor === 'Low') {
     return maxPoints === 5 ? { min: 0, max: 1 } : { min: 0, max: 3 }
@@ -223,9 +230,11 @@ export function getAnchorScoreRange(anchor: QualitativeAnchor, maxPoints: number
 
 export function isCriterionComplete(criterion: CriterionScoreData): boolean {
   if (!criterion.anchor) return false
-  if (criterion.exactScore === null || isNaN(criterion.exactScore)) return false
-  const range = getAnchorScoreRange(criterion.anchor, criterion.maxPoints)
-  if (criterion.exactScore < range.min || criterion.exactScore > range.max || criterion.exactScore > criterion.maxPoints) {
+  if (criterion.exactScore === null || isNaN(criterion.exactScore) || !Number.isInteger(criterion.exactScore)) return false
+  if (criterion.exactScore < 0 || criterion.exactScore > criterion.maxPoints) {
+    return false
+  }
+  if (!isValidTimestamp(criterion.evidenceTimestamp)) {
     return false
   }
   return (
@@ -393,6 +402,10 @@ export function submitEvaluation(submissionId: string): { success: boolean; draf
   if (!draft) return { success: false, draft: null }
 
   const totals = calculateDraftTotals(draft)
+  if (totals.isReady !== true) {
+    return { success: false, draft }
+  }
+
   // Lock draft
   draft.isSubmitted = true
   draft.submittedAt = new Date().toISOString()
@@ -496,5 +509,8 @@ export function resetVolunteerState(): void {
 }
 
 if (typeof window !== 'undefined') {
-  ;(window as unknown as Record<string, unknown>).__resetVolunteerState = resetVolunteerState
+  const win = window as unknown as Record<string, unknown>
+  win.__resetVolunteerState = resetVolunteerState
+  win.__submitVolunteerEvaluation = submitEvaluation
+  win.__getVolunteerScoringDraft = getScoringDraft
 }

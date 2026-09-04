@@ -5,6 +5,7 @@ import * as path from 'node:path'
 export const EVIDENCE_DIR = path.resolve('capture_output', 'playwright')
 export const REPAIRS_P2_DIR = path.resolve('capture_output', 'repairs_p2')
 export const HUMAN_FIX_H1_DIR = path.resolve('capture_output', 'human_fix_h1')
+export const HUMAN_FIX_H11_DIR = path.resolve('capture_output', 'human_fix_h11')
 
 export async function captureEvidenceScreenshot(page: Page, filename: string): Promise<string> {
   if (!fs.existsSync(EVIDENCE_DIR)) {
@@ -29,6 +30,15 @@ export async function captureHumanFixH1Screenshot(page: Page, filename: string):
     fs.mkdirSync(HUMAN_FIX_H1_DIR, { recursive: true })
   }
   const filePath = path.join(HUMAN_FIX_H1_DIR, filename)
+  await page.screenshot({ path: filePath, fullPage: false })
+  return filePath
+}
+
+export async function captureHumanFixH11Screenshot(page: Page, filename: string): Promise<string> {
+  if (!fs.existsSync(HUMAN_FIX_H11_DIR)) {
+    fs.mkdirSync(HUMAN_FIX_H11_DIR, { recursive: true })
+  }
+  const filePath = path.join(HUMAN_FIX_H11_DIR, filename)
   await page.screenshot({ path: filePath, fullPage: false })
   return filePath
 }

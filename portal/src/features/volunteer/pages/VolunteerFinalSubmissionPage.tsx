@@ -21,6 +21,11 @@ export function VolunteerFinalSubmissionPage() {
         structuralFlow: 0,
         trackSpecialisation: 0,
         submissionScore: 0,
+        criterionScoresCount: 0,
+        anchorCount: 0,
+        structuredFeedbackCount: 0,
+        isOverallSummaryComplete: false,
+        isReady: false,
       }
 
   const handleCancel = () => {
@@ -28,8 +33,10 @@ export function VolunteerFinalSubmissionPage() {
   }
 
   const handleConfirmSubmit = () => {
-    submitEvaluation(submissionId)
-    navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}/submitted`)
+    const res = submitEvaluation(submissionId)
+    if (res.success) {
+      navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}/submitted`)
+    }
   }
 
   return (
@@ -42,7 +49,10 @@ export function VolunteerFinalSubmissionPage() {
         {submissionId}
       </h2>
       <p className="auratio-volunteer-page-subtitle" style={{ top: '78px' }}>
-        {assignment?.track ? `${assignment.track} • ` : ''}Ready for final evaluator submission
+        {assignment?.track ? `${assignment.track} • ` : ''}
+        {totals.isReady
+          ? 'Ready for final evaluator submission'
+          : 'Incomplete evaluation • Submission blocked until all criteria are complete'}
       </p>
 
       {/* Header Status Pill */}
@@ -224,46 +234,77 @@ export function VolunteerFinalSubmissionPage() {
           top: '122px',
           width: '526px',
           height: '318px',
-          backgroundColor: 'var(--auratio-brand-blue-50)',
+          backgroundColor: totals.isReady ? 'var(--auratio-brand-blue-50)' : 'var(--auratio-amber-50)',
         }}
       >
-        <h3 className="auratio-volunteer-panel-title">Confirm final submission</h3>
+        <h3 className="auratio-volunteer-panel-title">
+          {totals.isReady ? 'Confirm final submission' : 'Submission blocked — Incomplete evaluation'}
+        </h3>
 
-        <h4
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '58px',
-            margin: 0,
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 600,
-            lineHeight: '20px',
-            letterSpacing: '0.0143em',
-            color: 'var(--auratio-neutral-900)',
-          }}
-        >
-          After confirmation:
-        </h4>
+        {!totals.isReady ? (
+          <div
+            style={{
+              position: 'absolute',
+              left: '18px',
+              top: '58px',
+              width: '480px',
+              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+              fontSize: '14px',
+              fontWeight: 400,
+              lineHeight: '22px',
+              color: 'var(--auratio-amber-700)',
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: '8px' }}>
+              Evaluation is incomplete and cannot be submitted:
+            </div>
+            <div>• Criterion scores: {totals.criterionScoresCount} / 16</div>
+            <div>• Structured feedback: {totals.structuredFeedbackCount} / 16 criteria complete</div>
+            <div>• Anchor selections: {totals.anchorCount} / 16 assessed</div>
+            <div>• Overall summary: {totals.isOverallSummaryComplete ? 'Complete' : 'Missing (required)'}</div>
+            <div style={{ marginTop: '10px', fontSize: '13px' }}>
+              All 16 criteria (with valid mm:ss timestamps and observations) plus the overall summary must be completed before submission.
+            </div>
+          </div>
+        ) : (
+          <>
+            <h4
+              style={{
+                position: 'absolute',
+                left: '18px',
+                top: '58px',
+                margin: 0,
+                fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                fontSize: '14px',
+                fontWeight: 600,
+                lineHeight: '20px',
+                letterSpacing: '0.0143em',
+                color: 'var(--auratio-neutral-900)',
+              }}
+            >
+              After confirmation:
+            </h4>
 
-        <div
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '92px',
-            width: '470px',
-            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '22px',
-            color: 'var(--auratio-neutral-600)',
-          }}
-        >
-          <div>• this evaluator-authored version becomes locked against silent editing;</div>
-          <div>• the task leaves Active Assignments;</div>
-          <div>• corrections require the formal Re-review / Reopened workflow;</div>
-          <div>• publication/moderation remains separate from evaluator submission.</div>
-        </div>
+            <div
+              style={{
+                position: 'absolute',
+                left: '18px',
+                top: '92px',
+                width: '470px',
+                fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                fontSize: '14px',
+                fontWeight: 400,
+                lineHeight: '22px',
+                color: 'var(--auratio-neutral-600)',
+              }}
+            >
+              <div>• this evaluator-authored version becomes locked against silent editing;</div>
+              <div>• the task leaves Active Assignments;</div>
+              <div>• corrections require the formal Re-review / Reopened workflow;</div>
+              <div>• publication/moderation remains separate from evaluator submission.</div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Bottom Panel: Submission boundary */}
@@ -310,7 +351,9 @@ export function VolunteerFinalSubmissionPage() {
           color: 'var(--auratio-neutral-500)',
         }}
       >
-        Cancel returns to the editable In Evaluation workspace. No submission occurs.
+        {totals.isReady
+          ? 'Cancel returns to the editable In Evaluation workspace. No submission occurs.'
+          : 'Submission is blocked. Return to the scoring workspace to complete all criteria.'}
       </span>
 
       <button
@@ -331,6 +374,7 @@ export function VolunteerFinalSubmissionPage() {
 
       <button
         type="button"
+        disabled={!totals.isReady}
         onClick={handleConfirmSubmit}
         className="auratio-volunteer-btn auratio-volunteer-btn--primary"
         style={{
@@ -340,6 +384,8 @@ export function VolunteerFinalSubmissionPage() {
           width: '188px',
           height: '44px',
           borderRadius: '10px',
+          opacity: totals.isReady ? 1 : 0.45,
+          cursor: totals.isReady ? 'pointer' : 'not-allowed',
         }}
       >
         Confirm & Submit

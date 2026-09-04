@@ -14,11 +14,23 @@ export function VolunteerAssignedTaskPage() {
     return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
   }
 
+  // IN EVALUATION: should resume the scoring workspace directly
+  // must not return to assignment-response controls
+  if (assignment.assignmentStatus === 'In Evaluation') {
+    return <Navigate to={`/volunteer/evaluation/${assignment.id.toLowerCase()}`} replace />
+  }
+
   function handleAccept() {
     if (!assignment) return
     if (assignment.assignmentStatus === 'Assigned') {
       updateAssignmentStatus(assignment.id, 'In Evaluation')
     }
+    navigate(`/volunteer/evaluation/${assignment.id.toLowerCase()}`)
+  }
+
+  function handleContinue() {
+    if (!assignment) return
+    updateAssignmentStatus(assignment.id, 'In Evaluation')
     navigate(`/volunteer/evaluation/${assignment.id.toLowerCase()}`)
   }
 
@@ -35,7 +47,9 @@ export function VolunteerAssignedTaskPage() {
     >
       <h2 className="auratio-volunteer-page-title">{assignment.id}</h2>
       <p className="auratio-volunteer-page-subtitle">
-        Assigned Human Evaluation task • Accept or Decline required
+        {assignment.assignmentStatus === 'Accepted'
+          ? 'Accepted Human Evaluation task • Evaluation ready to begin'
+          : 'Assigned Human Evaluation task • Accept or Decline required'}
       </p>
 
       {/* Header Status Pill */}
@@ -43,8 +57,6 @@ export function VolunteerAssignedTaskPage() {
         className={`auratio-volunteer-pill ${
           assignment.assignmentStatus === 'Accepted'
             ? 'auratio-volunteer-pill--accepted'
-            : assignment.assignmentStatus === 'In Evaluation'
-            ? 'auratio-volunteer-pill--in-evaluation-table'
             : 'auratio-volunteer-pill--assigned'
         }`}
         style={{
@@ -268,7 +280,7 @@ export function VolunteerAssignedTaskPage() {
               color: 'var(--auratio-amber-700)',
             }}
           >
-            Respond to assignment
+            {assignment.assignmentStatus === 'Accepted' ? 'Assignment accepted' : 'Respond to assignment'}
           </div>
           <div
             style={{
@@ -281,40 +293,61 @@ export function VolunteerAssignedTaskPage() {
               color: 'var(--auratio-amber-700)',
             }}
           >
-            Accept to take the task forward, or Decline with a short reason. No scoring begins until the assignment is accepted.
+            {assignment.assignmentStatus === 'Accepted'
+              ? 'This assignment has been accepted. Continue to the scoring workspace to evaluate the submission.'
+              : 'Accept to take the task forward, or Decline with a short reason. No scoring begins until the assignment is accepted.'}
           </div>
         </div>
 
         {/* Action Buttons */}
-        <button
-          type="button"
-          onClick={handleAccept}
-          className="auratio-volunteer-btn auratio-volunteer-btn--primary"
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '280px',
-            width: '170px',
-            height: '44px',
-          }}
-        >
-          Accept
-        </button>
+        {assignment.assignmentStatus === 'Accepted' ? (
+          <button
+            type="button"
+            onClick={handleContinue}
+            className="auratio-volunteer-btn auratio-volunteer-btn--primary"
+            style={{
+              position: 'absolute',
+              left: '18px',
+              top: '280px',
+              width: '220px',
+              height: '44px',
+            }}
+          >
+            Continue to Evaluation
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={handleAccept}
+              className="auratio-volunteer-btn auratio-volunteer-btn--primary"
+              style={{
+                position: 'absolute',
+                left: '18px',
+                top: '280px',
+                width: '170px',
+                height: '44px',
+              }}
+            >
+              Accept
+            </button>
 
-        <button
-          type="button"
-          onClick={handleDecline}
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
-          style={{
-            position: 'absolute',
-            left: '202px',
-            top: '280px',
-            width: '170px',
-            height: '44px',
-          }}
-        >
-          Decline
-        </button>
+            <button
+              type="button"
+              onClick={handleDecline}
+              className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
+              style={{
+                position: 'absolute',
+                left: '202px',
+                top: '280px',
+                width: '170px',
+                height: '44px',
+              }}
+            >
+              Decline
+            </button>
+          </>
+        )}
 
         <span
           style={{
@@ -358,7 +391,9 @@ export function VolunteerAssignedTaskPage() {
             color: 'var(--auratio-neutral-600)',
           }}
         >
-          Accept changes Assignment Status to Accepted. Decline requires a short reason, closes this attempt, removes the task from Active Assignments, and returns the request to the Admin Unassigned queue.
+          {assignment.assignmentStatus === 'Accepted'
+            ? 'Assignment has been accepted and is owned by you. Continuation opens the active scoring workspace and transitions the task to In Evaluation.'
+            : 'Accept changes Assignment Status to Accepted. Decline requires a short reason, closes this attempt, removes the task from Active Assignments, and returns the request to the Admin Unassigned queue.'}
         </p>
       </div>
     </VolunteerLayout>

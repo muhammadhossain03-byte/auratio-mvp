@@ -3,6 +3,7 @@ import {
   expect,
   captureEvidenceScreenshot,
   captureHumanFixH1Screenshot,
+  captureHumanFixH11Screenshot,
   resetMockState,
   registerErrorTracking,
   assertNoPageErrors,
@@ -178,18 +179,18 @@ test.describe('Volunteer Critical Regression', () => {
     // Screenshot 6: 06_criterion_editor_score_disabled.png
     await captureHumanFixH1Screenshot(page, '06_criterion_editor_score_disabled.png')
 
-    // TC 18: Selecting "Low" enables exact score input and allows scores in 0-30% range (0-1)
+    // TC 18: Selecting "Low" enables exact score input with full 0-5 placeholder
     await page.locator('input[name="anchor"][value="Low"]').click()
     await expect(exactScoreInput).toBeEnabled()
-    await expect(exactScoreInput).toHaveAttribute('placeholder', '0–1')
+    await expect(exactScoreInput).toHaveAttribute('placeholder', '0–5')
 
-    // TC 19: Selecting "Competent" sets range to 31-70% (2-3)
+    // TC 19: Selecting "Competent" retains full range placeholder 0-5
     await page.locator('input[name="anchor"][value="Competent"]').click()
-    await expect(exactScoreInput).toHaveAttribute('placeholder', '2–3')
+    await expect(exactScoreInput).toHaveAttribute('placeholder', '0–5')
 
-    // TC 20: Selecting "Excellent" sets range to 71-100% (4-5)
+    // TC 20: Selecting "Excellent" retains full range placeholder 0-5
     await page.locator('input[name="anchor"][value="Excellent"]').click()
-    await expect(exactScoreInput).toHaveAttribute('placeholder', '4–5')
+    await expect(exactScoreInput).toHaveAttribute('placeholder', '0–5')
 
     // Screenshot 7: 07_criterion_editor_anchor_selected.png
     await captureHumanFixH1Screenshot(page, '07_criterion_editor_anchor_selected.png')
@@ -202,12 +203,16 @@ test.describe('Volunteer Critical Regression', () => {
     // Set valid score for Excellent: 4
     await exactScoreInput.fill('4')
 
-    // Selectors for 4 feedback textareas
+    // Selectors for 4 feedback textareas and timestamp input
+    const timestampInput = page.locator('input[aria-label="Evidence timestamp"]')
     const evidenceTextarea = page.locator('textarea.auratio-volunteer-feedback-textarea--evidence')
     const strengthTextarea = page.locator('textarea.auratio-volunteer-feedback-textarea--strength')
     const weaknessTextarea = page.locator('textarea.auratio-volunteer-feedback-textarea--weakness')
     const adviceTextarea = page.locator('textarea.auratio-volunteer-feedback-textarea--advice')
     const completenessRow = page.locator('.auratio-volunteer-criterion-completeness-row')
+
+    // Set valid timestamp
+    await timestampInput.fill('01:24')
 
     // TC 22: Pure whitespace in timestamped evidence rejected
     await evidenceTextarea.fill('     ')
@@ -393,5 +398,237 @@ test.describe('Volunteer Critical Regression', () => {
 
     await page.locator('button.auratio-volunteer-nav-item', { hasText: 'Active Assignments' }).click()
     await expect(page).toHaveURL('/volunteer/assignments')
+  })
+
+  test.describe('Human Acceptance Repair H1.1: Residual Volunteer Scoring & State Corrections', () => {
+    test('H1.1 Issue 1: Status-specific controls for Assigned, Accepted, and In Evaluation', async ({ page }) => {
+      // 1. SUB-8814: Accepted state
+      await page.goto('/volunteer/assignments/sub-8814')
+      await expect(page).toHaveURL('/volunteer/assignments/sub-8814')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toHaveText('SUB-8814')
+
+      // Must NOT show "Accept or Decline required"
+      const pageText = await page.innerText('body')
+      expect(pageText).not.toContain('Accept or Decline required')
+
+      // Must NOT show Accept or Decline buttons
+      const acceptBtn = page.locator('button.auratio-volunteer-btn', { hasText: /^Accept$/ })
+      const declineBtn = page.locator('button.auratio-volunteer-btn', { hasText: /^Decline$/ })
+      await expect(acceptBtn).toHaveCount(0)
+      await expect(declineBtn).toHaveCount(0)
+
+      // Must show "Continue to Evaluation"
+      const continueBtn = page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Continue to Evaluation' })
+      await expect(continueBtn).toBeVisible()
+
+      // Capture Evidence 01: 01_sub8814_accepted_continue.png
+      await captureHumanFixH11Screenshot(page, '01_sub8814_accepted_continue.png')
+
+      // Continuation opens scoring workspace and transitions to In Evaluation
+      await continueBtn.click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8814')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toHaveText('SUB-8814')
+      await expect(page.locator('.auratio-volunteer-pill--in-evaluation-header')).toBeVisible()
+
+      // 2. SUB-8821: Assigned state retains Accept and Decline controls
+      await page.goto('/volunteer/assignments/sub-8821')
+      await expect(page).toHaveURL('/volunteer/assignments/sub-8821')
+      await expect(page.locator('p.auratio-volunteer-page-subtitle')).toContainText('Accept or Decline required')
+      await expect(page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Accept' })).toBeVisible()
+      await expect(page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Decline' })).toBeVisible()
+
+      // Capture Evidence 02: 02_sub8821_assigned_accept_decline.png
+      await captureHumanFixH11Screenshot(page, '02_sub8821_assigned_accept_decline.png')
+
+      // 3. SUB-8799: In Evaluation resumes scoring workspace directly
+      await page.goto('/volunteer/assignments/sub-8799')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8799')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toHaveText('SUB-8799')
+      const inEvalText = await page.innerText('body')
+      expect(inEvalText).not.toContain('Respond to assignment')
+    })
+
+    test('H1.1 Issue 2 & Issue 4: Deterministic mm:ss timestamp requirement and full score range after anchor selection', async ({ page }) => {
+      await page.goto('/volunteer/evaluation/sub-8821/criterion?criterionId=ud-pacing')
+      await expect(page).toHaveURL(/\/volunteer\/evaluation\/sub-8821\/criterion/)
+
+      const exactScoreInput = page.locator('input[aria-label="Exact score"]')
+      const timestampInput = page.locator('input[aria-label="Evidence timestamp"]')
+      const evidenceTextarea = page.locator('textarea.auratio-volunteer-feedback-textarea--evidence')
+      const strengthTextarea = page.locator('textarea.auratio-volunteer-feedback-textarea--strength')
+      const weaknessTextarea = page.locator('textarea.auratio-volunteer-feedback-textarea--weakness')
+      const adviceTextarea = page.locator('textarea.auratio-volunteer-feedback-textarea--advice')
+      const completenessRow = page.locator('.auratio-volunteer-criterion-completeness-row')
+
+      // Issue 4: Exact score disabled before anchor selection
+      await expect(exactScoreInput).toBeDisabled()
+
+      // Verify radio options do NOT contain hardcoded band labels like "(0–1 pts)"
+      const radioLabelsText = await page.innerText('.auratio-volunteer-panel')
+      expect(radioLabelsText).not.toContain('(0–1 pts)')
+      expect(radioLabelsText).not.toContain('(2–3 pts)')
+      expect(radioLabelsText).not.toContain('(4–5 pts)')
+
+      // Select "Low" anchor: enables score with full 0-5 placeholder
+      await page.locator('input[name="anchor"][value="Low"]').click()
+      await expect(exactScoreInput).toBeEnabled()
+      await expect(exactScoreInput).toHaveAttribute('placeholder', '0–5')
+
+      // Any integer in full range 0-5 accepted under Low anchor (no 0-1 restriction)
+      await exactScoreInput.fill('5')
+      let bodyText = await page.innerText('body')
+      expect(bodyText).not.toContain('Score must be between')
+
+      // Out of range (6) rejected with error
+      await exactScoreInput.fill('6')
+      bodyText = await page.innerText('body')
+      expect(bodyText).toMatch(/Score cannot exceed|exceed/)
+
+      // Fill valid score 4 under Low
+      await exactScoreInput.fill('4')
+
+      // Capture Evidence 05: 05_anchor_selected_full_score_range.png
+      await captureHumanFixH11Screenshot(page, '05_anchor_selected_full_score_range.png')
+
+      // Switch to Competent: score remains 4, placeholder 0-5
+      await page.locator('input[name="anchor"][value="Competent"]').click()
+      await expect(exactScoreInput).toHaveValue('4')
+
+      // Switch to Excellent: score 0 is valid
+      await page.locator('input[name="anchor"][value="Excellent"]').click()
+      await exactScoreInput.fill('0')
+      bodyText = await page.innerText('body')
+      expect(bodyText).not.toContain('Score must be between')
+
+      // Re-set score to 4
+      await exactScoreInput.fill('4')
+
+      // Fill feedback narratives
+      await evidenceTextarea.fill('At 01:24, speaker paced the opening problem effectively.')
+      await strengthTextarea.fill('Clear pauses at topic boundaries.')
+      await weaknessTextarea.fill('Pacing accelerated slightly during slide 3.')
+      await adviceTextarea.fill('Maintain steady tempo through technical explanations.')
+
+      // Issue 2: Real timestamp validation
+      // 1. Blank timestamp blocks completeness and Save
+      await timestampInput.fill('')
+      await expect(completenessRow).toContainText('Timestamped evidence —')
+
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Save Criterion Feedback' }).click()
+      await expect(page.locator('span[role="alert"]')).toContainText('valid timestamp in mm:ss format is required')
+      await expect(page).toHaveURL(/\/volunteer\/evaluation\/sub-8821\/criterion/)
+
+      // Capture Evidence 03: 03_timestamp_blank_blocked.png
+      await captureHumanFixH11Screenshot(page, '03_timestamp_blank_blocked.png')
+
+      // 2. Whitespace-only timestamp blocks completeness and Save
+      await timestampInput.fill('     ')
+      await expect(completenessRow).toContainText('Timestamped evidence —')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Save Criterion Feedback' }).click()
+      await expect(page.locator('span[role="alert"]')).toContainText('valid timestamp in mm:ss format is required')
+
+      // 3. Invalid timestamp (seconds > 59) blocks completeness and Save
+      await timestampInput.fill('01:60')
+      await expect(completenessRow).toContainText('Timestamped evidence —')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Save Criterion Feedback' }).click()
+      await expect(page.locator('span[role="alert"]')).toContainText('valid timestamp in mm:ss format is required')
+
+      // 4. Valid timestamp (01:24) produces completeness
+      await timestampInput.fill('01:24')
+      await expect(completenessRow).toContainText('Anchor ✓')
+      await expect(completenessRow).toContainText('Exact score ✓')
+      await expect(completenessRow).toContainText('Timestamped evidence ✓')
+      await expect(completenessRow).toContainText('Strength ✓')
+      await expect(completenessRow).toContainText('Weakness ✓')
+      await expect(completenessRow).toContainText('Actionable advice ✓')
+
+      // Capture Evidence 04: 04_timestamp_valid_complete.png
+      await captureHumanFixH11Screenshot(page, '04_timestamp_valid_complete.png')
+
+      // Save succeeds and navigates back to workspace
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Save Criterion Feedback' }).click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821')
+    })
+
+    test('H1.1 Issue 3: Submission readiness defense-in-depth at UI and Data Layer', async ({ page }) => {
+      // 1. Fresh 0/16 draft direct /review navigation is blocked
+      await page.goto('/volunteer/evaluation/sub-8821/review')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821/review')
+      await expect(page.locator('h3.auratio-volunteer-panel-title', { hasText: 'Submission blocked' })).toBeVisible()
+
+      const confirmBtn = page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm & Submit' })
+      await expect(confirmBtn).toBeDisabled()
+
+      // Capture Evidence 06: 06_incomplete_direct_review_blocked.png
+      await captureHumanFixH11Screenshot(page, '06_incomplete_direct_review_blocked.png')
+
+      // Verify submitEvaluation() data layer rejects incomplete draft
+      const resultIncomplete = await page.evaluate(() => {
+        const win = window as unknown as { __submitVolunteerEvaluation?: (id: string) => { success: boolean } }
+        return win.__submitVolunteerEvaluation ? win.__submitVolunteerEvaluation('SUB-8821') : { success: true }
+      })
+      expect(resultIncomplete.success).toBe(false)
+
+      // Verify zero state mutation
+      const assignments = await page.evaluate(() => {
+        return window.sessionStorage.getItem('auratio_volunteer_assignments')
+      })
+      if (assignments) {
+        expect(assignments).toContain('SUB-8821')
+      }
+
+      // 2. Partially complete draft (16/16 criteria complete but overallSummary empty)
+      await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_draft_SUB-8821')
+        if (raw) {
+          const draft = JSON.parse(raw)
+          for (const key of Object.keys(draft.criteria)) {
+            const c = draft.criteria[key]
+            c.anchor = 'Excellent'
+            c.exactScore = c.maxPoints
+            c.evidenceTimestamp = '01:24'
+            c.evidence = 'Strong execution and observable mastery'
+            c.strength = 'Clear delivery'
+            c.weakness = 'Minor polish'
+            c.advice = 'Keep momentum'
+          }
+          draft.overallSummary = ''
+          window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft))
+        }
+      })
+      await page.goto('/volunteer/evaluation/sub-8821/review')
+      await expect(confirmBtn).toBeDisabled()
+
+      // 3. Complete 16/16 + Overall Summary
+      await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_draft_SUB-8821')
+        if (raw) {
+          const draft = JSON.parse(raw)
+          draft.overallSummary = 'Exceptional presentation demonstrating deep mastery, strong audience rapport, and compelling message structure.'
+          window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft))
+        }
+      })
+      await page.goto('/volunteer/evaluation/sub-8821/review')
+      await expect(confirmBtn).toBeEnabled()
+      await expect(page.locator('h3.auratio-volunteer-panel-title', { hasText: 'Confirm final submission' })).toBeVisible()
+
+      // Click Confirm & Submit
+      await confirmBtn.click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821/submitted')
+      await expect(page.locator('text=Evaluation submitted')).toBeVisible()
+
+      // Capture Evidence 07: 07_complete_review_submit_success.png
+      await captureHumanFixH11Screenshot(page, '07_complete_review_submit_success.png')
+
+      // Verify SUB-8821 removed from Active Assignments
+      await page.goto('/volunteer/assignments')
+      const activeText = await page.innerText('body')
+      expect(activeText).not.toContain('SUB-8821')
+
+      // Verify SUB-8821 added to Completed History
+      await page.goto('/volunteer/completed')
+      const completedText = await page.innerText('body')
+      expect(completedText).toContain('SUB-8821')
+    })
   })
 })

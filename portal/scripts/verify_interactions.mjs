@@ -220,6 +220,7 @@ async function run() {
 
     // 3. DECLINE FLOW & CANCEL & REASON REQUIREMENT
     console.log('\n--- Testing Volunteer Decline Flow ---')
+    await sendCdp(ws, 'Runtime.evaluate', { expression: `window.__resetVolunteerState && window.__resetVolunteerState()` })
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/assignments/sub-8821` })
     await new Promise((r) => setTimeout(r, 500))
 
@@ -508,6 +509,7 @@ async function run() {
     }
 
     // Test Case 26: Valid completion marks all complete
+    await setInputValue('input[aria-label="Evidence timestamp"]', '01:24')
     await setInputValue('textarea.auratio-volunteer-feedback-textarea--advice', 'Practice pacing with a timer')
     await new Promise((r) => setTimeout(r, 300))
 

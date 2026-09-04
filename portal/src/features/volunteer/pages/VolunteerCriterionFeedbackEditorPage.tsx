@@ -7,7 +7,7 @@ import {
   getScoringDraft,
   saveCriterionScoreData,
   getCriteriaForTrack,
-  getAnchorScoreRange,
+  isValidTimestamp,
   type QualitativeAnchor,
 } from '../data/mockVolunteerData'
 
@@ -91,23 +91,18 @@ export function VolunteerCriterionFeedbackEditorPage() {
     return null
   }
 
-  const lowRange = getAnchorScoreRange('Low', activeCriterion.maxPoints)
-  const compRange = getAnchorScoreRange('Competent', activeCriterion.maxPoints)
-  const excRange = getAnchorScoreRange('Excellent', activeCriterion.maxPoints)
-
-  const activeRange = anchor ? getAnchorScoreRange(anchor, activeCriterion.maxPoints) : null
-
   const parsedScore = exactScore === '' ? null : Number(exactScore)
   const isScoreValid =
     anchor !== null &&
     parsedScore !== null &&
     !isNaN(parsedScore) &&
-    activeRange !== null &&
-    parsedScore >= activeRange.min &&
-    parsedScore <= activeRange.max &&
+    Number.isInteger(parsedScore) &&
+    parsedScore >= 0 &&
     parsedScore <= activeCriterion.maxPoints
 
-  const evidenceComplete = evidence.trim().length > 0
+  const isTimestampValid = isValidTimestamp(evidenceTimestamp)
+  const isEvidenceTextValid = evidence.trim().length > 0
+  const isTimestampedEvidenceComplete = isTimestampValid && isEvidenceTextValid
   const strengthComplete = strength.trim().length > 0
   const weaknessComplete = weakness.trim().length > 0
   const adviceComplete = advice.trim().length > 0
@@ -115,13 +110,6 @@ export function VolunteerCriterionFeedbackEditorPage() {
   const handleAnchorChange = (newAnchor: QualitativeAnchor) => {
     setAnchor(newAnchor)
     setErrorMessage('')
-    // If current score is outside new anchor range, clear or update score
-    if (parsedScore !== null) {
-      const newRange = getAnchorScoreRange(newAnchor, activeCriterion.maxPoints)
-      if (parsedScore < newRange.min || parsedScore > newRange.max) {
-        setExactScore('')
-      }
-    }
   }
 
   const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,9 +125,11 @@ export function VolunteerCriterionFeedbackEditorPage() {
     const num = Number(val)
     if (isNaN(num)) return
 
-    if (activeRange && (num < 0 || num > activeCriterion.maxPoints || num > activeRange.max)) {
+    if (!Number.isInteger(num)) {
+      setErrorMessage('Score must be a whole number (integer).')
+    } else if (num < 0 || num > activeCriterion.maxPoints) {
       setErrorMessage(
-        `Score cannot exceed ${Math.min(activeCriterion.maxPoints, activeRange.max)} for anchor ${anchor}.`
+        `Score cannot exceed ${activeCriterion.maxPoints} pts.`
       )
     } else {
       setErrorMessage('')
@@ -159,9 +149,9 @@ export function VolunteerCriterionFeedbackEditorPage() {
     }
 
     if (!isScoreValid || parsedScore === null) {
-      if (parsedScore !== null && activeRange && (parsedScore < activeRange.min || parsedScore > activeRange.max)) {
+      if (parsedScore !== null && (parsedScore < 0 || parsedScore > activeCriterion.maxPoints || !Number.isInteger(parsedScore))) {
         setErrorMessage(
-          `Score must be between ${activeRange.min} and ${activeRange.max} for anchor ${anchor}.`
+          `Score must be a whole number between 0 and ${activeCriterion.maxPoints} pts.`
         )
       } else {
         setErrorMessage('Please enter a valid numeric score.')
@@ -169,8 +159,13 @@ export function VolunteerCriterionFeedbackEditorPage() {
       return
     }
 
-    if (!evidenceComplete) {
-      setErrorMessage('Timestamped evidence is required.')
+    if (!isTimestampValid) {
+      setErrorMessage('A valid timestamp in mm:ss format is required (e.g. 01:24).')
+      return
+    }
+
+    if (!isEvidenceTextValid) {
+      setErrorMessage('Timestamped evidence narrative observation is required.')
       return
     }
 
@@ -189,12 +184,12 @@ export function VolunteerCriterionFeedbackEditorPage() {
       return
     }
 
-    // Save to draft
+    // Save to draft - never manufacture '01:00' or any fallback!
     setErrorMessage('')
     saveCriterionScoreData(submissionId, activeCriterion.id, {
       anchor,
       exactScore: parsedScore,
-      evidenceTimestamp: evidenceTimestamp.trim() || '01:00',
+      evidenceTimestamp: evidenceTimestamp.trim(),
       evidence: evidence.trim(),
       strength: strength.trim(),
       weakness: weakness.trim(),
@@ -331,7 +326,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
               checked={anchor === 'Low'}
               onChange={() => handleAnchorChange('Low')}
             />
-            Low ({lowRange.min}–{lowRange.max} pts)
+            Low
           </label>
 
           <label
@@ -353,7 +348,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
               checked={anchor === 'Competent'}
               onChange={() => handleAnchorChange('Competent')}
             />
-            Competent ({compRange.min}–{compRange.max} pts)
+            Competent
           </label>
 
           <label
@@ -375,7 +370,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
               checked={anchor === 'Excellent'}
               onChange={() => handleAnchorChange('Excellent')}
             />
-            Excellent ({excRange.min}–{excRange.max} pts)
+            Excellent
           </label>
         </div>
 
@@ -400,8 +395,8 @@ export function VolunteerCriterionFeedbackEditorPage() {
           disabled={!anchor}
           value={exactScore}
           onChange={handleScoreChange}
-          placeholder={anchor ? `${activeRange?.min}–${activeRange?.max}` : 'Select anchor'}
-          min={activeRange?.min ?? 0}
+          placeholder={anchor ? `0–${activeCriterion.maxPoints}` : 'Select anchor'}
+          min={0}
           max={activeCriterion.maxPoints}
           style={{
             position: 'absolute',
@@ -852,7 +847,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
             color: 'var(--auratio-amber-700)',
           }}
         >
-          Anchor {anchor ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Exact score {isScoreValid ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Timestamped evidence {evidenceComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Strength {strengthComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Weakness {weaknessComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Actionable advice {adviceComplete ? '✓' : '—'}
+          Anchor {anchor ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Exact score {isScoreValid ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Timestamped evidence {isTimestampedEvidenceComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Strength {strengthComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Weakness {weaknessComplete ? '✓' : '—'}&nbsp;&nbsp;&nbsp;Actionable advice {adviceComplete ? '✓' : '—'}
         </span>
       </div>
 
