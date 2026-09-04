@@ -274,6 +274,8 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
                                     key:
                                         EventsDiscoveryScreen.filterDivisionKey,
                                     label: _selectedDivision,
+                                    semanticLabel:
+                                        'Division: $_selectedDivision',
                                     onTap: () => _showOptionSelector(
                                       title: 'Select Division',
                                       options:
@@ -290,6 +292,7 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
                                   _FilterPill(
                                     key: EventsDiscoveryScreen.filterPathKey,
                                     label: _selectedPathFilter,
+                                    semanticLabel: 'Path: $_selectedPathFilter',
                                     onTap: () => _showOptionSelector(
                                       title: 'Select Path',
                                       options:
@@ -306,6 +309,7 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
                                   _FilterPill(
                                     key: EventsDiscoveryScreen.filterDateKey,
                                     label: _selectedDateFilter,
+                                    semanticLabel: 'Date: $_selectedDateFilter',
                                     onTap: () => _showOptionSelector(
                                       title: 'Select Date',
                                       options:
@@ -478,45 +482,57 @@ class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
 }
 
 class _FilterPill extends StatelessWidget {
-  const _FilterPill({required this.label, this.onTap, super.key});
+  const _FilterPill({
+    required this.label,
+    this.semanticLabel,
+    this.onTap,
+    super.key,
+  });
 
   final String label;
+  final String? semanticLabel;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        width: 102,
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        alignment: Alignment.centerLeft,
-        decoration: BoxDecoration(
-          color: AuratioColors.surfaceDefault,
-          border: Border.all(color: const Color(0xFFC9D6E7)),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AuratioTypography.caption.copyWith(
-                  color: AuratioColors.backgroundBrand,
-                  fontSize: 11,
-                  height: 16 / 11,
-                  fontWeight: FontWeight.w500,
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: semanticLabel ?? label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: 102,
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          alignment: Alignment.centerLeft,
+          decoration: BoxDecoration(
+            color: AuratioColors.surfaceDefault,
+            border: Border.all(color: const Color(0xFFC9D6E7)),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AuratioTypography.caption.copyWith(
+                    color: AuratioColors.backgroundBrand,
+                    fontSize: 11,
+                    height: 16 / 11,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 4),
-            const _DropdownTriangle(),
-          ],
+              const SizedBox(width: 4),
+              const _DropdownTriangle(),
+            ],
+          ),
         ),
       ),
     );

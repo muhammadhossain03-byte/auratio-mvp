@@ -73,64 +73,94 @@ class TracksScreen extends ConsumerWidget {
                     // Filter Chips Row (y=110, h=32)
                     Row(
                       children: [
-                        GestureDetector(
-                          key: filterAllChipKey,
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => ref
-                              .read(tracksCategoryFilterProvider.notifier)
-                              .select(TrackCategoryFilter.all),
-                          child: AuratioChipTab(
-                            label: 'All',
-                            selected: filter == TrackCategoryFilter.all,
-                            size: AuratioChipTabSize.compact,
-                            presentationOnly: true,
-                            width: 49,
+                        Semantics(
+                          button: true,
+                          selected: filter == TrackCategoryFilter.all,
+                          enabled: true,
+                          label: 'All',
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            key: filterAllChipKey,
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => ref
+                                .read(tracksCategoryFilterProvider.notifier)
+                                .select(TrackCategoryFilter.all),
+                            child: AuratioChipTab(
+                              label: 'All',
+                              selected: filter == TrackCategoryFilter.all,
+                              size: AuratioChipTabSize.compact,
+                              presentationOnly: true,
+                              width: 49,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 6),
-                        GestureDetector(
-                          key: filterPublicSpeakingChipKey,
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => ref
-                              .read(tracksCategoryFilterProvider.notifier)
-                              .select(TrackCategoryFilter.publicSpeaking),
-                          child: AuratioChipTab(
-                            label: 'Public Speaking',
-                            selected:
-                                filter == TrackCategoryFilter.publicSpeaking,
-                            size: AuratioChipTabSize.compact,
-                            presentationOnly: true,
-                            width: 125,
+                        Semantics(
+                          button: true,
+                          selected:
+                              filter == TrackCategoryFilter.publicSpeaking,
+                          enabled: true,
+                          label: 'Public Speaking',
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            key: filterPublicSpeakingChipKey,
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => ref
+                                .read(tracksCategoryFilterProvider.notifier)
+                                .select(TrackCategoryFilter.publicSpeaking),
+                            child: AuratioChipTab(
+                              label: 'Public Speaking',
+                              selected:
+                                  filter == TrackCategoryFilter.publicSpeaking,
+                              size: AuratioChipTabSize.compact,
+                              presentationOnly: true,
+                              width: 125,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 6),
-                        GestureDetector(
-                          key: filterPresentingChipKey,
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => ref
-                              .read(tracksCategoryFilterProvider.notifier)
-                              .select(TrackCategoryFilter.presenting),
-                          child: AuratioChipTab(
-                            label: 'Presenting',
-                            selected: filter == TrackCategoryFilter.presenting,
-                            size: AuratioChipTabSize.compact,
-                            presentationOnly: true,
-                            width: 92,
+                        Semantics(
+                          button: true,
+                          selected: filter == TrackCategoryFilter.presenting,
+                          enabled: true,
+                          label: 'Presenting',
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            key: filterPresentingChipKey,
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => ref
+                                .read(tracksCategoryFilterProvider.notifier)
+                                .select(TrackCategoryFilter.presenting),
+                            child: AuratioChipTab(
+                              label: 'Presenting',
+                              selected:
+                                  filter == TrackCategoryFilter.presenting,
+                              size: AuratioChipTabSize.compact,
+                              presentationOnly: true,
+                              width: 92,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 6),
-                        GestureDetector(
-                          key: filterContentChipKey,
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => ref
-                              .read(tracksCategoryFilterProvider.notifier)
-                              .select(TrackCategoryFilter.content),
-                          child: AuratioChipTab(
-                            label: 'Content',
-                            selected: filter == TrackCategoryFilter.content,
-                            size: AuratioChipTabSize.compact,
-                            presentationOnly: true,
-                            width: 66,
+                        Semantics(
+                          button: true,
+                          selected: filter == TrackCategoryFilter.content,
+                          enabled: true,
+                          label: 'Content',
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            key: filterContentChipKey,
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => ref
+                                .read(tracksCategoryFilterProvider.notifier)
+                                .select(TrackCategoryFilter.content),
+                            child: AuratioChipTab(
+                              label: 'Content',
+                              selected: filter == TrackCategoryFilter.content,
+                              size: AuratioChipTabSize.compact,
+                              presentationOnly: true,
+                              width: 66,
+                            ),
                           ),
                         ),
                       ],

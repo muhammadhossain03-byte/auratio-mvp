@@ -101,22 +101,29 @@ class LeaderboardAiAllTimeScreen extends ConsumerWidget {
                         key: modePillsRowKey,
                         children: [
                           // AI (selected - presentation only)
-                          Container(
-                            key: modeAiPillKey,
-                            width: 84,
-                            height: 34,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AuratioColors.backgroundBrand,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'AI',
-                              style: AuratioTypography.caption.copyWith(
-                                color: AuratioColors.textOnBrand,
-                                fontSize: 11,
-                                height: 16 / 11,
-                                fontWeight: FontWeight.w600,
+                          Semantics(
+                            button: true,
+                            selected: true,
+                            enabled: false,
+                            label: 'AI Leaderboard',
+                            excludeSemantics: true,
+                            child: Container(
+                              key: modeAiPillKey,
+                              width: 84,
+                              height: 34,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AuratioColors.backgroundBrand,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                'AI',
+                                style: AuratioTypography.caption.copyWith(
+                                  color: AuratioColors.textOnBrand,
+                                  fontSize: 11,
+                                  height: 16 / 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
@@ -125,8 +132,10 @@ class LeaderboardAiAllTimeScreen extends ConsumerWidget {
                           // Human (unselected - interactive)
                           Semantics(
                             button: true,
+                            selected: false,
                             enabled: true,
                             label: 'Human Leaderboard',
+                            excludeSemantics: true,
                             child: GestureDetector(
                               key: modeHumanPillKey,
                               behavior: HitTestBehavior.opaque,
@@ -164,67 +173,81 @@ class LeaderboardAiAllTimeScreen extends ConsumerWidget {
                       Row(
                         key: periodPillsRowKey,
                         children: [
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => ref
-                                .read(leaderboardPeriodProvider.notifier)
-                                .setPeriod(LeaderboardPeriod.allTime),
-                            child: Container(
-                              key: periodAllTimePillKey,
-                              width: 100,
-                              height: 34,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: isMonthly
-                                    ? AuratioColors.surfaceDefault
-                                    : const Color(0xFF53A6E6),
-                                border: isMonthly
-                                    ? Border.all(
-                                        color: AuratioColors.borderStrong,
-                                      )
-                                    : null,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                'All-Time',
-                                style: AuratioTypography.caption.copyWith(
-                                  color: AuratioColors.backgroundBrand,
-                                  fontSize: 11,
-                                  height: 16 / 11,
-                                  fontWeight: FontWeight.w600,
+                          Semantics(
+                            button: true,
+                            selected: !isMonthly,
+                            enabled: true,
+                            label: 'All-Time',
+                            excludeSemantics: true,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => ref
+                                  .read(leaderboardPeriodProvider.notifier)
+                                  .setPeriod(LeaderboardPeriod.allTime),
+                              child: Container(
+                                key: periodAllTimePillKey,
+                                width: 100,
+                                height: 34,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: isMonthly
+                                      ? AuratioColors.surfaceDefault
+                                      : const Color(0xFF53A6E6),
+                                  border: isMonthly
+                                      ? Border.all(
+                                          color: AuratioColors.borderStrong,
+                                        )
+                                      : null,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  'All-Time',
+                                  style: AuratioTypography.caption.copyWith(
+                                    color: AuratioColors.backgroundBrand,
+                                    fontSize: 11,
+                                    height: 16 / 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => ref
-                                .read(leaderboardPeriodProvider.notifier)
-                                .setPeriod(LeaderboardPeriod.monthly),
-                            child: Container(
-                              key: periodMonthlyPillKey,
-                              width: 100,
-                              height: 34,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: isMonthly
-                                    ? const Color(0xFF53A6E6)
-                                    : AuratioColors.surfaceDefault,
-                                border: isMonthly
-                                    ? null
-                                    : Border.all(
-                                        color: AuratioColors.borderStrong,
-                                      ),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                'Monthly',
-                                style: AuratioTypography.caption.copyWith(
-                                  color: AuratioColors.backgroundBrand,
-                                  fontSize: 11,
-                                  height: 16 / 11,
-                                  fontWeight: FontWeight.w600,
+                          Semantics(
+                            button: true,
+                            selected: isMonthly,
+                            enabled: true,
+                            label: 'Monthly',
+                            excludeSemantics: true,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => ref
+                                  .read(leaderboardPeriodProvider.notifier)
+                                  .setPeriod(LeaderboardPeriod.monthly),
+                              child: Container(
+                                key: periodMonthlyPillKey,
+                                width: 100,
+                                height: 34,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: isMonthly
+                                      ? const Color(0xFF53A6E6)
+                                      : AuratioColors.surfaceDefault,
+                                  border: isMonthly
+                                      ? null
+                                      : Border.all(
+                                          color: AuratioColors.borderStrong,
+                                        ),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  'Monthly',
+                                  style: AuratioTypography.caption.copyWith(
+                                    color: AuratioColors.backgroundBrand,
+                                    fontSize: 11,
+                                    height: 16 / 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
@@ -388,34 +411,40 @@ class LeaderboardAiAllTimeScreen extends ConsumerWidget {
 
                       // How Ranking Works (y=718, w=350, h=48)
                       SizedBox(
-                        key: howRankingWorksKey,
                         width: double.infinity,
                         height: 48,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            showDialog<void>(
-                              context: context,
-                              useSafeArea: false,
-                              builder: (_) => const HowRankingWorksModal(),
-                            );
-                          },
-                          child: Container(
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AuratioColors.surfaceDefault,
-                              border: Border.all(
-                                color: AuratioColors.borderStrong,
+                        child: Semantics(
+                          key: howRankingWorksKey,
+                          button: true,
+                          enabled: true,
+                          label: 'How Ranking Works',
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              showDialog<void>(
+                                context: context,
+                                useSafeArea: false,
+                                builder: (_) => const HowRankingWorksModal(),
+                              );
+                            },
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AuratioColors.surfaceDefault,
+                                border: Border.all(
+                                  color: AuratioColors.borderStrong,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'How Ranking Works',
-                              style: AuratioTypography.labelLarge.copyWith(
-                                color: AuratioColors.backgroundBrand,
-                                fontSize: 14,
-                                height: 20 / 14,
-                                fontWeight: FontWeight.w600,
+                              child: Text(
+                                'How Ranking Works',
+                                style: AuratioTypography.labelLarge.copyWith(
+                                  color: AuratioColors.backgroundBrand,
+                                  fontSize: 14,
+                                  height: 20 / 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),

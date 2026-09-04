@@ -3,13 +3,16 @@ import 'dart:ui' as ui;
 
 import 'package:auratio_mobile/app/app.dart';
 import 'package:auratio_mobile/app/router/app_route_paths.dart';
+import 'package:auratio_mobile/features/events/presentation/screens/events_discovery_screen.dart';
 import 'package:auratio_mobile/features/leaderboard/presentation/screens/leaderboard_ai_all_time_screen.dart';
 import 'package:auratio_mobile/features/leaderboard/presentation/screens/leaderboard_human_all_time_screen.dart';
 import 'package:auratio_mobile/features/onboarding/application/path_selection_controller.dart';
 import 'package:auratio_mobile/features/onboarding/domain/auratio_path.dart';
+import 'package:auratio_mobile/features/progress/presentation/screens/approved_evaluation_history_screen.dart';
 import 'package:auratio_mobile/features/shared/presentation/widgets/auratio_brand_lockup.dart';
 import 'package:auratio_mobile/features/tracks/application/selected_track_provider.dart';
 import 'package:auratio_mobile/features/tracks/domain/track_catalog.dart';
+import 'package:auratio_mobile/features/tracks/presentation/screens/tracks_screen.dart';
 import 'package:auratio_mobile/foundation/design_system/auratio_design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -225,120 +228,347 @@ void main() {
     });
   }
 
-  testWidgets('generate capture for leaderboard_ai_monthly', (tester) async {
-    await _loadFonts();
+  Future<void> saveBoundary(
+    WidgetTester tester,
+    Key key,
+    String fileName,
+  ) async {
+    await tester.runAsync(() async {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(key),
+      );
+      final image = await boundary.toImage(pixelRatio: 1.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final bytes = byteData!.buffer.asUint8List();
 
+      File('$outputDir/$fileName').writeAsBytesSync(bytes);
+    });
+  }
+
+  testWidgets('generate capture for tracks_public_speaking', (tester) async {
+    await _loadFonts();
     tester.view
       ..devicePixelRatio = 1.0
       ..physicalSize = const Size(390, 844);
     addTearDown(tester.view.reset);
-
     const captureKey = Key('capture-boundary');
-
     await tester.pumpWidget(
       ProviderScope(
         child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
       ),
     );
     await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.tracks);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(TracksScreen.filterPublicSpeakingChipKey));
+    await tester.pumpAndSettle();
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_tracks_public_speaking.png',
+    );
+  });
 
+  testWidgets('generate capture for tracks_presenting', (tester) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.tracks);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(TracksScreen.filterPresentingChipKey));
+    await tester.pumpAndSettle();
+    await saveBoundary(tester, captureKey, 'flutter_tracks_presenting.png');
+  });
+
+  testWidgets('generate capture for tracks_content', (tester) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.tracks);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(TracksScreen.filterContentChipKey));
+    await tester.pumpAndSettle();
+    await saveBoundary(tester, captureKey, 'flutter_tracks_content.png');
+  });
+
+  testWidgets('generate capture for events_public_speaking', (tester) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.events);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(EventsDiscoveryScreen.filterPathKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Public Speaking'));
+    await tester.pumpAndSettle();
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_events_public_speaking.png',
+    );
+  });
+
+  testWidgets('generate capture for events_professional_presenting', (
+    tester,
+  ) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.events);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(EventsDiscoveryScreen.filterPathKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Professional Presenting'));
+    await tester.pumpAndSettle();
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_events_professional_presenting.png',
+    );
+  });
+
+  testWidgets('generate capture for events_empty_non_dhaka', (tester) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.events);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(EventsDiscoveryScreen.filterDivisionKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Chattogram Division'));
+    await tester.pumpAndSettle();
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_events_empty_non_dhaka.png',
+    );
+  });
+
+  testWidgets('generate capture for approved_history_ai', (tester) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.approvedEvaluationHistory);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(ApprovedEvaluationHistoryScreen.filterAiPillKey),
+    );
+    await tester.pumpAndSettle();
+    await saveBoundary(tester, captureKey, 'flutter_approved_history_ai.png');
+  });
+
+  testWidgets('generate capture for approved_history_human', (tester) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.approvedEvaluationHistory);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(ApprovedEvaluationHistoryScreen.filterHumanPillKey),
+    );
+    await tester.pumpAndSettle();
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_approved_history_human.png',
+    );
+  });
+
+  testWidgets('generate capture for leaderboard_ai_monthly', (tester) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     final router = app.routerConfig! as GoRouter;
     router.go(AppRoutePaths.leaderboard);
     await tester.pumpAndSettle();
-
     await tester.tap(
       find.byKey(LeaderboardAiAllTimeScreen.periodMonthlyPillKey),
     );
     await tester.pumpAndSettle();
-
-    await tester.runAsync(() async {
-      final boundary = tester.renderObject<RenderRepaintBoundary>(
-        find.byKey(captureKey),
-      );
-      final image = await boundary.toImage(pixelRatio: 1.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final bytes = byteData!.buffer.asUint8List();
-
-      File('$outputDir/flutter_leaderboard_ai_monthly.png')
-          .writeAsBytesSync(bytes);
-    });
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_leaderboard_ai_monthly.png',
+    );
   });
 
   testWidgets('generate capture for leaderboard_human_monthly', (tester) async {
     await _loadFonts();
-
     tester.view
       ..devicePixelRatio = 1.0
       ..physicalSize = const Size(390, 844);
     addTearDown(tester.view.reset);
-
     const captureKey = Key('capture-boundary');
-
     await tester.pumpWidget(
       ProviderScope(
         child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
       ),
     );
     await tester.pumpAndSettle();
-
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     final router = app.routerConfig! as GoRouter;
     router.go(AppRoutePaths.leaderboardHuman);
     await tester.pumpAndSettle();
-
     await tester.tap(
       find.byKey(LeaderboardHumanAllTimeScreen.periodMonthlyPillKey),
     );
     await tester.pumpAndSettle();
-
-    await tester.runAsync(() async {
-      final boundary = tester.renderObject<RenderRepaintBoundary>(
-        find.byKey(captureKey),
-      );
-      final image = await boundary.toImage(pixelRatio: 1.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final bytes = byteData!.buffer.asUint8List();
-
-      File('$outputDir/flutter_leaderboard_human_monthly.png')
-          .writeAsBytesSync(bytes);
-    });
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_leaderboard_human_monthly.png',
+    );
   });
 
-  testWidgets('generate capture for how_ranking_works', (tester) async {
+  testWidgets('generate capture for how_ranking_works_ai_all_time', (
+    tester,
+  ) async {
     await _loadFonts();
-
     tester.view
       ..devicePixelRatio = 1.0
       ..physicalSize = const Size(390, 844);
     addTearDown(tester.view.reset);
-
     const captureKey = Key('capture-boundary');
-
     await tester.pumpWidget(
       ProviderScope(
         child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
       ),
     );
     await tester.pumpAndSettle();
-
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     final router = app.routerConfig! as GoRouter;
     router.go(AppRoutePaths.leaderboard);
     await tester.pumpAndSettle();
-
     await tester.tap(find.byKey(LeaderboardAiAllTimeScreen.howRankingWorksKey));
     await tester.pumpAndSettle();
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_how_ranking_works_ai_all_time.png',
+    );
+    await saveBoundary(tester, captureKey, 'flutter_how_ranking_works.png');
+  });
 
-    await tester.runAsync(() async {
-      final boundary = tester.renderObject<RenderRepaintBoundary>(
-        find.byKey(captureKey),
-      );
-      final image = await boundary.toImage(pixelRatio: 1.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final bytes = byteData!.buffer.asUint8List();
-
-      File('$outputDir/flutter_how_ranking_works.png').writeAsBytesSync(bytes);
-    });
+  testWidgets('generate capture for how_ranking_works_human_monthly', (
+    tester,
+  ) async {
+    await _loadFonts();
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    const captureKey = Key('capture-boundary');
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.leaderboardHuman);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(LeaderboardHumanAllTimeScreen.periodMonthlyPillKey),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(LeaderboardHumanAllTimeScreen.howRankingWorksKey),
+    );
+    await tester.pumpAndSettle();
+    await saveBoundary(
+      tester,
+      captureKey,
+      'flutter_how_ranking_works_human_monthly.png',
+    );
   });
 }

@@ -208,28 +208,34 @@ class HowRankingWorksModal extends StatelessWidget {
                         const SizedBox(height: 24),
 
                         // Back to Leaderboard Button (y=750, h=48)
-                        GestureDetector(
-                          key: backToLeaderboardButtonKey,
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => Navigator.of(context).pop(),
-                          child: Container(
-                            width: double.infinity,
-                            height: 48,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AuratioColors.surfaceDefault,
-                              border: Border.all(
-                                color: AuratioColors.borderStrong,
+                        Semantics(
+                          button: true,
+                          enabled: true,
+                          label: 'Back to Leaderboard',
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            key: backToLeaderboardButtonKey,
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: double.infinity,
+                              height: 48,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AuratioColors.surfaceDefault,
+                                border: Border.all(
+                                  color: AuratioColors.borderStrong,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'Back to Leaderboard',
-                              style: AuratioTypography.labelLarge.copyWith(
-                                color: AuratioColors.backgroundBrand,
-                                fontSize: 14,
-                                height: 20 / 14,
-                                fontWeight: FontWeight.w600,
+                              child: Text(
+                                'Back to Leaderboard',
+                                style: AuratioTypography.labelLarge.copyWith(
+                                  color: AuratioColors.backgroundBrand,
+                                  fontSize: 14,
+                                  height: 20 / 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),

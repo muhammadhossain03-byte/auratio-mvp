@@ -72,32 +72,39 @@ class _ApprovedEvaluationHistoryScreenState
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        key: key,
-        width: width,
-        height: 34,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AuratioColors.backgroundBrand
-              : AuratioColors.surfaceDefault,
-          border: isSelected
-              ? null
-              : Border.all(color: AuratioColors.borderStrong),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: AuratioTypography.caption.copyWith(
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      enabled: true,
+      label: label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          key: key,
+          width: width,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
             color: isSelected
-                ? AuratioColors.textOnBrand
-                : AuratioColors.backgroundBrand,
-            fontSize: 11,
-            height: 16 / 11,
-            fontWeight: FontWeight.w600,
+                ? AuratioColors.backgroundBrand
+                : AuratioColors.surfaceDefault,
+            border: isSelected
+                ? null
+                : Border.all(color: AuratioColors.borderStrong),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            label,
+            style: AuratioTypography.caption.copyWith(
+              color: isSelected
+                  ? AuratioColors.textOnBrand
+                  : AuratioColors.backgroundBrand,
+              fontSize: 11,
+              height: 16 / 11,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -303,50 +310,60 @@ class _ApprovedEvaluationHistoryScreenState
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    GestureDetector(
-                                      key: ApprovedEvaluationHistoryScreen
-                                          .aiViewResultLinkKey,
-                                      behavior: HitTestBehavior.opaque,
-                                      onTap: () => context.push(
-                                        Uri(
-                                          path:
-                                              AppRoutePaths.evaluationResultAi,
-                                          queryParameters: {
-                                            'track':
-                                                'business-pitch-sales-pitch',
-                                          },
-                                        ).toString(),
-                                      ),
-                                      child: Text(
-                                        'View Result',
-                                        style: AuratioTypography.caption
-                                            .copyWith(
-                                              color:
-                                                  AuratioColors.backgroundBrand,
-                                              fontSize: 11,
-                                              height: 16 / 11,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                    Semantics(
+                                      button: true,
+                                      enabled: true,
+                                      label: 'View Result',
+                                      child: GestureDetector(
+                                        key: ApprovedEvaluationHistoryScreen
+                                            .aiViewResultLinkKey,
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () => context.push(
+                                          Uri(
+                                            path: AppRoutePaths
+                                                .evaluationResultAi,
+                                            queryParameters: {
+                                              'track':
+                                                  'business-pitch-sales-pitch',
+                                            },
+                                          ).toString(),
+                                        ),
+                                        child: Text(
+                                          'View Result',
+                                          style: AuratioTypography.caption
+                                              .copyWith(
+                                                color: AuratioColors
+                                                    .backgroundBrand,
+                                                fontSize: 11,
+                                                height: 16 / 11,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
                                       ),
                                     ),
-                                    GestureDetector(
-                                      key: ApprovedEvaluationHistoryScreen
-                                          .aiDownloadDocxLinkKey,
-                                      behavior: HitTestBehavior.opaque,
-                                      onTap: () => context.push(
-                                        AppRoutePaths
-                                            .evaluationReportDownloadSimulated,
-                                      ),
-                                      child: Text(
-                                        'Download .docx',
-                                        style: AuratioTypography.caption
-                                            .copyWith(
-                                              color:
-                                                  AuratioColors.backgroundBrand,
-                                              fontSize: 11,
-                                              height: 16 / 11,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                    Semantics(
+                                      button: true,
+                                      enabled: true,
+                                      label: 'Download .docx',
+                                      child: GestureDetector(
+                                        key: ApprovedEvaluationHistoryScreen
+                                            .aiDownloadDocxLinkKey,
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () => context.push(
+                                          AppRoutePaths
+                                              .evaluationReportDownloadSimulated,
+                                        ),
+                                        child: Text(
+                                          'Download .docx',
+                                          style: AuratioTypography.caption
+                                              .copyWith(
+                                                color: AuratioColors
+                                                    .backgroundBrand,
+                                                fontSize: 11,
+                                                height: 16 / 11,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -464,50 +481,60 @@ class _ApprovedEvaluationHistoryScreenState
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    GestureDetector(
-                                      key: ApprovedEvaluationHistoryScreen
-                                          .humanViewResultLinkKey,
-                                      behavior: HitTestBehavior.opaque,
-                                      onTap: () => context.push(
-                                        Uri(
-                                          path: AppRoutePaths
-                                              .evaluationResultHuman,
-                                          queryParameters: {
-                                            'track':
-                                                'business-pitch-sales-pitch',
-                                          },
-                                        ).toString(),
-                                      ),
-                                      child: Text(
-                                        'View Result',
-                                        style: AuratioTypography.caption
-                                            .copyWith(
-                                              color:
-                                                  AuratioColors.backgroundBrand,
-                                              fontSize: 11,
-                                              height: 16 / 11,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                    Semantics(
+                                      button: true,
+                                      enabled: true,
+                                      label: 'View Result',
+                                      child: GestureDetector(
+                                        key: ApprovedEvaluationHistoryScreen
+                                            .humanViewResultLinkKey,
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () => context.push(
+                                          Uri(
+                                            path: AppRoutePaths
+                                                .evaluationResultHuman,
+                                            queryParameters: {
+                                              'track':
+                                                  'business-pitch-sales-pitch',
+                                            },
+                                          ).toString(),
+                                        ),
+                                        child: Text(
+                                          'View Result',
+                                          style: AuratioTypography.caption
+                                              .copyWith(
+                                                color: AuratioColors
+                                                    .backgroundBrand,
+                                                fontSize: 11,
+                                                height: 16 / 11,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
                                       ),
                                     ),
-                                    GestureDetector(
-                                      key: ApprovedEvaluationHistoryScreen
-                                          .humanDownloadDocxLinkKey,
-                                      behavior: HitTestBehavior.opaque,
-                                      onTap: () => context.push(
-                                        AppRoutePaths
-                                            .evaluationReportDownloadSimulated,
-                                      ),
-                                      child: Text(
-                                        'Download .docx',
-                                        style: AuratioTypography.caption
-                                            .copyWith(
-                                              color:
-                                                  AuratioColors.backgroundBrand,
-                                              fontSize: 11,
-                                              height: 16 / 11,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                    Semantics(
+                                      button: true,
+                                      enabled: true,
+                                      label: 'Download .docx',
+                                      child: GestureDetector(
+                                        key: ApprovedEvaluationHistoryScreen
+                                            .humanDownloadDocxLinkKey,
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () => context.push(
+                                          AppRoutePaths
+                                              .evaluationReportDownloadSimulated,
+                                        ),
+                                        child: Text(
+                                          'Download .docx',
+                                          style: AuratioTypography.caption
+                                              .copyWith(
+                                                color: AuratioColors
+                                                    .backgroundBrand,
+                                                fontSize: 11,
+                                                height: 16 / 11,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
                                       ),
                                     ),
                                   ],
