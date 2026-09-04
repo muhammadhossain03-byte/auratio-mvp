@@ -13,13 +13,6 @@ class EventDetailsScreen extends StatelessWidget {
 
   final String? slug;
 
-  EventItem get event {
-    if (slug == null) {
-      return AuratioEventCatalog.summit;
-    }
-    return AuratioEventCatalog.findBySlug(slug!) ?? AuratioEventCatalog.summit;
-  }
-
   static const screenKey = Key('event-details-screen');
   static const titleKey = Key('event-details-title');
   static const supportingTextKey = Key('event-details-supporting-text');
@@ -40,6 +33,36 @@ class EventDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final EventItem event;
+    if (slug != null) {
+      final eventFromSlug = AuratioEventCatalog.findBySlug(slug!);
+      if (eventFromSlug == null) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          key: screenKey,
+          value: _overlayStyle,
+          child: Scaffold(
+            backgroundColor: AuratioColors.backgroundApp,
+            body: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  AuratioScreenHeader(
+                    title: 'Event Details',
+                    showBack: true,
+                    onBack: () => context.go(AppRoutePaths.events),
+                  ),
+                  const Expanded(child: Center(child: Text('Event not found'))),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+      event = eventFromSlug;
+    } else {
+      event = AuratioEventCatalog.summit;
+    }
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: screenKey,
       value: _overlayStyle,

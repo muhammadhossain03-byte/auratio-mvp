@@ -36,12 +36,35 @@ class EvaluationResultAiScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeTrack = ref.watch(selectedTrackProvider);
-    final track =
-        (trackSlug != null
-            ? AuratioTrackCatalog.findBySlug(trackSlug!)
-            : null) ??
-        activeTrack;
+    final TrackItem track;
+    if (trackSlug != null) {
+      final trackFromSlug = AuratioTrackCatalog.findBySlug(trackSlug!);
+      if (trackFromSlug == null) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          key: screenKey,
+          value: _overlayStyle,
+          child: Scaffold(
+            backgroundColor: AuratioColors.backgroundApp,
+            body: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  AuratioScreenHeader(
+                    title: 'Evaluation Result',
+                    showBack: true,
+                    onBack: () => context.go(AppRoutePaths.home),
+                  ),
+                  const Expanded(child: Center(child: Text('Track not found'))),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+      track = trackFromSlug;
+    } else {
+      track = ref.watch(selectedTrackProvider);
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: screenKey,

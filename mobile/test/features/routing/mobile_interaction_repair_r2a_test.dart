@@ -3,6 +3,8 @@ import 'package:auratio_mobile/features/authentication/presentation/screens/crea
 import 'package:auratio_mobile/features/authentication/presentation/screens/forgot_password_screen.dart';
 import 'package:auratio_mobile/features/authentication/presentation/screens/sign_in_screen.dart';
 import 'package:auratio_mobile/features/evaluations/presentation/screens/evaluation_pending_moderation_screen.dart';
+import 'package:auratio_mobile/features/evaluations/presentation/screens/evaluation_result_ai_screen.dart';
+import 'package:auratio_mobile/features/evaluations/presentation/screens/evaluation_result_human_screen.dart';
 import 'package:auratio_mobile/features/evaluations/presentation/screens/evaluation_routing_screen.dart';
 import 'package:auratio_mobile/features/events/presentation/screens/event_details_screen.dart';
 import 'package:auratio_mobile/features/events/presentation/screens/events_discovery_screen.dart';
@@ -12,6 +14,8 @@ import 'package:auratio_mobile/features/progress/presentation/screens/approved_e
 import 'package:auratio_mobile/features/tracks/domain/track_catalog.dart';
 import 'package:auratio_mobile/features/tracks/presentation/screens/track_details_screen.dart';
 import 'package:auratio_mobile/foundation/navigation/auratio_navigation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/auratio_test_harness.dart';
@@ -293,6 +297,21 @@ void main() {
         expect(router.state.uri.path, AppRoutePaths.events);
         expect(find.byKey(EventsDiscoveryScreen.screenKey), findsOneWidget);
       });
+
+      testWidgets(
+        'Direct EventDetailsScreen construction with explicit invalid slug displays safe invalid state',
+        (tester) async {
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: EventDetailsScreen(slug: 'not-a-real-event'),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(find.text('Public Speaking Summit'), findsNothing);
+          expect(find.text('Event not found'), findsOneWidget);
+        },
+      );
     });
 
     group('6. Fix Historical Result Track Contamination', () {
@@ -442,6 +461,54 @@ void main() {
           findsOneWidget,
         );
       });
+
+      testWidgets(
+        'Direct EvaluationResultAiScreen construction with invalid explicit trackSlug displays safe invalid state',
+        (tester) async {
+          await tester.pumpWidget(
+            const ProviderScope(
+              child: MaterialApp(
+                home: EvaluationResultAiScreen(trackSlug: 'invalid-track'),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text(AuratioTrackCatalog.businessPitch.name),
+            findsNothing,
+          );
+          expect(
+            find.text(AuratioTrackCatalog.marketingPromotional.name),
+            findsNothing,
+          );
+          expect(find.text('Track not found'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'Direct EvaluationResultHumanScreen construction with invalid explicit trackSlug displays safe invalid state',
+        (tester) async {
+          await tester.pumpWidget(
+            const ProviderScope(
+              child: MaterialApp(
+                home: EvaluationResultHumanScreen(trackSlug: 'invalid-track'),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text(AuratioTrackCatalog.businessPitch.name),
+            findsNothing,
+          );
+          expect(
+            find.text(AuratioTrackCatalog.marketingPromotional.name),
+            findsNothing,
+          );
+          expect(find.text('Track not found'), findsOneWidget);
+        },
+      );
     });
   });
 }
