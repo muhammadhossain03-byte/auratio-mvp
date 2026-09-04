@@ -383,7 +383,10 @@ export function getAdminEventsList(): AdminEventItem[] {
 }
 
 export function resetAdminEvents(): void {
-  adminEvents = [...CANONICAL_EVENTS]
+  adminEvents = CANONICAL_EVENTS.map((item) => ({
+    ...item,
+    paths: item.paths ? { ...item.paths } : undefined,
+  }))
   if (typeof window !== 'undefined') {
     try {
       window.sessionStorage?.removeItem(EVENTS_STORAGE_KEY)
@@ -393,7 +396,7 @@ export function resetAdminEvents(): void {
 
 export function getAdminEventById(id: string): AdminEventItem | undefined {
   const all = getAdminEventsList()
-  return all.find((e) => e.id === id) || (id === 'draft' ? all[2] : undefined)
+  return all.find((e) => e.id === id)
 }
 
 export function saveAdminEvent(event: {
@@ -441,6 +444,64 @@ export function saveAdminEvent(event: {
   saveEvents(currentEvents)
   adminEvents = currentEvents
   return savedItem
+}
+
+export function publishAdminEvent(event: {
+  id?: string
+  title: string
+  dateTime: string
+  division: string
+  organizer: string
+  description: string
+  paths: {
+    publicSpeaking: boolean
+    professionalPresenting: boolean
+    contentCreation: boolean
+  }
+}): AdminEventItem {
+  const pathLabels: string[] = []
+  if (event.paths.publicSpeaking) pathLabels.push('Public Speaking')
+  if (event.paths.professionalPresenting) pathLabels.push('Professional Presenting')
+  if (event.paths.contentCreation) pathLabels.push('Content Creation')
+  const relevantPaths = pathLabels.join(', ') || 'None selected'
+
+  const currentEvents = [...getAdminEventsList()]
+  const eventId = event.id || `event-${Date.now()}`
+  const existingIdx = currentEvents.findIndex((e) => e.id === eventId)
+
+  const savedItem: AdminEventItem = {
+    id: eventId,
+    title: event.title,
+    date: event.dateTime || 'Upcoming date',
+    location: event.division,
+    relevantPaths,
+    status: 'Published',
+    actionLabel: 'Edit',
+    destinationPath: `/admin/events/editor?id=${eventId}`,
+    organizer: event.organizer,
+    description: event.description,
+    paths: event.paths,
+  }
+
+  if (existingIdx >= 0) {
+    currentEvents[existingIdx] = savedItem
+  } else {
+    currentEvents.push(savedItem)
+  }
+  saveEvents(currentEvents)
+  adminEvents = currentEvents
+  return savedItem
+}
+
+export function deleteAdminEvent(id: string): boolean {
+  const currentEvents = [...getAdminEventsList()]
+  const filtered = currentEvents.filter((e) => e.id !== id)
+  if (filtered.length !== currentEvents.length) {
+    saveEvents(filtered)
+    adminEvents = filtered
+    return true
+  }
+  return false
 }
 
 export const adminEventsList: AdminEventItem[] = adminEvents
@@ -938,6 +999,8 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __getAdminVolunteersList: typeof getAdminVolunteersList }).__getAdminVolunteersList = getAdminVolunteersList
   ;(window as unknown as { __getAdminEventsList: typeof getAdminEventsList }).__getAdminEventsList = getAdminEventsList
   ;(window as unknown as { __saveAdminEvent: typeof saveAdminEvent }).__saveAdminEvent = saveAdminEvent
+  ;(window as unknown as { __publishAdminEvent: typeof publishAdminEvent }).__publishAdminEvent = publishAdminEvent
+  ;(window as unknown as { __deleteAdminEvent: typeof deleteAdminEvent }).__deleteAdminEvent = deleteAdminEvent
   ;(window as unknown as { __addAdminVolunteer: typeof addAdminVolunteer }).__addAdminVolunteer = addAdminVolunteer
   ;(window as unknown as { __getModerationEntityState: typeof getModerationEntityState }).__getModerationEntityState = getModerationEntityState
   ;(window as unknown as { __approveModerationEntity: typeof approveModerationEntity }).__approveModerationEntity = approveModerationEntity

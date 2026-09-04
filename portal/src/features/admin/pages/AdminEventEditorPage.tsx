@@ -2,7 +2,12 @@ import { useState } from 'react'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getAdminEventById, saveAdminEvent } from '../data/mockAdminData'
+import {
+  deleteAdminEvent,
+  getAdminEventById,
+  publishAdminEvent,
+  saveAdminEvent,
+} from '../data/mockAdminData'
 
 export function AdminEventEditorPage() {
   const navigate = useNavigate()
@@ -16,6 +21,8 @@ export function AdminEventEditorPage() {
   const [division, setDivision] = useState(() => existing?.location || '')
   const [organizer, setOrganizer] = useState(() => existing?.organizer || '')
   const [description, setDescription] = useState(() => existing?.description || '')
+  const [titleError, setTitleError] = useState('')
+  const [divisionError, setDivisionError] = useState('')
   const [paths, setPaths] = useState<{
     publicSpeaking: boolean
     professionalPresenting: boolean
@@ -44,6 +51,44 @@ export function AdminEventEditorPage() {
       description: description.trim(),
       paths,
     })
+    navigate(portalRoutePaths.admin.events)
+  }
+
+  function handlePublish() {
+    let hasError = false
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      setTitleError('Event title is required.')
+      hasError = true
+    } else {
+      setTitleError('')
+    }
+
+    const trimmedDivision = division.trim()
+    if (!trimmedDivision) {
+      setDivisionError('Bangladesh Division is required.')
+      hasError = true
+    } else {
+      setDivisionError('')
+    }
+
+    if (hasError) return
+
+    publishAdminEvent({
+      id: eventId,
+      title: trimmedTitle,
+      dateTime: dateTime.trim(),
+      division: trimmedDivision,
+      organizer: organizer.trim(),
+      description: description.trim(),
+      paths,
+    })
+    navigate(portalRoutePaths.admin.events)
+  }
+
+  function handleDelete() {
+    if (!eventId || !existing) return
+    deleteAdminEvent(eventId)
     navigate(portalRoutePaths.admin.events)
   }
 
@@ -96,11 +141,19 @@ export function AdminEventEditorPage() {
               id="event-title"
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                if (titleError) setTitleError('')
+              }}
               placeholder="Event title"
               className="auratio-admin-input"
               style={{ width: '500px', height: '44px', fontSize: '11px' }}
             />
+            {titleError && (
+              <div data-testid="event-title-error" style={{ color: '#B42318', fontSize: '11px', marginTop: '4px' }}>
+                {titleError}
+              </div>
+            )}
           </div>
 
           <div style={{ width: '500px', marginLeft: '20px' }}>
@@ -135,11 +188,19 @@ export function AdminEventEditorPage() {
               id="event-division"
               type="text"
               value={division}
-              onChange={(e) => setDivision(e.target.value)}
+              onChange={(e) => {
+                setDivision(e.target.value)
+                if (divisionError) setDivisionError('')
+              }}
               placeholder="Select division"
               className="auratio-admin-input"
               style={{ width: '500px', height: '44px', fontSize: '11px' }}
             />
+            {divisionError && (
+              <div data-testid="event-division-error" style={{ color: '#B42318', fontSize: '11px', marginTop: '4px' }}>
+                {divisionError}
+              </div>
+            )}
           </div>
 
           <div style={{ width: '500px', marginLeft: '20px' }}>
@@ -300,24 +361,32 @@ export function AdminEventEditorPage() {
           Save Draft
         </button>
 
-        {/* Presentation-only controls per live Figma finding */}
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-admin-btn auratio-admin-btn--primary auratio-admin-btn--presentation"
+        <button
+          type="button"
+          onClick={handlePublish}
+          className="auratio-admin-btn auratio-admin-btn--primary"
           style={{ width: '160px', height: '42px', fontSize: '13px', fontWeight: 600, marginLeft: '12px' }}
         >
           Publish Event
-        </div>
+        </button>
 
-        <div
-          role="presentation"
-          aria-hidden="true"
-          className="auratio-admin-btn auratio-admin-btn--secondary auratio-admin-btn--presentation"
-          style={{ width: '150px', height: '42px', fontSize: '13px', fontWeight: 600, marginLeft: '12px' }}
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={!existing}
+          aria-disabled={!existing}
+          className={`auratio-admin-btn auratio-admin-btn--secondary ${!existing ? 'auratio-admin-btn--disabled' : ''}`}
+          style={{
+            width: '150px',
+            height: '42px',
+            fontSize: '13px',
+            fontWeight: 600,
+            marginLeft: '12px',
+            ...(!existing ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
+          }}
         >
           Delete Event
-        </div>
+        </button>
       </div>
     </AdminLayout>
   )

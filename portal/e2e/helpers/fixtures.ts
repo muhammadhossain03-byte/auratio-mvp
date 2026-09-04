@@ -3,12 +3,22 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 export const EVIDENCE_DIR = path.resolve('capture_output', 'playwright')
+export const REPAIRS_P2_DIR = path.resolve('capture_output', 'repairs_p2')
 
 export async function captureEvidenceScreenshot(page: Page, filename: string): Promise<string> {
   if (!fs.existsSync(EVIDENCE_DIR)) {
     fs.mkdirSync(EVIDENCE_DIR, { recursive: true })
   }
   const filePath = path.join(EVIDENCE_DIR, filename)
+  await page.screenshot({ path: filePath, fullPage: true })
+  return filePath
+}
+
+export async function captureRepairsP2Screenshot(page: Page, filename: string): Promise<string> {
+  if (!fs.existsSync(REPAIRS_P2_DIR)) {
+    fs.mkdirSync(REPAIRS_P2_DIR, { recursive: true })
+  }
+  const filePath = path.join(REPAIRS_P2_DIR, filename)
   await page.screenshot({ path: filePath, fullPage: true })
   return filePath
 }

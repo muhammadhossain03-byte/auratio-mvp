@@ -216,6 +216,14 @@ export const router = createBrowserRouter([
     element: <AdminRequestRedirectedHumanPage />,
   },
   {
+    path: '/admin/requests/:requestId',
+    element: <Navigate to={portalRoutePaths.admin.requests} replace />,
+  },
+  {
+    path: '/admin/requests/:requestId/*',
+    element: <Navigate to={portalRoutePaths.admin.requests} replace />,
+  },
+  {
     path: portalRoutePaths.admin.evaluations,
     element: <AdminEvaluationRecordsPage />,
   },

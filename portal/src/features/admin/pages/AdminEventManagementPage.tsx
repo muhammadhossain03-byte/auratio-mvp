@@ -126,7 +126,7 @@ export function AdminEventManagementPage() {
           </div>
         ) : (
           events.map((ev, idx) => (
-          <div key={ev.title}>
+          <div key={ev.id} data-event-id={ev.id} data-testid={`admin-event-row-${ev.id}`}>
             <div
               style={{
                 display: 'flex',

@@ -1,4 +1,4 @@
-import { test, expect, captureEvidenceScreenshot, resetMockState, registerErrorTracking, assertNoPageErrors } from './helpers/fixtures'
+import { test, expect, captureEvidenceScreenshot, captureRepairsP2Screenshot, resetMockState, registerErrorTracking, assertNoPageErrors } from './helpers/fixtures'
 
 test.describe('Admin Request, Moderation, Volunteer, Event, and Audit Regressions', () => {
   test.beforeEach(async ({ page }) => {
@@ -80,6 +80,44 @@ test.describe('Admin Request, Moderation, Volunteer, Event, and Audit Regression
     })
     expect(confirmOwnership?.activeOwner).toBe('Nadia Rahman')
     expect(confirmOwnership?.supersededOwner).toBe('Farhana Islam')
+
+    // 6. Invalid request route fallback & malformed nested routes (DEFECT P2-01)
+    await page.goto('/admin/requests/req-9999')
+    await expect(page).toHaveURL('/admin/requests')
+    await expect(page.locator('h2.auratio-admin-page-title')).toContainText('Evaluation requests')
+    await expect(page.locator('text=Unexpected Application Error')).toHaveCount(0)
+    await expect(page.locator('text=404 Not Found')).toHaveCount(0)
+    await captureRepairsP2Screenshot(page, '01_invalid_request_redirect.png')
+
+    const malformedRequestRoutes = [
+      '/admin/requests/req-9999/assign',
+      '/admin/requests/req-9999/reassign',
+      '/admin/requests/unknown-req-404/extra/deep',
+    ]
+    for (const route of malformedRequestRoutes) {
+      await page.goto(route)
+      await expect(page).toHaveURL('/admin/requests')
+      await expect(page.locator('text=Unexpected Application Error')).toHaveCount(0)
+      await expect(page.locator('text=404 Not Found')).toHaveCount(0)
+      await expect(page.locator('h2.auratio-admin-page-title')).toContainText('Evaluation requests')
+    }
+
+    // Confirm canonical request routes still render their exact expected views intact
+    await page.goto('/admin/requests/req-1042')
+    await expect(page).toHaveURL('/admin/requests/req-1042')
+    await expect(page.locator('h2.auratio-admin-page-title')).toContainText('REQ-1042')
+
+    await page.goto('/admin/requests/req-1041')
+    await expect(page).toHaveURL('/admin/requests/req-1041')
+    await expect(page.locator('h2.auratio-admin-page-title')).toContainText('REQ-1041')
+
+    await page.goto('/admin/requests/req-1038')
+    await expect(page).toHaveURL('/admin/requests/req-1038')
+    await expect(page.locator('h2.auratio-admin-page-title')).toContainText('REQ-1038')
+
+    await page.goto('/admin/requests/req-1034')
+    await expect(page).toHaveURL('/admin/requests/req-1034')
+    await expect(page.locator('h2.auratio-admin-page-title')).toContainText('REQ-1034')
   })
 
   // 8. MODERATION ENTITY-INTEGRITY REGRESSION
@@ -247,56 +285,131 @@ test.describe('Admin Request, Moderation, Volunteer, Event, and Audit Regression
     expect(canonicalFarhana).toEqual(['Informative', 'Persuasive', 'Business Pitch / Sales Pitch'])
   })
 
-  // 10. ADMIN EVENT REGRESSION
-  test('admin event management handles All Events, Published filter, Save Draft persistence, and event isolation', async ({ page }) => {
+  // 10. ADMIN EVENT REGRESSION & COMPLETE LIFECYCLE (DEFECT P2-02)
+  test('admin event management handles complete lifecycle: publish validation, draft persistence, publishing, deletion, and isolation', async ({ page }) => {
     await page.goto('/admin/events')
     await expect(page).toHaveURL('/admin/events')
 
-    // Initial state contains both Published and Draft
+    // Initial state contains canonical Published and Draft events
     await expect(page.locator('text=Public Speaking Summit')).toBeVisible()
     await expect(page.locator('text=Draft Event')).toBeVisible()
 
-    // Click Published filter
+    // 1. BRAND-NEW EVENT: Delete Event must be genuinely disabled
+    await page.locator('button.auratio-admin-btn--primary', { hasText: 'Create Event' }).click()
+    await expect(page).toHaveURL('/admin/events/editor')
+    const newDeleteBtn = page.locator('button', { hasText: 'Delete Event' })
+    await expect(newDeleteBtn).toBeDisabled()
+    await expect(newDeleteBtn).toHaveAttribute('aria-disabled', 'true')
+    await expect(newDeleteBtn).toHaveClass(/auratio-admin-btn--disabled/)
+    await captureRepairsP2Screenshot(page, '02_event_new_delete_disabled.png')
+
+    // 2. MINIMUM PUBLISH VALIDATION: Title & Bangladesh Division required
+    await page.locator('button', { hasText: 'Publish Event' }).click()
+    await expect(page).toHaveURL('/admin/events/editor')
+    await expect(page.locator('[data-testid="event-title-error"]')).toContainText('Event title is required.')
+    await expect(page.locator('[data-testid="event-division-error"]')).toContainText('Bangladesh Division is required.')
+
+    // Typing clears respective error
+    await page.locator('#event-title').fill('Draft A')
+    await expect(page.locator('[data-testid="event-title-error"]')).toHaveCount(0)
+    await expect(page.locator('[data-testid="event-division-error"]')).toBeVisible()
+
+    // 3. CREATE DRAFT A: Save Draft succeeds and creates Draft A
+    await page.locator('#event-date').fill('October 2026')
+    await page.locator('button.auratio-admin-btn--secondary', { hasText: 'Save Draft' }).click()
+    await expect(page).toHaveURL('/admin/events')
+    await expect(page.locator('text=Draft A')).toBeVisible()
+    await captureRepairsP2Screenshot(page, '03_event_draft_saved.png')
+
+    // 4. CREATE DRAFT B
+    await page.locator('button.auratio-admin-btn--primary', { hasText: 'Create Event' }).click()
+    await expect(page).toHaveURL('/admin/events/editor')
+    await page.locator('#event-title').fill('Draft B')
+    await page.locator('#event-division').fill('Chittagong Division')
+    await page.locator('#event-date').fill('November 2026')
+    await page.locator('button.auratio-admin-btn--secondary', { hasText: 'Save Draft' }).click()
+    await expect(page).toHaveURL('/admin/events')
+    await expect(page.locator('text=Draft B')).toBeVisible()
+
+    // Both Draft A and Draft B are present as Drafts
+    const draftARow = page.locator('.auratio-admin-panel > div').filter({ hasText: 'Draft A' })
+    const draftBRow = page.locator('.auratio-admin-panel > div').filter({ hasText: 'Draft B' })
+    await expect(draftARow.locator('.auratio-admin-status-pill--draft')).toHaveText('Draft')
+    await expect(draftBRow.locator('.auratio-admin-status-pill--draft')).toHaveText('Draft')
+
+    // 5. PUBLISH DRAFT A: Edit Draft A, provide division, and publish
+    await draftARow.locator('button').click()
+    await expect(page).toHaveURL(/\/admin\/events\/editor\?id=/)
+    const existingDeleteBtn = page.locator('button', { hasText: 'Delete Event' })
+    await expect(existingDeleteBtn).toBeEnabled()
+    await expect(existingDeleteBtn).not.toHaveClass(/auratio-admin-btn--disabled/)
+
+    await page.locator('#event-division').fill('Dhaka Division')
+    await page.locator('button', { hasText: 'Publish Event' }).click()
+    await expect(page).toHaveURL('/admin/events')
+
+    // Draft A is now Published; Draft B remains Draft and unmutated
+    await expect(page.locator('.auratio-admin-panel > div').filter({ hasText: 'Draft A' }).locator('.auratio-admin-status-pill--published')).toHaveText('Published')
+    await expect(page.locator('.auratio-admin-panel > div').filter({ hasText: 'Draft B' }).locator('.auratio-admin-status-pill--draft')).toHaveText('Draft')
+    await captureRepairsP2Screenshot(page, '04_event_published.png')
+
+    // 6. PUBLISHED FILTER: includes Draft A, excludes Draft B
     const publishedFilterBtn = page.locator('button[data-testid="admin-events-filter-published"]')
     await publishedFilterBtn.click()
     await expect(publishedFilterBtn).toHaveAttribute('aria-pressed', 'true')
-    await expect(page.locator('text=Public Speaking Summit')).toBeVisible()
-    await expect(page.locator('text=Draft Event')).toHaveCount(0)
-
-    // Capture Published filter screenshot
+    await expect(page.locator('text=Draft A')).toBeVisible()
+    await expect(page.locator('text=Draft B')).toHaveCount(0)
+    await captureRepairsP2Screenshot(page, '05_event_published_filter.png')
     await captureEvidenceScreenshot(page, '06_event_published_filter.png')
 
-    // Return to All Events
+    // 7. ALL EVENTS FILTER: restores both
     const allEventsFilterBtn = page.locator('button[data-testid="admin-events-filter-all"]')
     await allEventsFilterBtn.click()
     await expect(allEventsFilterBtn).toHaveAttribute('aria-pressed', 'true')
-    await expect(page.locator('text=Draft Event')).toBeVisible()
+    await expect(page.locator('text=Draft A')).toBeVisible()
+    await expect(page.locator('text=Draft B')).toBeVisible()
+    await captureRepairsP2Screenshot(page, '06_event_delete_before.png')
 
-    // Create Event -> Save Draft
-    await page.locator('button.auratio-admin-btn--primary', { hasText: 'Create Event' }).click()
-    await expect(page).toHaveURL('/admin/events/editor')
-    await page.locator('#event-title').fill('Playwright Test Event')
-    await page.locator('#event-division').fill('Sylhet Division')
-    await page.locator('button.auratio-admin-btn--secondary', { hasText: 'Save Draft' }).click()
+    // 8. DELETE DRAFT B: delete exactly opened event; Draft A remains untouched
+    const draftBRowToDelete = page.locator('.auratio-admin-panel > div').filter({ hasText: 'Draft B' })
+    await draftBRowToDelete.locator('button').click()
+    await expect(page).toHaveURL(/\/admin\/events\/editor\?id=/)
+    await page.locator('button', { hasText: 'Delete Event' }).click()
     await expect(page).toHaveURL('/admin/events')
 
-    // Newly saved draft appears in directory
-    await expect(page.locator('text=Playwright Test Event')).toBeVisible()
+    // Draft B is gone from directory; Draft A remains Published and untouched
+    await expect(page.locator('text=Draft B')).toHaveCount(0)
+    await expect(page.locator('text=Draft A')).toBeVisible()
+    await expect(page.locator('text=Public Speaking Summit')).toBeVisible()
+    await expect(page.locator('text=Presentation Practice Meetup')).toBeVisible()
+    await captureRepairsP2Screenshot(page, '07_event_delete_after.png')
 
-    // Reopen exact saved draft and verify data persistence
-    const newDraftRow = page.locator('.auratio-admin-panel > div').filter({ hasText: 'Playwright Test Event' })
-    await newDraftRow.locator('button').click()
-    await expect(page.locator('#event-title')).toHaveValue('Playwright Test Event')
+    // 9. EDIT / PUBLISH EXISTING EVENT DOES NOT DUPLICATE
+    const draftARowToEdit = page.locator('.auratio-admin-panel > div').filter({ hasText: 'Draft A' })
+    await draftARowToEdit.locator('button').click()
+    await page.locator('#event-description').fill('Updated description for Draft A')
+    await page.locator('button', { hasText: 'Publish Event' }).click()
+    await expect(page).toHaveURL('/admin/events')
+    await expect(page.locator('text=Draft A')).toHaveCount(1)
+
+    // 10. REPEATED SAVE DRAFT REMAINS IDEMPOTENT
+    const draftARowToSaveDraft = page.locator('.auratio-admin-panel > div').filter({ hasText: 'Draft A' })
+    await draftARowToSaveDraft.locator('button').click()
     await page.locator('button.auratio-admin-btn--secondary', { hasText: 'Save Draft' }).click()
     await expect(page).toHaveURL('/admin/events')
+    await expect(page.locator('text=Draft A')).toHaveCount(1)
 
-    // Published filter excludes the newly created draft
-    await publishedFilterBtn.click()
-    await expect(page.locator('text=Playwright Test Event')).toHaveCount(0)
-
-    // All events restores it
-    await allEventsFilterBtn.click()
-    await expect(page.locator('text=Playwright Test Event')).toBeVisible()
+    // 11. INVALID EVENT ID REDIRECTS SAFELY
+    const invalidEventRoutes = [
+      '/admin/events/non-existent-id-9999',
+      '/admin/events/editor?id=non-existent-id-9999',
+    ]
+    for (const route of invalidEventRoutes) {
+      await page.goto(route)
+      await expect(page).toHaveURL('/admin/events')
+      await expect(page.locator('text=Unexpected Application Error')).toHaveCount(0)
+      await expect(page.locator('text=404 Not Found')).toHaveCount(0)
+    }
   })
 
   // 11. AUDIT LOG REGRESSION

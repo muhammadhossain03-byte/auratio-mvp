@@ -701,6 +701,9 @@ async function run() {
 
     // A. Safe redirection for unknown dynamic IDs (no fake mutable entities fabricated)
     const unknownRoutes = [
+      { path: '/admin/requests/req-9999', expectedRedirect: '/admin/requests' },
+      { path: '/admin/requests/req-9999/assign', expectedRedirect: '/admin/requests' },
+      { path: '/admin/requests/req-9999/reassign', expectedRedirect: '/admin/requests' },
       { path: '/admin/volunteers/unknown-vol', expectedRedirect: '/admin/volunteers' },
       { path: '/admin/events/unknown-event', expectedRedirect: '/admin/events' },
       { path: '/super-admin/admin-accounts/unknown-admin', expectedRedirect: '/super-admin/admin-accounts' },
