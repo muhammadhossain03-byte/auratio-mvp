@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../application/leaderboard_period_provider.dart';
+import '../widgets/how_ranking_works_modal.dart';
 import '../widgets/leaderboard_rank_card.dart';
 
-class LeaderboardAiAllTimeScreen extends StatelessWidget {
+class LeaderboardAiAllTimeScreen extends ConsumerWidget {
   const LeaderboardAiAllTimeScreen({super.key});
 
   static const screenKey = Key('leaderboard-ai-all-time-screen');
@@ -40,7 +43,9 @@ class LeaderboardAiAllTimeScreen extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final period = ref.watch(leaderboardPeriodProvider);
+    final isMonthly = period == LeaderboardPeriod.monthly;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: screenKey,
       value: _overlayStyle,
@@ -159,48 +164,68 @@ class LeaderboardAiAllTimeScreen extends StatelessWidget {
                       Row(
                         key: periodPillsRowKey,
                         children: [
-                          // All-Time (selected - presentation only)
-                          Container(
-                            key: periodAllTimePillKey,
-                            width: 100,
-                            height: 34,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF53A6E6),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'All-Time',
-                              style: AuratioTypography.caption.copyWith(
-                                color: AuratioColors.backgroundBrand,
-                                fontSize: 11,
-                                height: 16 / 11,
-                                fontWeight: FontWeight.w600,
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => ref
+                                .read(leaderboardPeriodProvider.notifier)
+                                .setPeriod(LeaderboardPeriod.allTime),
+                            child: Container(
+                              key: periodAllTimePillKey,
+                              width: 100,
+                              height: 34,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: isMonthly
+                                    ? AuratioColors.surfaceDefault
+                                    : const Color(0xFF53A6E6),
+                                border: isMonthly
+                                    ? Border.all(
+                                        color: AuratioColors.borderStrong,
+                                      )
+                                    : null,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                'All-Time',
+                                style: AuratioTypography.caption.copyWith(
+                                  color: AuratioColors.backgroundBrand,
+                                  fontSize: 11,
+                                  height: 16 / 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
-
-                          // Monthly (unselected - presentation only)
-                          Container(
-                            key: periodMonthlyPillKey,
-                            width: 100,
-                            height: 34,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AuratioColors.surfaceDefault,
-                              border: Border.all(
-                                color: AuratioColors.borderStrong,
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => ref
+                                .read(leaderboardPeriodProvider.notifier)
+                                .setPeriod(LeaderboardPeriod.monthly),
+                            child: Container(
+                              key: periodMonthlyPillKey,
+                              width: 100,
+                              height: 34,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: isMonthly
+                                    ? const Color(0xFF53A6E6)
+                                    : AuratioColors.surfaceDefault,
+                                border: isMonthly
+                                    ? null
+                                    : Border.all(
+                                        color: AuratioColors.borderStrong,
+                                      ),
+                                borderRadius: BorderRadius.circular(999),
                               ),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'Monthly',
-                              style: AuratioTypography.caption.copyWith(
-                                color: AuratioColors.backgroundBrand,
-                                fontSize: 11,
-                                height: 16 / 11,
-                                fontWeight: FontWeight.w600,
+                              child: Text(
+                                'Monthly',
+                                style: AuratioTypography.caption.copyWith(
+                                  color: AuratioColors.backgroundBrand,
+                                  fontSize: 11,
+                                  height: 16 / 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
@@ -237,11 +262,13 @@ class LeaderboardAiAllTimeScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '3 Approved AI evaluations in this scope.',
+                                isMonthly
+                                    ? '3 Approved AI evaluations submitted this calendar month (D = 1.00).'
+                                    : '3 Approved AI evaluations in this scope.',
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: AuratioColors.textSecondary,
-                                  fontSize: 12,
-                                  height: 18 / 12,
+                                  fontSize: isMonthly ? 11 : 12,
+                                  height: isMonthly ? 14 / 11 : 18 / 12,
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -258,7 +285,9 @@ class LeaderboardAiAllTimeScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 20,
                         child: Text(
-                          'ALL-TIME AI RANKING',
+                          isMonthly
+                              ? 'MONTHLY AI RANKING'
+                              : 'ALL-TIME AI RANKING',
                           style: AuratioTypography.caption.copyWith(
                             color: AuratioColors.neutral500,
                             fontSize: 11,
@@ -272,34 +301,40 @@ class LeaderboardAiAllTimeScreen extends StatelessWidget {
                       const SizedBox(height: 10),
 
                       // Ranking Card 1 (y=422, w=350, h=56)
-                      const LeaderboardRankCard(
+                      LeaderboardRankCard(
                         key: rankCard1Key,
                         rank: '1',
                         name: 'Speaker A',
-                        alr: 'ALR 92.4',
-                        participation: 'Participation 7',
+                        alr: isMonthly ? 'ALR 94.0' : 'ALR 92.4',
+                        participation: isMonthly
+                            ? 'Participation 3'
+                            : 'Participation 7',
                       ),
 
                       const SizedBox(height: 10),
 
                       // Ranking Card 2 (y=488, w=350, h=56)
-                      const LeaderboardRankCard(
+                      LeaderboardRankCard(
                         key: rankCard2Key,
                         rank: '2',
-                        name: 'Speaker B',
-                        alr: 'ALR 90.9',
-                        participation: 'Participation 5',
+                        name: isMonthly ? 'Speaker C' : 'Speaker B',
+                        alr: isMonthly ? 'ALR 91.5' : 'ALR 90.9',
+                        participation: isMonthly
+                            ? 'Participation 4'
+                            : 'Participation 5',
                       ),
 
                       const SizedBox(height: 10),
 
                       // Ranking Card 3 (y=554, w=350, h=56)
-                      const LeaderboardRankCard(
+                      LeaderboardRankCard(
                         key: rankCard3Key,
                         rank: '3',
-                        name: 'Speaker C',
-                        alr: 'ALR 89.7',
-                        participation: 'Participation 9',
+                        name: isMonthly ? 'Speaker B' : 'Speaker C',
+                        alr: isMonthly ? 'ALR 89.0' : 'ALR 89.7',
+                        participation: isMonthly
+                            ? 'Participation 2'
+                            : 'Participation 9',
                       ),
 
                       const SizedBox(height: 22),
@@ -323,7 +358,9 @@ class LeaderboardAiAllTimeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Your position  #12',
+                                isMonthly
+                                    ? 'Your position  #8'
+                                    : 'Your position  #12',
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: AuratioColors.backgroundBrand,
                                   fontSize: 12,
@@ -332,7 +369,9 @@ class LeaderboardAiAllTimeScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                'ALR 86.4  •  Participation 3',
+                                isMonthly
+                                    ? 'ALR 87.5  •  Participation 3'
+                                    : 'ALR 86.4  •  Participation 3',
                                 style: AuratioTypography.caption.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 11,
@@ -352,22 +391,32 @@ class LeaderboardAiAllTimeScreen extends StatelessWidget {
                         key: howRankingWorksKey,
                         width: double.infinity,
                         height: 48,
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AuratioColors.surfaceDefault,
-                            border: Border.all(
-                              color: AuratioColors.borderStrong,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            showDialog<void>(
+                              context: context,
+                              useSafeArea: false,
+                              builder: (_) => const HowRankingWorksModal(),
+                            );
+                          },
+                          child: Container(
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AuratioColors.surfaceDefault,
+                              border: Border.all(
+                                color: AuratioColors.borderStrong,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'How Ranking Works',
-                            style: AuratioTypography.labelLarge.copyWith(
-                              color: AuratioColors.backgroundBrand,
-                              fontSize: 14,
-                              height: 20 / 14,
-                              fontWeight: FontWeight.w600,
+                            child: Text(
+                              'How Ranking Works',
+                              style: AuratioTypography.labelLarge.copyWith(
+                                color: AuratioColors.backgroundBrand,
+                                fontSize: 14,
+                                height: 20 / 14,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),

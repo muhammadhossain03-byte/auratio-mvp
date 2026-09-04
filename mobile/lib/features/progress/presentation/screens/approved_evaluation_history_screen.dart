@@ -7,7 +7,9 @@ import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../../foundation/navigation/auratio_mobile_navigation.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 
-class ApprovedEvaluationHistoryScreen extends StatelessWidget {
+enum ApprovedHistoryFilter { all, ai, human }
+
+class ApprovedEvaluationHistoryScreen extends StatefulWidget {
   const ApprovedEvaluationHistoryScreen({super.key});
 
   static const screenKey = Key('approved-evaluation-history-screen');
@@ -55,10 +57,65 @@ class ApprovedEvaluationHistoryScreen extends StatelessWidget {
   );
 
   @override
+  State<ApprovedEvaluationHistoryScreen> createState() =>
+      _ApprovedEvaluationHistoryScreenState();
+}
+
+class _ApprovedEvaluationHistoryScreenState
+    extends State<ApprovedEvaluationHistoryScreen> {
+  ApprovedHistoryFilter _selectedFilter = ApprovedHistoryFilter.all;
+
+  Widget _buildFilterPill({
+    required Key key,
+    required String label,
+    required double width,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        key: key,
+        width: width,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AuratioColors.backgroundBrand
+              : AuratioColors.surfaceDefault,
+          border: isSelected
+              ? null
+              : Border.all(color: AuratioColors.borderStrong),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: AuratioTypography.caption.copyWith(
+            color: isSelected
+                ? AuratioColors.textOnBrand
+                : AuratioColors.backgroundBrand,
+            fontSize: 11,
+            height: 16 / 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final showAi =
+        _selectedFilter == ApprovedHistoryFilter.all ||
+        _selectedFilter == ApprovedHistoryFilter.ai;
+    final showHuman =
+        _selectedFilter == ApprovedHistoryFilter.all ||
+        _selectedFilter == ApprovedHistoryFilter.human;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      key: screenKey,
-      value: _overlayStyle,
+      key: ApprovedEvaluationHistoryScreen.screenKey,
+      value: ApprovedEvaluationHistoryScreen._overlayStyle,
       child: Scaffold(
         backgroundColor: AuratioColors.backgroundApp,
         body: SafeArea(
@@ -81,7 +138,7 @@ class ApprovedEvaluationHistoryScreen extends StatelessWidget {
                       // Intro (y=116, w=350, h=36)
                       Text(
                         'Approved results remain in your private history even after they leave a public rating window.',
-                        key: introKey,
+                        key: ApprovedEvaluationHistoryScreen.introKey,
                         style: AuratioTypography.bodySmall.copyWith(
                           color: AuratioColors.textSecondary,
                           fontSize: 12,
@@ -94,379 +151,379 @@ class ApprovedEvaluationHistoryScreen extends StatelessWidget {
 
                       // Filter Pills Row (y=166, h=34)
                       Row(
-                        key: filterPillsRowKey,
+                        key: ApprovedEvaluationHistoryScreen.filterPillsRowKey,
                         children: [
-                          // All (selected)
-                          Container(
-                            key: filterAllPillKey,
+                          _buildFilterPill(
+                            key: ApprovedEvaluationHistoryScreen
+                                .filterAllPillKey,
+                            label: 'All',
                             width: 66,
-                            height: 34,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AuratioColors.backgroundBrand,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'All',
-                              style: AuratioTypography.caption.copyWith(
-                                color: AuratioColors.textOnBrand,
-                                fontSize: 11,
-                                height: 16 / 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            isSelected:
+                                _selectedFilter == ApprovedHistoryFilter.all,
+                            onTap: () {
+                              setState(() {
+                                _selectedFilter = ApprovedHistoryFilter.all;
+                              });
+                            },
                           ),
                           const SizedBox(width: 8),
-
-                          // AI (unselected)
-                          Container(
-                            key: filterAiPillKey,
+                          _buildFilterPill(
+                            key:
+                                ApprovedEvaluationHistoryScreen.filterAiPillKey,
+                            label: 'AI',
                             width: 66,
-                            height: 34,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AuratioColors.surfaceDefault,
-                              border: Border.all(
-                                color: AuratioColors.borderStrong,
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'AI',
-                              style: AuratioTypography.caption.copyWith(
-                                color: AuratioColors.backgroundBrand,
-                                fontSize: 11,
-                                height: 16 / 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            isSelected:
+                                _selectedFilter == ApprovedHistoryFilter.ai,
+                            onTap: () {
+                              setState(() {
+                                _selectedFilter = ApprovedHistoryFilter.ai;
+                              });
+                            },
                           ),
                           const SizedBox(width: 8),
-
-                          // Human (unselected)
-                          Container(
-                            key: filterHumanPillKey,
+                          _buildFilterPill(
+                            key: ApprovedEvaluationHistoryScreen
+                                .filterHumanPillKey,
+                            label: 'Human',
                             width: 86,
-                            height: 34,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AuratioColors.surfaceDefault,
-                              border: Border.all(
-                                color: AuratioColors.borderStrong,
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'Human',
-                              style: AuratioTypography.caption.copyWith(
-                                color: AuratioColors.backgroundBrand,
-                                fontSize: 11,
-                                height: 16 / 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            isSelected:
+                                _selectedFilter == ApprovedHistoryFilter.human,
+                            onTap: () {
+                              setState(() {
+                                _selectedFilter = ApprovedHistoryFilter.human;
+                              });
+                            },
                           ),
                         ],
                       ),
 
                       const SizedBox(height: 22),
 
-                      // Approved Record 1 — AI (y=222, w=350, h=138)
-                      SizedBox(
-                        key: aiRecordCardKey,
-                        width: double.infinity,
-                        height: 138,
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-                          decoration: BoxDecoration(
-                            color: AuratioColors.surfaceDefault,
-                            border: Border.all(
-                              color: AuratioColors.borderDefault,
+                      if (showAi) ...[
+                        // Approved Record 1 — AI (y=222, w=350, h=138)
+                        SizedBox(
+                          key: ApprovedEvaluationHistoryScreen.aiRecordCardKey,
+                          width: double.infinity,
+                          height: 138,
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+                            decoration: BoxDecoration(
+                              color: AuratioColors.surfaceDefault,
+                              border: Border.all(
+                                color: AuratioColors.borderDefault,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Business Pitch / Sales Pitch',
-                                style: AuratioTypography.labelLarge.copyWith(
-                                  color: AuratioColors.textPrimary,
-                                  fontSize: 14,
-                                  height: 20 / 14,
-                                  fontWeight: FontWeight.w600,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Business Pitch / Sales Pitch',
+                                  style: AuratioTypography.labelLarge.copyWith(
+                                    color: AuratioColors.textPrimary,
+                                    fontSize: 14,
+                                    height: 20 / 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 80,
-                                    height: 30,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: AuratioColors
-                                          .statusApprovedBackground,
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    child: Text(
-                                      'Approved',
-                                      style: AuratioTypography.caption.copyWith(
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 80,
+                                      height: 30,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
                                         color: AuratioColors
-                                            .statusApprovedForeground,
-                                        fontSize: 11,
-                                        height: 16 / 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Text(
-                                    'AI Evaluation',
-                                    style: AuratioTypography.caption.copyWith(
-                                      color: AuratioColors.neutral500,
-                                      fontSize: 11,
-                                      height: 16 / 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Score',
-                                    style: AuratioTypography.caption.copyWith(
-                                      color: AuratioColors.neutral500,
-                                      fontSize: 11,
-                                      height: 16 / 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '88 / 100',
-                                    style: AuratioTypography.bodyMedium
-                                        .copyWith(
-                                          color: AuratioColors.backgroundBrand,
-                                          fontSize: 13,
-                                          height: 18 / 13,
-                                          fontWeight: FontWeight.w700,
+                                            .statusApprovedBackground,
+                                        borderRadius: BorderRadius.circular(
+                                          999,
                                         ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    'Approved 22 Aug 2026',
-                                    style: AuratioTypography.caption.copyWith(
-                                      color: AuratioColors.textSecondary,
-                                      fontSize: 11,
-                                      height: 16 / 11,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  GestureDetector(
-                                    key: aiViewResultLinkKey,
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => context.push(
-                                      Uri(
-                                        path: AppRoutePaths.evaluationResultAi,
-                                        queryParameters: {
-                                          'track': 'business-pitch-sales-pitch',
-                                        },
-                                      ).toString(),
-                                    ),
-                                    child: Text(
-                                      'View Result',
-                                      style: AuratioTypography.caption.copyWith(
-                                        color: AuratioColors.backgroundBrand,
-                                        fontSize: 11,
-                                        height: 16 / 11,
-                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      child: Text(
+                                        'Approved',
+                                        style: AuratioTypography.caption
+                                            .copyWith(
+                                              color: AuratioColors
+                                                  .statusApprovedForeground,
+                                              fontSize: 11,
+                                              height: 16 / 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                     ),
-                                  ),
-                                  GestureDetector(
-                                    key: aiDownloadDocxLinkKey,
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => context.push(
-                                      AppRoutePaths
-                                          .evaluationReportDownloadSimulated,
-                                    ),
-                                    child: Text(
-                                      'Download .docx',
+                                    const SizedBox(width: 14),
+                                    Text(
+                                      'AI Evaluation',
                                       style: AuratioTypography.caption.copyWith(
-                                        color: AuratioColors.backgroundBrand,
+                                        color: AuratioColors.neutral500,
                                         fontSize: 11,
                                         height: 16 / 11,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Score',
+                                      style: AuratioTypography.caption.copyWith(
+                                        color: AuratioColors.neutral500,
+                                        fontSize: 11,
+                                        height: 16 / 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '88 / 100',
+                                      style: AuratioTypography.bodyMedium
+                                          .copyWith(
+                                            color:
+                                                AuratioColors.backgroundBrand,
+                                            fontSize: 13,
+                                            height: 18 / 13,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      'Approved 22 Aug 2026',
+                                      style: AuratioTypography.caption.copyWith(
+                                        color: AuratioColors.textSecondary,
+                                        fontSize: 11,
+                                        height: 16 / 11,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    GestureDetector(
+                                      key: ApprovedEvaluationHistoryScreen
+                                          .aiViewResultLinkKey,
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () => context.push(
+                                        Uri(
+                                          path:
+                                              AppRoutePaths.evaluationResultAi,
+                                          queryParameters: {
+                                            'track':
+                                                'business-pitch-sales-pitch',
+                                          },
+                                        ).toString(),
+                                      ),
+                                      child: Text(
+                                        'View Result',
+                                        style: AuratioTypography.caption
+                                            .copyWith(
+                                              color:
+                                                  AuratioColors.backgroundBrand,
+                                              fontSize: 11,
+                                              height: 16 / 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      key: ApprovedEvaluationHistoryScreen
+                                          .aiDownloadDocxLinkKey,
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () => context.push(
+                                        AppRoutePaths
+                                            .evaluationReportDownloadSimulated,
+                                      ),
+                                      child: Text(
+                                        'Download .docx',
+                                        style: AuratioTypography.caption
+                                            .copyWith(
+                                              color:
+                                                  AuratioColors.backgroundBrand,
+                                              fontSize: 11,
+                                              height: 16 / 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
+                      ],
 
-                      const SizedBox(height: 18),
+                      if (showAi && showHuman) const SizedBox(height: 18),
 
-                      // Approved Record 2 — Human (y=378, w=350, h=138)
-                      SizedBox(
-                        key: humanRecordCardKey,
-                        width: double.infinity,
-                        height: 138,
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-                          decoration: BoxDecoration(
-                            color: AuratioColors.surfaceDefault,
-                            border: Border.all(
-                              color: AuratioColors.borderDefault,
+                      if (showHuman) ...[
+                        // Approved Record 2 — Human (y=378, w=350, h=138)
+                        SizedBox(
+                          key: ApprovedEvaluationHistoryScreen
+                              .humanRecordCardKey,
+                          width: double.infinity,
+                          height: 138,
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+                            decoration: BoxDecoration(
+                              color: AuratioColors.surfaceDefault,
+                              border: Border.all(
+                                color: AuratioColors.borderDefault,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Business Pitch / Sales Pitch',
-                                style: AuratioTypography.labelLarge.copyWith(
-                                  color: AuratioColors.textPrimary,
-                                  fontSize: 14,
-                                  height: 20 / 14,
-                                  fontWeight: FontWeight.w600,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Business Pitch / Sales Pitch',
+                                  style: AuratioTypography.labelLarge.copyWith(
+                                    color: AuratioColors.textPrimary,
+                                    fontSize: 14,
+                                    height: 20 / 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 80,
-                                    height: 30,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: AuratioColors
-                                          .statusApprovedBackground,
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    child: Text(
-                                      'Approved',
-                                      style: AuratioTypography.caption.copyWith(
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 80,
+                                      height: 30,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
                                         color: AuratioColors
-                                            .statusApprovedForeground,
-                                        fontSize: 11,
-                                        height: 16 / 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Text(
-                                    'Human Evaluation',
-                                    style: AuratioTypography.caption.copyWith(
-                                      color: AuratioColors.neutral500,
-                                      fontSize: 11,
-                                      height: 16 / 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Score',
-                                    style: AuratioTypography.caption.copyWith(
-                                      color: AuratioColors.neutral500,
-                                      fontSize: 11,
-                                      height: 16 / 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '84 / 100',
-                                    style: AuratioTypography.bodyMedium
-                                        .copyWith(
-                                          color: AuratioColors.backgroundBrand,
-                                          fontSize: 13,
-                                          height: 18 / 13,
-                                          fontWeight: FontWeight.w700,
+                                            .statusApprovedBackground,
+                                        borderRadius: BorderRadius.circular(
+                                          999,
                                         ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    'Approved 18 Aug 2026',
-                                    style: AuratioTypography.caption.copyWith(
-                                      color: AuratioColors.textSecondary,
-                                      fontSize: 11,
-                                      height: 16 / 11,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  GestureDetector(
-                                    key: humanViewResultLinkKey,
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => context.push(
-                                      Uri(
-                                        path:
-                                            AppRoutePaths.evaluationResultHuman,
-                                        queryParameters: {
-                                          'track': 'business-pitch-sales-pitch',
-                                        },
-                                      ).toString(),
-                                    ),
-                                    child: Text(
-                                      'View Result',
-                                      style: AuratioTypography.caption.copyWith(
-                                        color: AuratioColors.backgroundBrand,
-                                        fontSize: 11,
-                                        height: 16 / 11,
-                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      child: Text(
+                                        'Approved',
+                                        style: AuratioTypography.caption
+                                            .copyWith(
+                                              color: AuratioColors
+                                                  .statusApprovedForeground,
+                                              fontSize: 11,
+                                              height: 16 / 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                     ),
-                                  ),
-                                  GestureDetector(
-                                    key: humanDownloadDocxLinkKey,
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => context.push(
-                                      AppRoutePaths
-                                          .evaluationReportDownloadSimulated,
-                                    ),
-                                    child: Text(
-                                      'Download .docx',
+                                    const SizedBox(width: 14),
+                                    Text(
+                                      'Human Evaluation',
                                       style: AuratioTypography.caption.copyWith(
-                                        color: AuratioColors.backgroundBrand,
+                                        color: AuratioColors.neutral500,
                                         fontSize: 11,
                                         height: 16 / 11,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Score',
+                                      style: AuratioTypography.caption.copyWith(
+                                        color: AuratioColors.neutral500,
+                                        fontSize: 11,
+                                        height: 16 / 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '84 / 100',
+                                      style: AuratioTypography.bodyMedium
+                                          .copyWith(
+                                            color:
+                                                AuratioColors.backgroundBrand,
+                                            fontSize: 13,
+                                            height: 18 / 13,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      'Approved 18 Aug 2026',
+                                      style: AuratioTypography.caption.copyWith(
+                                        color: AuratioColors.textSecondary,
+                                        fontSize: 11,
+                                        height: 16 / 11,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    GestureDetector(
+                                      key: ApprovedEvaluationHistoryScreen
+                                          .humanViewResultLinkKey,
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () => context.push(
+                                        Uri(
+                                          path: AppRoutePaths
+                                              .evaluationResultHuman,
+                                          queryParameters: {
+                                            'track':
+                                                'business-pitch-sales-pitch',
+                                          },
+                                        ).toString(),
+                                      ),
+                                      child: Text(
+                                        'View Result',
+                                        style: AuratioTypography.caption
+                                            .copyWith(
+                                              color:
+                                                  AuratioColors.backgroundBrand,
+                                              fontSize: 11,
+                                              height: 16 / 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      key: ApprovedEvaluationHistoryScreen
+                                          .humanDownloadDocxLinkKey,
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () => context.push(
+                                        AppRoutePaths
+                                            .evaluationReportDownloadSimulated,
+                                      ),
+                                      child: Text(
+                                        'Download .docx',
+                                        style: AuratioTypography.caption
+                                            .copyWith(
+                                              color:
+                                                  AuratioColors.backgroundBrand,
+                                              fontSize: 11,
+                                              height: 16 / 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
+                      ],
 
                       const SizedBox(height: 36),
 
                       // Progress Effect Card (y=552, w=350, h=104)
                       SizedBox(
-                        key: progressEffectCardKey,
+                        key: ApprovedEvaluationHistoryScreen
+                            .progressEffectCardKey,
                         width: double.infinity,
                         height: 104,
                         child: Container(

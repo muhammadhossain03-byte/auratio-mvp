@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../../foundation/navigation/auratio_navigation.dart';
+import '../../../onboarding/application/path_selection_controller.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../domain/event_catalog.dart';
 import '../widgets/event_discovery_card.dart';
 
-class EventsDiscoveryScreen extends StatelessWidget {
+class EventsDiscoveryScreen extends ConsumerStatefulWidget {
   const EventsDiscoveryScreen({super.key});
 
   static const screenKey = Key('events-discovery-screen');
@@ -24,7 +27,28 @@ class EventsDiscoveryScreen extends StatelessWidget {
   static const eventCard1Key = Key('events-discovery-event-card-1');
   static const eventCard2Key = Key('events-discovery-event-card-2');
   static const readOnlyCardKey = Key('events-discovery-read-only-card');
+  static const emptyStateKey = Key('events-discovery-empty-state');
   static const bottomNavKey = Key('events-discovery-bottom-nav');
+
+  static const divisionOptions = [
+    'Dhaka Division',
+    'Chattogram Division',
+    'Rajshahi Division',
+    'Khulna Division',
+    'Barishal Division',
+    'Sylhet Division',
+    'Rangpur Division',
+    'Mymensingh Division',
+  ];
+
+  static const pathOptions = [
+    'All Paths',
+    'Public Speaking',
+    'Professional Presenting',
+    'Content Creation',
+  ];
+
+  static const dateOptions = ['Upcoming', 'All Dates'];
 
   static const _overlayStyle = SystemUiOverlayStyle(
     statusBarColor: AuratioColors.backgroundBrand,
@@ -35,10 +59,130 @@ class EventsDiscoveryScreen extends StatelessWidget {
   );
 
   @override
+  ConsumerState<EventsDiscoveryScreen> createState() =>
+      _EventsDiscoveryScreenState();
+}
+
+class _EventsDiscoveryScreenState extends ConsumerState<EventsDiscoveryScreen> {
+  String _selectedDivision = 'Dhaka Division';
+  String _selectedPathFilter = 'All Paths';
+  String _selectedDateFilter = 'Upcoming';
+
+  Future<void> _showOptionSelector({
+    required String title,
+    required List<String> options,
+    required String selectedOption,
+    required ValueChanged<String> onSelected,
+  }) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AuratioColors.surfaceDefault,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    title,
+                    style: AuratioTypography.headingMedium.copyWith(
+                      color: AuratioColors.textPrimary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Divider(height: 1, color: AuratioColors.borderDefault),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: options.map((option) {
+                        final isSelected = option == selectedOption;
+                        return ListTile(
+                          title: Text(
+                            option,
+                            style: AuratioTypography.bodyMedium.copyWith(
+                              color: isSelected
+                                  ? AuratioColors.backgroundBrand
+                                  : AuratioColors.textPrimary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                          trailing: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  color: AuratioColors.backgroundBrand,
+                                  size: 20,
+                                )
+                              : null,
+                          onTap: () {
+                            onSelected(option);
+                            Navigator.of(bottomSheetContext).pop();
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final userPaths = ref.watch(selectedPathsProvider);
+
+    final displayedEvents = AuratioEventCatalog.all.where((event) {
+      // 1. Division filter
+      if (event.division != _selectedDivision) {
+        return false;
+      }
+
+      // 2. Path filter
+      if (_selectedPathFilter == 'All Paths') {
+        if (!userPaths.contains(event.relevantPath)) {
+          return false;
+        }
+      } else {
+        if (event.relevantPath.label != _selectedPathFilter) {
+          return false;
+        }
+        if (!userPaths.contains(event.relevantPath)) {
+          return false;
+        }
+      }
+
+      // 3. Date filter
+      if (_selectedDateFilter == 'Upcoming') {
+        if (!event.date.toLowerCase().contains('upcoming')) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      key: screenKey,
-      value: _overlayStyle,
+      key: EventsDiscoveryScreen.screenKey,
+      value: EventsDiscoveryScreen._overlayStyle,
       child: Scaffold(
         backgroundColor: AuratioColors.backgroundApp,
         body: SafeArea(
@@ -60,7 +204,7 @@ class EventsDiscoveryScreen extends StatelessWidget {
                         width: double.infinity,
                         child: Text(
                           'Events for you',
-                          key: headingKey,
+                          key: EventsDiscoveryScreen.headingKey,
                           style: AuratioTypography.headingLarge.copyWith(
                             color: AuratioColors.textPrimary,
                             fontSize: 24,
@@ -75,7 +219,7 @@ class EventsDiscoveryScreen extends StatelessWidget {
                       // Intro copy (y=160, w=350, h=38)
                       Text(
                         'Bangladesh-only events are matched to your saved Division and selected Auratio paths.',
-                        key: introKey,
+                        key: EventsDiscoveryScreen.introKey,
                         style: AuratioTypography.bodyMedium.copyWith(
                           color: AuratioColors.textSecondary,
                           fontSize: 13,
@@ -88,7 +232,7 @@ class EventsDiscoveryScreen extends StatelessWidget {
 
                       // Filter Card (y=214, w=350, h=142)
                       SizedBox(
-                        key: filterCardKey,
+                        key: EventsDiscoveryScreen.filterCardKey,
                         width: double.infinity,
                         height: 142,
                         child: Container(
@@ -126,23 +270,51 @@ class EventsDiscoveryScreen extends StatelessWidget {
                               Row(
                                 children: [
                                   // Division Filter (Rect(34, 278, 102, 40))
-                                  const _FilterPill(
-                                    key: filterDivisionKey,
-                                    label: 'Dhaka Division',
+                                  _FilterPill(
+                                    key:
+                                        EventsDiscoveryScreen.filterDivisionKey,
+                                    label: _selectedDivision,
+                                    onTap: () => _showOptionSelector(
+                                      title: 'Select Division',
+                                      options:
+                                          EventsDiscoveryScreen.divisionOptions,
+                                      selectedOption: _selectedDivision,
+                                      onSelected: (val) => setState(
+                                        () => _selectedDivision = val,
+                                      ),
+                                    ),
                                   ),
                                   const SizedBox(width: 8),
 
                                   // Path Filter (Rect(144, 278, 102, 40))
-                                  const _FilterPill(
-                                    key: filterPathKey,
-                                    label: 'All Paths',
+                                  _FilterPill(
+                                    key: EventsDiscoveryScreen.filterPathKey,
+                                    label: _selectedPathFilter,
+                                    onTap: () => _showOptionSelector(
+                                      title: 'Select Path',
+                                      options:
+                                          EventsDiscoveryScreen.pathOptions,
+                                      selectedOption: _selectedPathFilter,
+                                      onSelected: (val) => setState(
+                                        () => _selectedPathFilter = val,
+                                      ),
+                                    ),
                                   ),
                                   const SizedBox(width: 8),
 
                                   // Date Filter (Rect(254, 278, 102, 40))
-                                  const _FilterPill(
-                                    key: filterDateKey,
-                                    label: 'Upcoming',
+                                  _FilterPill(
+                                    key: EventsDiscoveryScreen.filterDateKey,
+                                    label: _selectedDateFilter,
+                                    onTap: () => _showOptionSelector(
+                                      title: 'Select Date',
+                                      options:
+                                          EventsDiscoveryScreen.dateOptions,
+                                      selectedOption: _selectedDateFilter,
+                                      onSelected: (val) => setState(
+                                        () => _selectedDateFilter = val,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -155,7 +327,7 @@ class EventsDiscoveryScreen extends StatelessWidget {
 
                       // Section Label (y=374, w=350, h=20)
                       SizedBox(
-                        key: relevantEventsLabelKey,
+                        key: EventsDiscoveryScreen.relevantEventsLabelKey,
                         width: double.infinity,
                         height: 20,
                         child: Text(
@@ -172,34 +344,71 @@ class EventsDiscoveryScreen extends StatelessWidget {
 
                       const SizedBox(height: 6),
 
-                      // Event Card 1 (y=400, w=350, h=112)
-                      EventDiscoveryCard(
-                        key: eventCard1Key,
-                        title: 'Public Speaking Summit',
-                        divisionAndDate: 'Dhaka Division • Upcoming date',
-                        relevantPath: 'Relevant path: Public Speaking',
-                        onTap: () =>
-                            context.push('/events/public-speaking-summit'),
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      // Event Card 2 (y=530, w=350, h=112)
-                      EventDiscoveryCard(
-                        key: eventCard2Key,
-                        title: 'Presentation Practice Meetup',
-                        divisionAndDate: 'Dhaka Division • Upcoming date',
-                        relevantPath: 'Relevant path: Professional Presenting',
-                        onTap: () => context.push(
-                          '/events/presentation-practice-meetup',
+                      if (displayedEvents.isEmpty) ...[
+                        Container(
+                          key: EventsDiscoveryScreen.emptyStateKey,
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 36,
+                            horizontal: 20,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AuratioColors.surfaceDefault,
+                            border: Border.all(
+                              color: AuratioColors.borderDefault,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'No matching events',
+                                style: AuratioTypography.headingMedium.copyWith(
+                                  color: AuratioColors.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'No events match your current filter selection.',
+                                textAlign: TextAlign.center,
+                                style: AuratioTypography.bodySmall.copyWith(
+                                  color: AuratioColors.textSecondary,
+                                  fontSize: 13,
+                                  height: 18 / 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ] else ...[
+                        for (int i = 0; i < displayedEvents.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 18),
+                          EventDiscoveryCard(
+                            key:
+                                displayedEvents[i].slug ==
+                                    'public-speaking-summit'
+                                ? EventsDiscoveryScreen.eventCard1Key
+                                : EventsDiscoveryScreen.eventCard2Key,
+                            title: displayedEvents[i].title,
+                            divisionAndDate:
+                                '${displayedEvents[i].division} • ${displayedEvents[i].date}',
+                            relevantPath:
+                                'Relevant path: ${displayedEvents[i].relevantPath.label}',
+                            onTap: () => context.push(
+                              '/events/${displayedEvents[i].slug}',
+                            ),
+                          ),
+                        ],
+                      ],
 
                       const SizedBox(height: 18),
 
                       // Read-Only Directory Card (y=660, w=350, h=82)
                       SizedBox(
-                        key: readOnlyCardKey,
+                        key: EventsDiscoveryScreen.readOnlyCardKey,
                         width: double.infinity,
                         height: 82,
                         child: Container(
@@ -244,7 +453,7 @@ class EventsDiscoveryScreen extends StatelessWidget {
                 ),
               ),
               AuratioMobileNavigationBar(
-                key: bottomNavKey,
+                key: EventsDiscoveryScreen.bottomNavKey,
                 destinations: canonicalMobileDestinations,
                 currentIndex: 0,
                 interactiveIndices: const {0, 1, 2, 3},
@@ -269,36 +478,46 @@ class EventsDiscoveryScreen extends StatelessWidget {
 }
 
 class _FilterPill extends StatelessWidget {
-  const _FilterPill({required this.label, super.key});
+  const _FilterPill({required this.label, this.onTap, super.key});
 
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 102,
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-        color: AuratioColors.surfaceDefault,
-        border: Border.all(color: const Color(0xFFC9D6E7)),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: AuratioTypography.caption.copyWith(
-              color: AuratioColors.backgroundBrand,
-              fontSize: 11,
-              height: 16 / 11,
-              fontWeight: FontWeight.w500,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 102,
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        alignment: Alignment.centerLeft,
+        decoration: BoxDecoration(
+          color: AuratioColors.surfaceDefault,
+          border: Border.all(color: const Color(0xFFC9D6E7)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AuratioTypography.caption.copyWith(
+                  color: AuratioColors.backgroundBrand,
+                  fontSize: 11,
+                  height: 16 / 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-          ),
-          const _DropdownTriangle(),
-        ],
+            const SizedBox(width: 4),
+            const _DropdownTriangle(),
+          ],
+        ),
       ),
     );
   }

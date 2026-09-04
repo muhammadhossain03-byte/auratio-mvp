@@ -10,6 +10,22 @@ import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 import '../../application/selected_track_provider.dart';
 import '../../domain/track_catalog.dart';
 
+enum TrackCategoryFilter { all, publicSpeaking, presenting, content }
+
+final tracksCategoryFilterProvider =
+    NotifierProvider<TracksCategoryFilterController, TrackCategoryFilter>(
+      TracksCategoryFilterController.new,
+    );
+
+class TracksCategoryFilterController extends Notifier<TrackCategoryFilter> {
+  @override
+  TrackCategoryFilter build() => TrackCategoryFilter.all;
+
+  void select(TrackCategoryFilter filter) {
+    state = filter;
+  }
+}
+
 class TracksScreen extends ConsumerWidget {
   const TracksScreen({super.key});
 
@@ -17,6 +33,12 @@ class TracksScreen extends ConsumerWidget {
   static const businessPitchTrackKey = Key(
     'track-row-business-pitch-sales-pitch',
   );
+  static const filterAllChipKey = Key('tracks-filter-all-chip');
+  static const filterPublicSpeakingChipKey = Key(
+    'tracks-filter-public-speaking-chip',
+  );
+  static const filterPresentingChipKey = Key('tracks-filter-presenting-chip');
+  static const filterContentChipKey = Key('tracks-filter-content-chip');
 
   static const _overlayStyle = SystemUiOverlayStyle(
     statusBarColor: AuratioColors.backgroundBrand,
@@ -28,6 +50,8 @@ class TracksScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final filter = ref.watch(tracksCategoryFilterProvider);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: tracksScreenKey,
       value: _overlayStyle,
@@ -47,71 +71,113 @@ class TracksScreen extends ConsumerWidget {
                     const SizedBox(height: 18),
 
                     // Filter Chips Row (y=110, h=32)
-                    const Row(
+                    Row(
                       children: [
-                        AuratioChipTab(
-                          label: 'All',
-                          selected: true,
-                          size: AuratioChipTabSize.compact,
-                          presentationOnly: true,
-                          width: 49,
+                        GestureDetector(
+                          key: filterAllChipKey,
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => ref
+                              .read(tracksCategoryFilterProvider.notifier)
+                              .select(TrackCategoryFilter.all),
+                          child: AuratioChipTab(
+                            label: 'All',
+                            selected: filter == TrackCategoryFilter.all,
+                            size: AuratioChipTabSize.compact,
+                            presentationOnly: true,
+                            width: 49,
+                          ),
                         ),
-                        SizedBox(width: 6),
-                        AuratioChipTab(
-                          label: 'Public Speaking',
-                          selected: false,
-                          size: AuratioChipTabSize.compact,
-                          presentationOnly: true,
-                          width: 125,
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          key: filterPublicSpeakingChipKey,
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => ref
+                              .read(tracksCategoryFilterProvider.notifier)
+                              .select(TrackCategoryFilter.publicSpeaking),
+                          child: AuratioChipTab(
+                            label: 'Public Speaking',
+                            selected:
+                                filter == TrackCategoryFilter.publicSpeaking,
+                            size: AuratioChipTabSize.compact,
+                            presentationOnly: true,
+                            width: 125,
+                          ),
                         ),
-                        SizedBox(width: 6),
-                        AuratioChipTab(
-                          label: 'Presenting',
-                          selected: false,
-                          size: AuratioChipTabSize.compact,
-                          presentationOnly: true,
-                          width: 92,
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          key: filterPresentingChipKey,
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => ref
+                              .read(tracksCategoryFilterProvider.notifier)
+                              .select(TrackCategoryFilter.presenting),
+                          child: AuratioChipTab(
+                            label: 'Presenting',
+                            selected: filter == TrackCategoryFilter.presenting,
+                            size: AuratioChipTabSize.compact,
+                            presentationOnly: true,
+                            width: 92,
+                          ),
                         ),
-                        SizedBox(width: 6),
-                        AuratioChipTab(
-                          label: 'Content',
-                          selected: false,
-                          size: AuratioChipTabSize.compact,
-                          presentationOnly: true,
-                          width: 66,
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          key: filterContentChipKey,
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => ref
+                              .read(tracksCategoryFilterProvider.notifier)
+                              .select(TrackCategoryFilter.content),
+                          child: AuratioChipTab(
+                            label: 'Content',
+                            selected: filter == TrackCategoryFilter.content,
+                            size: AuratioChipTabSize.compact,
+                            presentationOnly: true,
+                            width: 66,
+                          ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 22),
+                    if (filter == TrackCategoryFilter.all ||
+                        filter == TrackCategoryFilter.publicSpeaking) ...[
+                      const SizedBox(height: 22),
+                      // Category 1: Public Speaking
+                      _buildCategorySection(
+                        context,
+                        ref: ref,
+                        header: 'PUBLIC SPEAKING',
+                        tracks: AuratioTrackCatalog.publicSpeakingTracks,
+                      ),
+                    ],
 
-                    // Category 1: Public Speaking
-                    _buildCategorySection(
-                      context,
-                      ref: ref,
-                      header: 'PUBLIC SPEAKING',
-                      tracks: AuratioTrackCatalog.publicSpeakingTracks,
-                    ),
+                    if (filter == TrackCategoryFilter.all ||
+                        filter == TrackCategoryFilter.presenting) ...[
+                      SizedBox(
+                        height: filter == TrackCategoryFilter.presenting
+                            ? 22
+                            : 16,
+                      ),
+                      // Category 2: Professional Presenting
+                      _buildCategorySection(
+                        context,
+                        ref: ref,
+                        header: 'PROFESSIONAL PRESENTING',
+                        tracks:
+                            AuratioTrackCatalog.professionalPresentingTracks,
+                      ),
+                    ],
 
-                    const SizedBox(height: 16),
-
-                    // Category 2: Professional Presenting
-                    _buildCategorySection(
-                      context,
-                      ref: ref,
-                      header: 'PROFESSIONAL PRESENTING',
-                      tracks: AuratioTrackCatalog.professionalPresentingTracks,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Category 3: Content Creation
-                    _buildCategorySection(
-                      context,
-                      ref: ref,
-                      header: 'CONTENT CREATION',
-                      tracks: AuratioTrackCatalog.contentCreationTracks,
-                    ),
+                    if (filter == TrackCategoryFilter.all ||
+                        filter == TrackCategoryFilter.content) ...[
+                      SizedBox(
+                        height: filter == TrackCategoryFilter.content ? 22 : 16,
+                      ),
+                      // Category 3: Content Creation
+                      _buildCategorySection(
+                        context,
+                        ref: ref,
+                        header: 'CONTENT CREATION',
+                        tracks: AuratioTrackCatalog.contentCreationTracks,
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
                   ],

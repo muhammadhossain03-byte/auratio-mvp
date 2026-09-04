@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:auratio_mobile/app/app.dart';
 import 'package:auratio_mobile/app/router/app_route_paths.dart';
+import 'package:auratio_mobile/features/leaderboard/presentation/screens/leaderboard_ai_all_time_screen.dart';
+import 'package:auratio_mobile/features/leaderboard/presentation/screens/leaderboard_human_all_time_screen.dart';
 import 'package:auratio_mobile/features/onboarding/application/path_selection_controller.dart';
 import 'package:auratio_mobile/features/onboarding/domain/auratio_path.dart';
 import 'package:auratio_mobile/features/shared/presentation/widgets/auratio_brand_lockup.dart';
@@ -222,4 +224,121 @@ void main() {
       });
     });
   }
+
+  testWidgets('generate capture for leaderboard_ai_monthly', (tester) async {
+    await _loadFonts();
+
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+
+    const captureKey = Key('capture-boundary');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.leaderboard);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(LeaderboardAiAllTimeScreen.periodMonthlyPillKey),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.runAsync(() async {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(captureKey),
+      );
+      final image = await boundary.toImage(pixelRatio: 1.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final bytes = byteData!.buffer.asUint8List();
+
+      File('$outputDir/flutter_leaderboard_ai_monthly.png')
+          .writeAsBytesSync(bytes);
+    });
+  });
+
+  testWidgets('generate capture for leaderboard_human_monthly', (tester) async {
+    await _loadFonts();
+
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+
+    const captureKey = Key('capture-boundary');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.leaderboardHuman);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(LeaderboardHumanAllTimeScreen.periodMonthlyPillKey),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.runAsync(() async {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(captureKey),
+      );
+      final image = await boundary.toImage(pixelRatio: 1.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final bytes = byteData!.buffer.asUint8List();
+
+      File('$outputDir/flutter_leaderboard_human_monthly.png')
+          .writeAsBytesSync(bytes);
+    });
+  });
+
+  testWidgets('generate capture for how_ranking_works', (tester) async {
+    await _loadFonts();
+
+    tester.view
+      ..devicePixelRatio = 1.0
+      ..physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+
+    const captureKey = Key('capture-boundary');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: RepaintBoundary(key: captureKey, child: const AuratioApp()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig! as GoRouter;
+    router.go(AppRoutePaths.leaderboard);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(LeaderboardAiAllTimeScreen.howRankingWorksKey));
+    await tester.pumpAndSettle();
+
+    await tester.runAsync(() async {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(captureKey),
+      );
+      final image = await boundary.toImage(pixelRatio: 1.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final bytes = byteData!.buffer.asUint8List();
+
+      File('$outputDir/flutter_how_ranking_works.png').writeAsBytesSync(bytes);
+    });
+  });
 }
