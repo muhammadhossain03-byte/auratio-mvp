@@ -1,0 +1,95 @@
+{
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "valid-usable",
+      "expected": "ACCEPT",
+      "reason": "Exactly 16 expected unique criteria; integer scores compatible with anchors; timestamps within duration; all required text and summary present."
+    },
+    {
+      "id": "valid-unassessable",
+      "expected": "ACCEPT",
+      "reason": "evaluation_usable=false, non-empty unusable_reason, criteria=[], overall_summary=null."
+    },
+    {
+      "id": "missing-criterion",
+      "expected": "REJECT",
+      "reason": "Usable result does not contain exactly the expected 16 criterion IDs."
+    },
+    {
+      "id": "duplicate-criterion",
+      "expected": "REJECT",
+      "reason": "Criterion ID appears more than once."
+    },
+    {
+      "id": "wrong-track-criterion",
+      "expected": "REJECT",
+      "reason": "A criterion from a non-selected track is present."
+    },
+    {
+      "id": "invalid-anchor",
+      "expected": "REJECT",
+      "reason": "Anchor is not Low, Competent, or Excellent."
+    },
+    {
+      "id": "low-high-score",
+      "expected": "REJECT",
+      "reason": "Low anchor paired with score above its permitted band."
+    },
+    {
+      "id": "excellent-low-score",
+      "expected": "REJECT",
+      "reason": "Excellent anchor paired with score below its permitted band."
+    },
+    {
+      "id": "decimal-score",
+      "expected": "REJECT",
+      "reason": "Scores must be integers."
+    },
+    {
+      "id": "timestamp-beyond-duration",
+      "expected": "REJECT",
+      "reason": "Primary timestamp exceeds measured video duration."
+    },
+    {
+      "id": "malformed-timestamp",
+      "expected": "REJECT",
+      "reason": "Primary timestamp does not match mm:ss."
+    },
+    {
+      "id": "blank-evidence",
+      "expected": "REJECT",
+      "reason": "Evidence must be non-empty."
+    },
+    {
+      "id": "blank-strength",
+      "expected": "REJECT",
+      "reason": "Strength must be non-empty."
+    },
+    {
+      "id": "blank-weakness",
+      "expected": "REJECT",
+      "reason": "Weakness must be non-empty."
+    },
+    {
+      "id": "blank-improvement",
+      "expected": "REJECT",
+      "reason": "Actionable improvement must be non-empty."
+    },
+    {
+      "id": "extra-field",
+      "expected": "REJECT",
+      "reason": "Schema forbids unexpected fields."
+    },
+    {
+      "id": "missing-summary-usable",
+      "expected": "REJECT",
+      "reason": "Usable evaluation requires non-empty overall_summary."
+    },
+    {
+      "id": "criteria-on-unassessable",
+      "expected": "REJECT",
+      "reason": "Unassessable branch must contain no criteria."
+    }
+  ]
+}

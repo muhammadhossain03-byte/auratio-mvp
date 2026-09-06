@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://auratio.cloud/schemas/ai-evaluation-output-v1.json",
+  "title": "Auratio AI Evaluation Output v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "submission_id",
+    "track_slug",
+    "evaluation_usable",
+    "unusable_reason",
+    "criteria",
+    "overall_summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "submission_id": {
+      "type": "string",
+      "pattern": "^SUB-[A-Z0-9-]+$"
+    },
+    "track_slug": {
+      "type": "string",
+      "enum": [
+        "informative",
+        "extempore",
+        "persuasive",
+        "argumentative-debate",
+        "explanatory",
+        "news-delivery",
+        "business-pitch",
+        "general-presentation-multimedia",
+        "academic-poster-project-thesis",
+        "corporate-report",
+        "infotainment-oriented",
+        "academic-lecture-course",
+        "marketing-promotional"
+      ]
+    },
+    "evaluation_usable": {
+      "type": "boolean"
+    },
+    "unusable_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "criteria": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/criterionResult"
+      }
+    },
+    "overall_summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evaluation_usable": {
+            "const": true
+          }
+        },
+        "required": [
+          "evaluation_usable"
+        ]
+      },
+      "then": {
+        "properties": {
+          "unusable_reason": {
+            "type": "null"
+          },
+          "criteria": {
+            "minItems": 16,
+            "maxItems": 16
+          },
+          "overall_summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evaluation_usable": {
+            "const": false
+          }
+        },
+        "required": [
+          "evaluation_usable"
+        ]
+      },
+      "then": {
+        "properties": {
+          "unusable_reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "criteria": {
+            "maxItems": 0
+          },
+          "overall_summary": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "criterionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criterion_id",
+        "anchor",
+        "score",
+        "primary_timestamp",
+        "evidence",
+        "strength",
+        "weakness",
+        "actionable_improvement"
+      ],
+      "properties": {
+        "criterion_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "anchor": {
+          "type": "string",
+          "enum": [
+            "Low",
+            "Competent",
+            "Excellent"
+          ]
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "primary_timestamp": {
+          "type": "string",
+          "pattern": "^[0-9]{2}:[0-5][0-9]$"
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "strength": {
+          "type": "string",
+          "minLength": 1
+        },
+        "weakness": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actionable_improvement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
