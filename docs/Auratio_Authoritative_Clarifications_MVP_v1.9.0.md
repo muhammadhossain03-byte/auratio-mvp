@@ -25,9 +25,15 @@ Core paths: Public Speaking, Professional Presenting, Content Creation. All 13 t
 
 ## 3. Development authority model
 
-ChatGPT is the sole technical lead for Auratio: architecture, code/design decisions, AI prompt/rubric design, backend logic, QA acceptance, documentation, and change approval.
+ChatGPT is the sole technical lead **and developer** for Auratio: requirements interpretation, architecture, implementation design, actual code/patch/file authoring, AI prompt/rubric design, backend logic, test changes, QA acceptance, documentation, and change approval.
 
-Antigravity is **execution-only** for the limitation that regular ChatGPT cannot directly write/commit/push to GitHub. It may apply exact files/patches/instructions, run explicitly requested mechanical validations, commit, push, and return evidence. It must not independently redesign, refactor, reinterpret requirements, invent fixes, or continue to another task.
+Antigravity is **execution-only** for the limitation that regular ChatGPT cannot directly perform the required local repository write/commit/push workflow.
+
+**Locked code-authoring boundary:** Antigravity must never implement Auratio from a broad feature request, bug description, acceptance criteria, specification, or design brief. Before Antigravity modifies repository contents, ChatGPT must have already authored the finished patch, complete replacement files, or an equivalently deterministic mechanical transformation that requires no implementation judgment.
+
+Antigravity may verify branch/HEAD, apply those exact ChatGPT-authored changes, run explicitly requested mechanical validations, show diff/status, commit, push, and return evidence. It must not independently design, code, refactor, reinterpret requirements, choose implementation details, invent fixes, weaken tests, or troubleshoot validation failures by editing source code.
+
+If a validation command fails, Antigravity stops and reports the failure. ChatGPT diagnoses it and authors the correction.
 
 After every Antigravity push, ChatGPT independently reads/audits the GitHub commit before accepting it.
 
@@ -131,4 +137,4 @@ Internal Pending Moderation and Re-review/Reopened can remain user-facing **Proc
 
 ## 14. Precedence
 
-This v1.9.0 file supersedes Clarifications v1.8.2 wherever they conflict. Dedicated AI, report, scoring, deployment, and QA specifications referenced by `CURRENT.md` govern their domains.
+This v1.9.0 file supersedes Clarifications v1.8.2 wherever they conflict. Dedicated AI, report, scoring, deployment, QA, and development-operating-model specifications referenced by `CURRENT.md` govern their domains.

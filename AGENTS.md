@@ -1,14 +1,33 @@
 # AGENTS.md — Auratio
 
 ## Authority
-- ChatGPT is the sole technical lead for Auratio.
+- ChatGPT is the sole technical lead and developer for Auratio.
 - Read `docs/CURRENT.md` first and follow its precedence order.
 - Written current specifications override stale historical files and, for semantics, stale Figma affordances.
 
-## Antigravity execution-only rule
-Antigravity may only apply the exact task/patch/files supplied by ChatGPT, run explicitly requested validation commands, show diff/status, commit with the supplied message, push the supplied branch, return the full SHA/results/errors, and stop.
+## ChatGPT-authored code gate
+All Auratio implementation code, patches, complete replacement files, test changes, schema changes, prompts, specifications, and technical fixes must be authored by ChatGPT before Antigravity is asked to change the repository.
 
-Do not independently redesign, reinterpret, optimize, refactor outside scope, fix unrelated failures, change architecture, or start another task.
+Antigravity must never implement Auratio from a broad task description, feature request, bug description, acceptance criteria, or design brief. A repository-changing Antigravity task is valid only when ChatGPT has already supplied the exact finished patch/file contents or an equivalently deterministic mechanical transformation.
+
+If an Antigravity instruction would require Antigravity to decide how to implement, redesign, refactor, troubleshoot, or invent code, Antigravity must stop and report that the task requires a ChatGPT-authored implementation package.
+
+## Antigravity execution-only rule
+Antigravity may only:
+- verify the exact branch/HEAD and clean working-tree preconditions supplied by ChatGPT;
+- apply the exact ChatGPT-authored patch/files or deterministic mechanical transformation;
+- run explicitly requested validation commands;
+- show diff/status;
+- report validation failures without independently changing code to fix them;
+- commit with the supplied message;
+- push the supplied branch;
+- return the full SHA/results/errors;
+- stop.
+
+Antigravity must not independently redesign, reinterpret, optimize, refactor, troubleshoot by editing code, fix unrelated failures, change architecture, choose implementation details, invent fixes, or start another task.
+
+## Acceptance rule
+An Antigravity commit is never accepted merely because Antigravity reports success. ChatGPT must independently inspect the pushed GitHub commit/diff and explicitly accept it.
 
 ## Current branch
 `step-iv/ui-foundation`
