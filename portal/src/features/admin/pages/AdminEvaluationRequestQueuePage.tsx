@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom'
-import { initialAdminQueueItems } from '../data/mockAdminData'
+import { getAdminEvaluationRequests } from '../data/mockAdminData'
 import { AdminLayout } from '../components/AdminLayout'
 
 export function AdminEvaluationRequestQueuePage() {
   const navigate = useNavigate()
+  const queueItems = getAdminEvaluationRequests()
 
   return (
     <AdminLayout
@@ -109,10 +110,12 @@ export function AdminEvaluationRequestQueuePage() {
         </div>
 
         {/* Table Rows */}
-        {initialAdminQueueItems.map((item, index) => (
+        {queueItems.map((item, index) => (
           <div key={item.id}>
             <div
               data-request-id={item.id}
+              data-routing={item.routing}
+              title={item.declineReason ? `Declined: ${item.declineReason}` : undefined}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -169,7 +172,7 @@ export function AdminEvaluationRequestQueuePage() {
               </div>
             </div>
 
-            {index < initialAdminQueueItems.length - 1 && (
+            {index < queueItems.length - 1 && (
               <div
                 style={{
                   width: '1040px',

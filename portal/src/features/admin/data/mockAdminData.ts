@@ -1,14 +1,36 @@
 // Auratio Admin Portal — Local / In-Memory Mock Data & State
 
+import {
+  getAdminUnassignedDeclinedQueue,
+  removeAdminUnassignedDeclinedQueue,
+  seedVolunteerAssignment,
+} from '../../volunteer/data/mockVolunteerData'
+import {
+  CANONICAL_REQUEST_SUBMISSION_MAP,
+  getMappingBySubmissionId,
+  getMappingByRequestId,
+  type RequestSubmissionMapping,
+} from '../../shared/requestSubmissionMap'
+
+export {
+  CANONICAL_REQUEST_SUBMISSION_MAP,
+  getMappingBySubmissionId,
+  getMappingByRequestId,
+  type RequestSubmissionMapping,
+}
+
 export interface AdminQueueItem {
   id: string
   user: string
   track: string
   requestedMethod: 'Human' | 'AI'
-  routing: 'Requested' | 'Assigned AI' | 'Assigned Human' | 'Redirected Human'
+  routing: 'Requested' | 'Assigned AI' | 'Assigned Human' | 'Redirected Human' | 'Unassigned'
   eligibility: 'Eligible'
   interactive: boolean
   destinationPath?: string
+  submissionId?: string
+  declineReason?: string
+  returnedAt?: string
 }
 
 export interface AdminEvaluatorCandidate {
@@ -558,11 +580,43 @@ export const adminAuditLogsList: AdminAuditLogItem[] = [
   },
 ]
 
-// In-memory assignment & reassignment state for HE-0142
+// In-memory & session assignment state for HE-0142
+const ADMIN_HE0142_STORAGE_KEY = 'auratio_admin_he0142_state'
+
 let he0142ActiveOwner: string | null = 'Farhana Islam'
 let he0142SupersededOwner: string | null = null
 
+function loadHE0142State(): { activeOwner: string | null; supersededOwner: string | null } {
+  // If REQ-1042 / SUB-8821 is currently in returned unassigned queue from volunteer decline, activeOwner is null (None)
+  const unassigned = getAdminUnassignedDeclinedQueue()
+  const isDeclined = unassigned.some(
+    (r) => r.requestId.toUpperCase() === 'REQ-1042' || r.submissionId.toUpperCase() === 'SUB-8821'
+  )
+  if (isDeclined) {
+    return {
+      activeOwner: null,
+      supersededOwner: 'Farhana Islam',
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.sessionStorage?.getItem(ADMIN_HE0142_STORAGE_KEY)
+      if (raw) {
+        return JSON.parse(raw)
+      }
+    } catch {}
+  }
+  return {
+    activeOwner: he0142ActiveOwner,
+    supersededOwner: he0142SupersededOwner,
+  }
+}
+
 export function getHE0142AssignmentState() {
+  const loaded = loadHE0142State()
+  he0142ActiveOwner = loaded.activeOwner
+  he0142SupersededOwner = loaded.supersededOwner
   return {
     activeOwner: he0142ActiveOwner,
     supersededOwner: he0142SupersededOwner,
@@ -570,20 +624,113 @@ export function getHE0142AssignmentState() {
 }
 
 export function confirmHE0142Reassignment() {
-  he0142SupersededOwner = he0142ActiveOwner
+  const prev = getHE0142AssignmentState()
+  he0142SupersededOwner = prev.activeOwner
   he0142ActiveOwner = 'Nadia Rahman'
-  return getHE0142AssignmentState()
+  const state = { activeOwner: he0142ActiveOwner, supersededOwner: he0142SupersededOwner }
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.setItem(ADMIN_HE0142_STORAGE_KEY, JSON.stringify(state))
+    } catch {}
+  }
+  return state
 }
 
 export function assignHE0142Candidate(name: string) {
+  const prev = getHE0142AssignmentState()
   he0142ActiveOwner = name
-  he0142SupersededOwner = null
-  return getHE0142AssignmentState()
+  he0142SupersededOwner = prev.activeOwner && prev.activeOwner !== name ? prev.activeOwner : (prev.supersededOwner || 'Farhana Islam')
+  const state = { activeOwner: he0142ActiveOwner, supersededOwner: he0142SupersededOwner }
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.setItem(ADMIN_HE0142_STORAGE_KEY, JSON.stringify(state))
+    } catch {}
+  }
+
+  // Remove REQ-1042 / SUB-8821 from unassigned declined queue
+  removeAdminUnassignedDeclinedQueue('REQ-1042')
+  removeAdminUnassignedDeclinedQueue('SUB-8821')
+
+  // Coordinate with Volunteer active ownership
+  if (name === 'Farhana Islam') {
+    seedVolunteerAssignment({
+      id: 'SUB-8821',
+      track: 'Business Pitch / Sales Pitch',
+      trackSlug: 'business-pitch',
+      assignmentStatus: 'Assigned',
+      publicationStatus: 'Processing',
+    })
+  }
+
+  return state
 }
 
 export function resetHE0142Reassignment() {
   he0142ActiveOwner = 'Farhana Islam'
   he0142SupersededOwner = null
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.removeItem(ADMIN_HE0142_STORAGE_KEY)
+    } catch {}
+  }
+}
+
+export function getAdminEvaluationRequests(): AdminQueueItem[] {
+  const items: AdminQueueItem[] = initialAdminQueueItems.map((item) => ({ ...item }))
+
+  // 1. Read decline-returned unassigned requests from Volunteer decline
+  const returnedRecords = getAdminUnassignedDeclinedQueue()
+  const returnedMap = new Map<string, (typeof returnedRecords)[0]>()
+  for (const r of returnedRecords) {
+    returnedMap.set(r.requestId.toUpperCase(), r)
+  }
+
+  // 2. Read HE-0142 assignment state
+  const he0142State = getHE0142AssignmentState()
+
+  // 3. Merge returned unassigned requests into the queue
+  for (let i = 0; i < items.length; i++) {
+    const reqId = items[i].id.toUpperCase()
+    if (returnedMap.has(reqId)) {
+      const record = returnedMap.get(reqId)!
+      items[i] = {
+        ...items[i],
+        track: record.track,
+        requestedMethod: 'Human',
+        routing: 'Unassigned',
+        submissionId: record.submissionId,
+        declineReason: record.reason,
+        returnedAt: record.returnedAt,
+        interactive: true,
+        destinationPath: items[i].destinationPath || `/admin/requests/${record.requestId.toLowerCase()}`,
+      }
+      returnedMap.delete(reqId)
+    } else if (reqId === 'REQ-1042' && he0142State.activeOwner && he0142State.activeOwner !== 'None' && he0142State.activeOwner !== 'Farhana Islam') {
+      items[i] = {
+        ...items[i],
+        routing: 'Assigned Human',
+      }
+    }
+  }
+
+  // 4. Append any returned requests not matching canonical IDs
+  for (const record of returnedMap.values()) {
+    items.push({
+      id: record.requestId,
+      user: record.user || 'Evaluated Speaker',
+      track: record.track,
+      requestedMethod: 'Human',
+      routing: 'Unassigned',
+      eligibility: 'Eligible',
+      interactive: true,
+      destinationPath: `/admin/requests/${record.requestId.toLowerCase()}`,
+      submissionId: record.submissionId,
+      declineReason: record.reason,
+      returnedAt: record.returnedAt,
+    })
+  }
+
+  return items
 }
 
 // In-memory multi-entity moderation state
@@ -1013,4 +1160,10 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __getVolunteerAvailabilityState: typeof getVolunteerAvailabilityState }).__getVolunteerAvailabilityState = getVolunteerAvailabilityState
   ;(window as unknown as { __applyVolunteerAvailabilityOverride: typeof applyVolunteerAvailabilityOverride }).__applyVolunteerAvailabilityOverride = applyVolunteerAvailabilityOverride
   ;(window as unknown as { __resetVolunteerAvailabilityOverride: typeof resetVolunteerAvailabilityOverride }).__resetVolunteerAvailabilityOverride = resetVolunteerAvailabilityOverride
+  ;(window as unknown as { __getAdminEvaluationRequests: typeof getAdminEvaluationRequests }).__getAdminEvaluationRequests = getAdminEvaluationRequests
+  ;(window as unknown as { __assignHE0142Candidate: typeof assignHE0142Candidate }).__assignHE0142Candidate = assignHE0142Candidate
+  ;(window as unknown as { __confirmHE0142Reassignment: typeof confirmHE0142Reassignment }).__confirmHE0142Reassignment = confirmHE0142Reassignment
+  ;(window as unknown as { __CANONICAL_REQUEST_SUBMISSION_MAP: typeof CANONICAL_REQUEST_SUBMISSION_MAP }).__CANONICAL_REQUEST_SUBMISSION_MAP = CANONICAL_REQUEST_SUBMISSION_MAP
+  ;(window as unknown as { __getMappingBySubmissionId: typeof getMappingBySubmissionId }).__getMappingBySubmissionId = getMappingBySubmissionId
+  ;(window as unknown as { __getMappingByRequestId: typeof getMappingByRequestId }).__getMappingByRequestId = getMappingByRequestId
 }

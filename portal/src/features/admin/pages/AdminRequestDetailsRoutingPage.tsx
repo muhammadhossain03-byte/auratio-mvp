@@ -1,9 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { AdminLayout } from '../components/AdminLayout'
+import { getAdminUnassignedDeclinedQueue } from '../../volunteer/data/mockVolunteerData'
 
 export function AdminRequestDetailsRoutingPage() {
   const navigate = useNavigate()
+  const unassignedQueue = getAdminUnassignedDeclinedQueue()
+  const declineRecord = unassignedQueue.find((r) => r.requestId === 'REQ-1042' || r.submissionId === 'SUB-8821')
+  const routingStatus = declineRecord ? 'Unassigned' : 'Requested'
 
   return (
     <AdminLayout
@@ -37,7 +41,9 @@ export function AdminRequestDetailsRoutingPage() {
         className="auratio-admin-page-subtitle"
         style={{ top: '72px', fontSize: '12px', lineHeight: '18px', fontWeight: 400 }}
       >
-        Eligible recording awaiting routing decision
+        {declineRecord
+          ? 'Eligible recording returned to Unassigned queue after evaluator decline'
+          : 'Eligible recording awaiting routing decision'}
       </p>
 
       {/* Left Panel: Submission */}
@@ -80,6 +86,15 @@ export function AdminRequestDetailsRoutingPage() {
 
         <div style={{ marginTop: '21px' }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
+            SUBMISSION ID
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
+            SUB-8821
+          </div>
+        </div>
+
+        <div style={{ marginTop: '21px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
             MEASURED DURATION
           </div>
           <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
@@ -101,9 +116,20 @@ export function AdminRequestDetailsRoutingPage() {
             ROUTING STATUS
           </div>
           <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
-            Requested
+            {routingStatus}
           </div>
         </div>
+
+        {declineRecord && (
+          <div style={{ marginTop: '21px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
+              DECLINE REASON
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#B42318', marginTop: '3px' }}>
+              {declineRecord.reason}
+            </div>
+          </div>
+        )}
 
         <div style={{ marginTop: '21px' }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>

@@ -38,6 +38,7 @@ import {
   getTrackLabel,
   getCriteriaForTrack,
 } from './canonicalTrackRegistry'
+import { getMappingBySubmissionId } from '../../shared/requestSubmissionMap'
 
 export interface CriterionScoreData {
   id: string
@@ -247,12 +248,16 @@ export interface DeclinedAssignmentRecord {
 }
 
 export interface AdminUnassignedRequestRecord {
+  requestId: string
   submissionId: string
+  user: string
   track: string
   trackSlug?: string
+  requestedMethod: 'Human'
   reason: string
   returnedAt: string
   status: 'Unassigned'
+  evaluationId?: string
 }
 
 export function getDeclinedAssignments(): DeclinedAssignmentRecord[] {
@@ -302,6 +307,14 @@ export function saveAdminUnassignedDeclinedQueue(records: AdminUnassignedRequest
   try {
     window.sessionStorage?.setItem(ADMIN_UNASSIGNED_QUEUE_KEY, JSON.stringify(records))
   } catch {}
+}
+
+export function removeAdminUnassignedDeclinedQueue(identifier: string): void {
+  const norm = (identifier || '').toUpperCase()
+  const list = getAdminUnassignedDeclinedQueue().filter(
+    (r) => r.submissionId.toUpperCase() !== norm && r.requestId.toUpperCase() !== norm
+  )
+  saveAdminUnassignedDeclinedQueue(list)
 }
 
 export function declineVolunteerAssignment(
@@ -363,14 +376,21 @@ export function declineVolunteerAssignment(
   } catch {}
 
   // 4. Reflect in Admin Unassigned queue state representation (Section 3)
-  const existingAdminQueue = getAdminUnassignedDeclinedQueue().filter((r) => r.submissionId.toUpperCase() !== normalizedId)
+  const mapping = getMappingBySubmissionId(normalizedId)
+  const existingAdminQueue = getAdminUnassignedDeclinedQueue().filter(
+    (r) => r.submissionId.toUpperCase() !== normalizedId && r.requestId.toUpperCase() !== mapping.requestId.toUpperCase()
+  )
   const adminRecord: AdminUnassignedRequestRecord = {
+    requestId: mapping.requestId,
     submissionId: normalizedId,
+    user: mapping.user,
     track: assignment.track,
     trackSlug: assignment.trackSlug,
+    requestedMethod: 'Human',
     reason: trimmedReason,
     returnedAt: declineRecord.declinedAt,
     status: 'Unassigned',
+    evaluationId: mapping.evaluationId,
   }
   saveAdminUnassignedDeclinedQueue([...existingAdminQueue, adminRecord])
 
@@ -420,6 +440,7 @@ export function seedVolunteerAssignment(assignment: ActiveAssignment): void {
   saveVolunteerAssignments([...filtered, assignment])
   const remainingDeclined = getDeclinedAssignments().filter((d) => d.submissionId.toUpperCase() !== assignment.id.toUpperCase())
   saveDeclinedAssignments(remainingDeclined)
+  removeAdminUnassignedDeclinedQueue(assignment.id)
 }
 
 export function updateAssignmentStatus(submissionId: string, status: ActiveAssignment['assignmentStatus']): void {
@@ -912,4 +933,5 @@ if (typeof window !== 'undefined') {
   win.__getDeclinedAssignment = getDeclinedAssignment
   win.__isAssignmentDeclined = isAssignmentDeclined
   win.__getAdminUnassignedDeclinedQueue = getAdminUnassignedDeclinedQueue
+  win.__removeAdminUnassignedDeclinedQueue = removeAdminUnassignedDeclinedQueue
 }
