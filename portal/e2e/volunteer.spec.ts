@@ -381,11 +381,9 @@ test.describe('Volunteer Critical Regression', () => {
     await expect(page).toHaveURL('/volunteer/completed/sub-8741')
     await expect(page.locator('h2.auratio-volunteer-page-title')).toContainText('SUB-8741')
 
-    // Reopened evaluation flow
+    // Unsubmitted evaluation cannot be reopened -> redirects safely to /volunteer/assignments
     await page.goto('/volunteer/evaluation/sub-8821/reopened')
-    await expect(page).toHaveURL('/volunteer/evaluation/sub-8821/reopened')
-    await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Continue Correction' }).click()
-    await expect(page).toHaveURL('/volunteer/evaluation/sub-8821')
+    await expect(page).toHaveURL('/volunteer/assignments')
   })
 
   test('sidebar navigation links navigate between volunteer sections', async ({ page }) => {
@@ -833,6 +831,264 @@ test.describe('Volunteer Critical Regression', () => {
         return typeof (window as any).getAnchorScoreRange !== 'undefined'
       })
       expect(anchorBandsFunctionExists).toBe(false)
+    })
+  })
+
+  test.describe('Volunteer Defect Groups V-01 & V-02 Regression Hardening', () => {
+    test('V-01: Reopened evaluation route safety, invalid/unsubmitted rejection, and versioning immutability', async ({ page }) => {
+      // 1. Invalid reopened ID fails safely and redirects to /volunteer/assignments
+      await page.goto('/volunteer/evaluation/invalid-id/reopened')
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      await page.goto('/volunteer/evaluation/sub-9999/reopened')
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      // 2. Unsubmitted evaluation cannot be reopened -> redirects to /volunteer/assignments
+      await page.goto('/volunteer/evaluation/sub-8814/reopened')
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      await page.goto('/volunteer/evaluation/sub-8799/reopened')
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      await page.goto('/volunteer/evaluation/sub-8821/reopened')
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      // 3. Legitimate submitted evaluation can be reopened
+      // Submit SUB-8814 (Extempore) with real score (e.g. 92) and valid criteria
+      await page.goto('/volunteer/assignments')
+      await page.evaluate(() => {
+        const win = window as any
+        const draft = {
+          submissionId: 'SUB-8814',
+          track: 'Extempore',
+          trackSlug: 'extempore',
+          criteria: {
+            'ud-pacing': { id: 'ud-pacing', name: 'Pacing', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:10', evidence: 'Good pacing', strength: 'Steady', weakness: 'Minor rush', advice: 'Keep steady' },
+            'ud-tone': { id: 'ud-tone', name: 'Tone', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:20', evidence: 'Good tone', strength: 'Clear', weakness: 'Flat at end', advice: 'Modulate' },
+            'ud-variety': { id: 'ud-variety', name: 'Variety', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:30', evidence: 'Varied pitch', strength: 'Dynamic', weakness: 'None', advice: 'Continue' },
+            'ud-filler': { id: 'ud-filler', name: 'Filler', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:40', evidence: 'Low filler', strength: 'Clean', weakness: 'Occasional um', advice: 'Pause instead' },
+            'ud-eye-contact': { id: 'ud-eye-contact', name: 'Eye contact', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:50', evidence: 'Good gaze', strength: 'Direct', weakness: 'None', advice: 'Maintain' },
+            'ud-posture': { id: 'ud-posture', name: 'Posture', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:00', evidence: 'Upright', strength: 'Confident', weakness: 'None', advice: 'Maintain' },
+            'ud-gestures': { id: 'ud-gestures', name: 'Gestures', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:10', evidence: 'Natural', strength: 'Supportive', weakness: 'Slight repetitive', advice: 'Vary' },
+            'ud-time': { id: 'ud-time', name: 'Time', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:20', evidence: 'On target', strength: 'Precise', weakness: 'None', advice: 'Keep it up' },
+            'sf-hook': { id: 'sf-hook', name: 'Hook', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '00:15', evidence: 'Strong start', strength: 'Engaging', weakness: 'None', advice: 'Great' },
+            'sf-clarity': { id: 'sf-clarity', name: 'Clarity', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '00:45', evidence: 'Clear outline', strength: 'Cohesive', weakness: 'None', advice: 'Continue' },
+            'sf-transitions': { id: 'sf-transitions', name: 'Transitions', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:15', evidence: 'Smooth shifts', strength: 'Logical', weakness: 'None', advice: 'Good' },
+            'sf-conclusion': { id: 'sf-conclusion', name: 'Conclusion', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:40', evidence: 'Punchy wrap-up', strength: 'Memorable', weakness: 'None', advice: 'Excellent' },
+            'ex-thesis': { id: 'ex-thesis', name: 'Rapid thesis', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '00:30', evidence: 'Quick framing', strength: 'Fast clarity', weakness: 'Brief lag', advice: 'Anchor faster' },
+            'ex-structure': { id: 'ex-structure', name: 'Spontaneous structure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '01:00', evidence: 'Clean spontaneous points', strength: '3 points clear', weakness: 'Point 2 short', advice: 'Balance points' },
+            'ex-narrative': { id: 'ex-narrative', name: 'Narrative continuity', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '01:45', evidence: 'Story thread held', strength: 'Engaging arc', weakness: 'Minor detour', advice: 'Tighten arc' },
+            'ex-composure': { id: 'ex-composure', name: 'Composure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '02:15', evidence: 'Poised response', strength: 'Calm under pressure', weakness: 'None', advice: 'Flawless poise' },
+          },
+          overallSummary: 'High-quality spontaneous speech demonstrating rapid thesis formulation.',
+          isSubmitted: false,
+          submittedAt: null,
+          version: 1,
+        }
+        win.sessionStorage.setItem('auratio_volunteer_draft_SUB-8814', JSON.stringify(draft))
+        return win.__submitVolunteerEvaluation('SUB-8814')
+      })
+
+      // Verify now legitimate submitted evaluation can be reopened
+      await page.goto('/volunteer/evaluation/sub-8814/reopened')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8814/reopened')
+      const reopenedContent = await page.innerText('body')
+      expect(reopenedContent).toContain('SUB-8814 — Reopened Evaluation')
+      expect(reopenedContent).toContain('Extempore • formal re-review work (Version 2)')
+      expect(reopenedContent).not.toContain('Business Pitch')
+      expect(reopenedContent).toContain('92 / 100')
+      expect(reopenedContent).not.toContain('85 / 100')
+
+      // 4. Submitted evaluation remains non-editable in scoring workspace unless formally reopened
+      await page.goto('/volunteer/evaluation/sub-8814')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8814')
+
+      // 5. Formal reopen creates editable version 2
+      await page.goto('/volunteer/evaluation/sub-8814/reopened')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Continue Correction' }).click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8814')
+
+      // Scoring workspace is now accessible
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toContainText('SUB-8814')
+      const draftV2 = await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_draft_SUB-8814')
+        return raw ? JSON.parse(raw) : null
+      })
+      expect(draftV2).not.toBeNull()
+      expect(draftV2.version).toBe(2)
+      expect(draftV2.isSubmitted).toBe(false)
+      expect(draftV2.track).toBe('Extempore')
+
+      // Prior locked version 1 remains immutable in storage
+      const preservedV1 = await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_locked_SUB-8814_v1')
+        return raw ? JSON.parse(raw) : null
+      })
+      expect(preservedV1).not.toBeNull()
+      expect(preservedV1.version).toBe(1)
+      expect(preservedV1.isSubmitted).toBe(true)
+      expect(preservedV1.score).toBe(92)
+
+      // 6. Repeated reopen cycle: v1 -> v2 -> v3
+      // Edit version 2 overall summary and submit version 2
+      await page.evaluate(() => {
+        const win = window as any
+        win.__saveOverallSummary('SUB-8814', 'Version 2 updated summary with enhanced analysis.')
+        return win.__submitVolunteerEvaluation('SUB-8814')
+      })
+
+      // Verify version 2 is locked
+      const preservedV2 = await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_locked_SUB-8814_v2')
+        return raw ? JSON.parse(raw) : null
+      })
+      expect(preservedV2).not.toBeNull()
+      expect(preservedV2.version).toBe(2)
+      expect(preservedV2.isSubmitted).toBe(true)
+      expect(preservedV2.overallSummary).toBe('Version 2 updated summary with enhanced analysis.')
+
+      // Preserved version 1 remains untouched
+      const preservedV1AfterV2 = await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_locked_SUB-8814_v1')
+        return raw ? JSON.parse(raw) : null
+      })
+      expect(preservedV1AfterV2.version).toBe(1)
+      expect(preservedV1AfterV2.overallSummary).toBe('High-quality spontaneous speech demonstrating rapid thesis formulation.')
+
+      // Reopen again -> advances to Version 3 from latest locked version (version 2)
+      await page.goto('/volunteer/evaluation/sub-8814/reopened')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8814/reopened')
+      const reopenedV2Content = await page.innerText('body')
+      expect(reopenedV2Content).toContain('Version 3')
+      expect(reopenedV2Content).toContain('92 / 100')
+
+      // Continue correction to Version 3
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Continue Correction' }).click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8814')
+
+      const draftV3 = await page.evaluate(() => {
+        const raw = window.sessionStorage.getItem('auratio_volunteer_draft_SUB-8814')
+        return raw ? JSON.parse(raw) : null
+      })
+      expect(draftV3.version).toBe(3)
+      expect(draftV3.isSubmitted).toBe(false)
+    })
+
+    test('V-02: Completed evaluation detail entity integrity and invariant enforcement', async ({ page }) => {
+      // 1. Submit SUB-8814 so it enters completed history alongside canonical records
+      await page.goto('/volunteer/assignments')
+      await page.evaluate(() => {
+        const win = window as any
+        const draft = {
+          submissionId: 'SUB-8814',
+          track: 'Extempore',
+          trackSlug: 'extempore',
+          criteria: {
+            'ud-pacing': { id: 'ud-pacing', name: 'Pacing', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:10', evidence: 'Good pacing', strength: 'Steady', weakness: 'Minor rush', advice: 'Keep steady' },
+            'ud-tone': { id: 'ud-tone', name: 'Tone', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:20', evidence: 'Good tone', strength: 'Clear', weakness: 'Flat at end', advice: 'Modulate' },
+            'ud-variety': { id: 'ud-variety', name: 'Variety', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:30', evidence: 'Varied pitch', strength: 'Dynamic', weakness: 'None', advice: 'Continue' },
+            'ud-filler': { id: 'ud-filler', name: 'Filler', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:40', evidence: 'Low filler', strength: 'Clean', weakness: 'Occasional um', advice: 'Pause instead' },
+            'ud-eye-contact': { id: 'ud-eye-contact', name: 'Eye contact', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:50', evidence: 'Good gaze', strength: 'Direct', weakness: 'None', advice: 'Maintain' },
+            'ud-posture': { id: 'ud-posture', name: 'Posture', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:00', evidence: 'Upright', strength: 'Confident', weakness: 'None', advice: 'Maintain' },
+            'ud-gestures': { id: 'ud-gestures', name: 'Gestures', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:10', evidence: 'Natural', strength: 'Supportive', weakness: 'Slight repetitive', advice: 'Vary' },
+            'ud-time': { id: 'ud-time', name: 'Time', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:20', evidence: 'On target', strength: 'Precise', weakness: 'None', advice: 'Keep it up' },
+            'sf-hook': { id: 'sf-hook', name: 'Hook', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '00:15', evidence: 'Strong start', strength: 'Engaging', weakness: 'None', advice: 'Great' },
+            'sf-clarity': { id: 'sf-clarity', name: 'Clarity', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '00:45', evidence: 'Clear outline', strength: 'Cohesive', weakness: 'None', advice: 'Continue' },
+            'sf-transitions': { id: 'sf-transitions', name: 'Transitions', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:15', evidence: 'Smooth shifts', strength: 'Logical', weakness: 'None', advice: 'Good' },
+            'sf-conclusion': { id: 'sf-conclusion', name: 'Conclusion', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:40', evidence: 'Punchy wrap-up', strength: 'Memorable', weakness: 'None', advice: 'Excellent' },
+            'ex-thesis': { id: 'ex-thesis', name: 'Rapid thesis', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '00:30', evidence: 'Quick framing', strength: 'Fast clarity', weakness: 'Brief lag', advice: 'Anchor faster' },
+            'ex-structure': { id: 'ex-structure', name: 'Spontaneous structure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '01:00', evidence: 'Clean spontaneous points', strength: '3 points clear', weakness: 'Point 2 short', advice: 'Balance points' },
+            'ex-narrative': { id: 'ex-narrative', name: 'Narrative continuity', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '01:45', evidence: 'Story thread held', strength: 'Engaging arc', weakness: 'Minor detour', advice: 'Tighten arc' },
+            'ex-composure': { id: 'ex-composure', name: 'Composure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '02:15', evidence: 'Poised response', strength: 'Calm under pressure', weakness: 'None', advice: 'Flawless poise' },
+          },
+          overallSummary: 'High-quality spontaneous speech demonstrating rapid thesis formulation.',
+          isSubmitted: false,
+          submittedAt: null,
+          version: 1,
+        }
+        win.sessionStorage.setItem('auratio_volunteer_draft_SUB-8814', JSON.stringify(draft))
+        return win.__submitVolunteerEvaluation('SUB-8814')
+      })
+
+      // 2. Opening SUB-8814 must display SUB-8814 data, NOT SUB-8821 data
+      await page.goto('/volunteer/completed/sub-8814')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8814')
+      const sub8814Title = await page.innerText('h2.auratio-volunteer-page-title')
+      expect(sub8814Title).toContain('SUB-8814')
+      expect(sub8814Title).not.toContain('SUB-8821')
+
+      // Check track attribute and score
+      const sub8814Entity = page.locator('[data-testid="completed-detail-entity"]')
+      await expect(sub8814Entity).toHaveAttribute('data-submission-id', 'SUB-8814')
+      await expect(sub8814Entity).toHaveAttribute('data-track', 'Extempore')
+      await expect(sub8814Entity).toHaveAttribute('data-publication-status', 'Pending Moderation')
+      const sub8814BodyText = await page.innerText('body')
+      expect(sub8814BodyText).toContain('92 / 100')
+      expect(sub8814BodyText).not.toContain('85 / 100')
+
+      // 3. Opening SUB-8821 must display SUB-8821 data
+      await page.goto('/volunteer/completed/sub-8821')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8821')
+      const sub8821Title = await page.innerText('h2.auratio-volunteer-page-title')
+      expect(sub8821Title).toContain('SUB-8821')
+      expect(sub8821Title).not.toContain('SUB-8814')
+      const sub8821Entity = page.locator('[data-testid="completed-detail-entity"]')
+      await expect(sub8821Entity).toHaveAttribute('data-submission-id', 'SUB-8821')
+      await expect(sub8821Entity).toHaveAttribute('data-track', 'Business Pitch / Sales Pitch')
+      await expect(sub8821Entity).toHaveAttribute('data-publication-status', 'Pending Moderation')
+      const sub8821BodyText = await page.innerText('body')
+      expect(sub8821BodyText).toContain('85 / 100')
+
+      // 4. Opening SUB-8792 must display SUB-8792 data (Approved)
+      await page.goto('/volunteer/completed/sub-8792')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8792')
+      const sub8792Title = await page.innerText('h2.auratio-volunteer-page-title')
+      expect(sub8792Title).toContain('SUB-8792')
+      const sub8792Entity = page.locator('[data-testid="completed-detail-entity"]')
+      await expect(sub8792Entity).toHaveAttribute('data-submission-id', 'SUB-8792')
+      await expect(sub8792Entity).toHaveAttribute('data-publication-status', 'Approved')
+      await expect(page.locator('.auratio-volunteer-pill', { hasText: 'Approved' })).toBeVisible()
+
+      // 5. Opening SUB-8755 must display SUB-8755 data (Rejected)
+      await page.goto('/volunteer/completed/sub-8755')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8755')
+      const sub8755Title = await page.innerText('h2.auratio-volunteer-page-title')
+      expect(sub8755Title).toContain('SUB-8755')
+      const sub8755Entity = page.locator('[data-testid="completed-detail-entity"]')
+      await expect(sub8755Entity).toHaveAttribute('data-submission-id', 'SUB-8755')
+      await expect(sub8755Entity).toHaveAttribute('data-publication-status', 'Rejected')
+      await expect(page.locator('.auratio-volunteer-pill', { hasText: 'Rejected' })).toBeVisible()
+
+      // 6. Opening SUB-8741 must display SUB-8741 data (Processing)
+      await page.goto('/volunteer/completed/sub-8741')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8741')
+      const sub8741Title = await page.innerText('h2.auratio-volunteer-page-title')
+      expect(sub8741Title).toContain('SUB-8741')
+      const sub8741Entity = page.locator('[data-testid="completed-detail-entity"]')
+      await expect(sub8741Entity).toHaveAttribute('data-submission-id', 'SUB-8741')
+      await expect(sub8741Entity).toHaveAttribute('data-publication-status', 'Processing')
+      await expect(page.locator('.auratio-volunteer-pill', { hasText: 'Processing' })).toBeVisible()
+
+      // 7. Unknown IDs must fail and redirect safely to /volunteer/completed
+      await page.goto('/volunteer/completed/sub-9999')
+      await expect(page).toHaveURL('/volunteer/completed')
+
+      await page.goto('/volunteer/completed/invalid-xyz')
+      await expect(page).toHaveURL('/volunteer/completed')
+
+      // 8. History row ID = route ID = displayed submission ID = track = score = publication state invariant
+      await page.goto('/volunteer/completed')
+      // Row 0 is SUB-8814
+      const rows = page.locator('.auratio-volunteer-panel > div')
+      const firstRowText = await rows.nth(0).innerText()
+      expect(firstRowText).toContain('SUB-8814')
+      expect(firstRowText).toContain('Extempore')
+      expect(firstRowText).toContain('Pending Moderation')
+
+      // Clicking Open on SUB-8814 navigates to /volunteer/completed/sub-8814
+      await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Open' }).first().click()
+      await expect(page).toHaveURL('/volunteer/completed/sub-8814')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toContainText('SUB-8814')
     })
   })
 })

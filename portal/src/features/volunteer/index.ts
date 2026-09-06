@@ -13,6 +13,7 @@ export { VolunteerCompletedPendingModerationPage } from './pages/VolunteerComple
 export { VolunteerCompletedApprovedPage } from './pages/VolunteerCompletedApprovedPage'
 export { VolunteerCompletedRejectedPage } from './pages/VolunteerCompletedRejectedPage'
 export { VolunteerCompletedProcessingPage } from './pages/VolunteerCompletedProcessingPage'
+export { VolunteerCompletedDetailPage } from './pages/VolunteerCompletedDetailPage'
 export { VolunteerReopenedEvaluationPage } from './pages/VolunteerReopenedEvaluationPage'
 export { VolunteerLayout } from './components/VolunteerLayout'
 export * from './data/mockVolunteerData'

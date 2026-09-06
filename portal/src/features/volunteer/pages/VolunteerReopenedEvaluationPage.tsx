@@ -1,25 +1,44 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation, Navigate } from 'react-router-dom'
+import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import {
-  getVolunteerAssignment,
-  getPreservedLockedSubmission,
+  getLatestLockedSubmission,
   reopenEvaluation,
   calculateDraftTotals,
 } from '../data/mockVolunteerData'
 
 export function VolunteerReopenedEvaluationPage() {
   const navigate = useNavigate()
-  const { submissionId: routeSubmissionId } = useParams<{ submissionId?: string }>()
-  const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
+  const location = useLocation()
+  const { submissionId: paramId } = useParams<{ submissionId?: string }>()
+  const pathMatch = location.pathname.match(/\/volunteer\/evaluation\/([^/]+)\/reopened/i)
+  const routeSubmissionId = paramId || (pathMatch ? pathMatch[1] : undefined)
 
-  const assignment = getVolunteerAssignment(submissionId)
-  const prior = getPreservedLockedSubmission(submissionId)
-  const priorScore = prior ? calculateDraftTotals(prior).submissionScore : 85
-  const priorVersion = prior?.version || 1
+  // V-01 Invariant: A Reopened Evaluation may exist only when there is a legitimate previously submitted and locked evaluator version.
+  // Unknown, invalid, unsupported, or never-submitted submission IDs must fail safely and redirect to an appropriate Volunteer page.
+  if (!routeSubmissionId) {
+    return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
+  }
+
+  const submissionId = routeSubmissionId.toUpperCase()
+  const prior = getLatestLockedSubmission(submissionId)
+
+  if (!prior || !prior.isSubmitted) {
+    return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
+  }
+
+  // Remove all fabricated fallback values; use exact prior submitted values
+  const priorScore = calculateDraftTotals(prior).submissionScore
+  const priorVersion = prior.version
+  const track = prior.track
 
   const handleContinueCorrection = () => {
-    reopenEvaluation(submissionId)
-    navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}`)
+    const reopenedDraft = reopenEvaluation(submissionId)
+    if (reopenedDraft) {
+      navigate(`/volunteer/evaluation/${submissionId.toLowerCase()}`)
+    } else {
+      navigate(portalRoutePaths.volunteer.assignments)
+    }
   }
 
   return (
@@ -28,12 +47,19 @@ export function VolunteerReopenedEvaluationPage() {
       topbarTitle="Human Evaluation Workspace"
       activeNav="assignments"
     >
-      <h2 className="auratio-volunteer-page-title" style={{ top: '34px' }}>
-        {submissionId} — Reopened Evaluation
-      </h2>
-      <p className="auratio-volunteer-page-subtitle" style={{ top: '78px' }}>
-        {assignment?.track || prior?.track || 'Business Pitch / Sales Pitch'} • formal re-review work (Version {priorVersion + 1})
-      </p>
+      <div
+        data-testid="reopened-evaluation-entity"
+        data-submission-id={submissionId}
+        data-prior-score={priorScore}
+        data-prior-version={priorVersion}
+        data-track={track}
+      >
+        <h2 className="auratio-volunteer-page-title" style={{ top: '34px' }}>
+          {submissionId} — Reopened Evaluation
+        </h2>
+        <p className="auratio-volunteer-page-subtitle" style={{ top: '78px' }}>
+          {track} • formal re-review work (Version {priorVersion + 1})
+        </p>
 
       {/* Header Pill */}
       <div
@@ -440,6 +466,7 @@ export function VolunteerReopenedEvaluationPage() {
       >
         Continue Correction
       </button>
+      </div>
     </VolunteerLayout>
   )
 }

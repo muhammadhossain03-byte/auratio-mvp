@@ -347,6 +347,26 @@ async function run() {
     })
 
     for (const screen of SCREENS) {
+      if (screen.name === 'volunteer_reopened_evaluation') {
+        await sendCdp(ws, 'Runtime.evaluate', {
+          expression: `(() => {
+            const draft = {
+              submissionId: 'SUB-8821',
+              track: 'Business Pitch / Sales Pitch',
+              trackSlug: 'business-pitch',
+              criteria: {},
+              overallSummary: 'Authoritative evaluation summary on record.',
+              isSubmitted: true,
+              submittedAt: new Date().toISOString(),
+              version: 1,
+              score: 85,
+            };
+            window.sessionStorage.setItem('auratio_volunteer_locked_SUB-8821_v1', JSON.stringify(draft));
+            window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft));
+          })()`,
+        })
+      }
+
       console.log(`Capturing ${screen.name} at ${screen.path}...`)
       await sendCdp(ws, 'Page.navigate', {
         url: `http://127.0.0.1:${PORT}${screen.path}`,

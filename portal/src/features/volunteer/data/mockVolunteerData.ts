@@ -39,6 +39,7 @@ export interface VolunteerSubmissionScoringDraft {
   isSubmitted: boolean
   submittedAt: string | null
   version: number
+  score?: number
   priorSubmittedVersion?: VolunteerSubmissionScoringDraft | null
 }
 
@@ -363,7 +364,8 @@ export function calculateDraftTotals(draft: VolunteerSubmissionScoringDraft) {
     }
   }
 
-  const submissionScore = Math.min(100, universalDelivery + structuralFlow + trackSpecialisation)
+  const calculatedScore = Math.min(100, universalDelivery + structuralFlow + trackSpecialisation)
+  const submissionScore = draft.score !== undefined ? draft.score : calculatedScore
   const isOverallSummaryComplete = draft.overallSummary.trim().length > 0
   const isReady =
     anchorCount === 16 &&
@@ -418,6 +420,7 @@ export function submitEvaluation(submissionId: string): { success: boolean; draf
   // Lock draft
   draft.isSubmitted = true
   draft.submittedAt = new Date().toISOString()
+  draft.score = totals.submissionScore
   saveScoringDraft(draft)
 
   // Save locked snapshot
@@ -444,46 +447,105 @@ export function submitEvaluation(submissionId: string): { success: boolean; draf
   return { success: true, draft }
 }
 
-export function getPreservedLockedSubmission(submissionId: string, version = 1): VolunteerSubmissionScoringDraft | null {
+export function getLatestLockedSubmission(submissionId: string): VolunteerSubmissionScoringDraft | null {
   const normalizedId = submissionId.toUpperCase()
+  let latest: VolunteerSubmissionScoringDraft | null = null
+  let maxVersion = 0
+
+  // 1. Scan locked version snapshots in sessionStorage
   try {
-    const raw = window.sessionStorage?.getItem(`${LOCKED_VERSION_PREFIX}${normalizedId}_v${version}`)
-    if (raw) {
-      return JSON.parse(raw) as VolunteerSubmissionScoringDraft
+    const prefix = `${LOCKED_VERSION_PREFIX}${normalizedId}_v`
+    for (let i = 0; i < (window.sessionStorage?.length || 0); i++) {
+      const key = window.sessionStorage.key(i)
+      if (key && key.startsWith(prefix)) {
+        const vNum = parseInt(key.slice(prefix.length), 10)
+        if (!isNaN(vNum) && vNum > maxVersion) {
+          const raw = window.sessionStorage.getItem(key)
+          if (raw) {
+            const parsed = JSON.parse(raw) as VolunteerSubmissionScoringDraft
+            if (parsed.isSubmitted && parsed.submissionId === normalizedId) {
+              maxVersion = vNum
+              latest = parsed
+            }
+          }
+        }
+      }
     }
   } catch {}
 
-  // Fallback to active draft if marked submitted
-  const draft = getScoringDraft(normalizedId)
-  if (draft && draft.isSubmitted) {
-    return draft
+  // 2. Also check if the active draft in sessionStorage is submitted and has version >= maxVersion
+  try {
+    const rawDraft = window.sessionStorage?.getItem(`${DRAFT_PREFIX}${normalizedId}`)
+    if (rawDraft) {
+      const draft = JSON.parse(rawDraft) as VolunteerSubmissionScoringDraft
+      if (draft.isSubmitted && draft.submissionId === normalizedId && draft.version >= maxVersion) {
+        maxVersion = draft.version
+        latest = draft
+      }
+    }
+  } catch {}
+
+  return latest
+}
+
+export function getPreservedLockedSubmission(submissionId: string, version?: number): VolunteerSubmissionScoringDraft | null {
+  const normalizedId = submissionId.toUpperCase()
+  if (version !== undefined) {
+    try {
+      const raw = window.sessionStorage?.getItem(`${LOCKED_VERSION_PREFIX}${normalizedId}_v${version}`)
+      if (raw) {
+        return JSON.parse(raw) as VolunteerSubmissionScoringDraft
+      }
+    } catch {}
+
+    const draft = getScoringDraft(normalizedId)
+    if (draft && draft.isSubmitted && draft.version === version) {
+      return draft
+    }
+    return null
   }
-  return null
+
+  return getLatestLockedSubmission(normalizedId)
 }
 
 export function reopenEvaluation(submissionId: string): VolunteerSubmissionScoringDraft | null {
   const normalizedId = submissionId.toUpperCase()
-  const prior = getPreservedLockedSubmission(normalizedId) || getScoringDraft(normalizedId)
+  const prior = getLatestLockedSubmission(normalizedId)
 
-  // Increment version, clone prior data so evaluator can edit without mutating prior locked version
-  const newVersion = (prior?.version || 1) + 1
+  // V-01 Invariant: A Reopened Evaluation may exist only when there is a legitimate previously submitted and locked evaluator version.
+  // Unknown, invalid, unsupported, or never-submitted submission IDs must return null.
+  if (!prior || !prior.isSubmitted) {
+    return null
+  }
+
+  // Increment version from the latest valid locked submitted version
+  const newVersion = prior.version + 1
   const newDraft: VolunteerSubmissionScoringDraft = {
     submissionId: normalizedId,
-    track: prior?.track || 'Business Pitch / Sales Pitch',
-    trackSlug: prior?.trackSlug || 'business-pitch',
-    criteria: prior ? JSON.parse(JSON.stringify(prior.criteria)) : {},
-    overallSummary: prior?.overallSummary || '',
+    track: prior.track,
+    trackSlug: prior.trackSlug,
+    criteria: JSON.parse(JSON.stringify(prior.criteria)),
+    overallSummary: prior.overallSummary || '',
     isSubmitted: false,
     submittedAt: null,
     version: newVersion,
-    priorSubmittedVersion: prior ? JSON.parse(JSON.stringify(prior)) : null,
+    priorSubmittedVersion: JSON.parse(JSON.stringify(prior)),
   }
 
   saveScoringDraft(newDraft)
 
-  // Re-add to active assignments if not present
+  // Prior locked version snapshot in `${LOCKED_VERSION_PREFIX}${normalizedId}_v${prior.version}` remains immutable
+
+  // Re-add to active assignments if not present or update its status to 'In Evaluation'
   const currentActive = getVolunteerAssignments()
-  if (!currentActive.some((a) => a.id.toUpperCase() === normalizedId)) {
+  const existingActiveIdx = currentActive.findIndex((a) => a.id.toUpperCase() === normalizedId)
+  if (existingActiveIdx >= 0) {
+    currentActive[existingActiveIdx] = {
+      ...currentActive[existingActiveIdx],
+      assignmentStatus: 'In Evaluation',
+    }
+    saveVolunteerAssignments(currentActive)
+  } else {
     const updatedActive: ActiveAssignment[] = [
       ...currentActive,
       {
@@ -518,7 +580,7 @@ export function isEvaluationSubmitted(submissionId: string): boolean {
     return true
   }
 
-  const locked = getPreservedLockedSubmission(normalizedId)
+  const locked = getLatestLockedSubmission(normalizedId)
   if (locked?.isSubmitted) {
     return true
   }
@@ -526,18 +588,19 @@ export function isEvaluationSubmitted(submissionId: string): boolean {
   return false
 }
 
+export function getCompletedEntity(submissionId: string): CompletedAssignmentRecord | null {
+  if (!submissionId) return null
+  const normalizedId = submissionId.toUpperCase()
+  const history = getCompletedHistory()
+  return history.find((c) => c.id.toUpperCase() === normalizedId) ?? null
+}
+
 export function getCompletedRouteForSubmission(submissionId: string): string {
   const normalizedId = submissionId.toUpperCase()
-  const lowerId = submissionId.toLowerCase()
-
   const history = getCompletedHistory()
   const record = history.find((c) => c.id.toUpperCase() === normalizedId)
   if (record?.route) {
     return record.route
-  }
-
-  if (['sub-8821', 'sub-8792', 'sub-8755', 'sub-8741'].includes(lowerId)) {
-    return `/volunteer/completed/${lowerId}`
   }
 
   return '/volunteer/completed'
@@ -570,4 +633,7 @@ if (typeof window !== 'undefined') {
   win.__reopenEvaluation = reopenEvaluation
   win.__getVolunteerAssignment = getVolunteerAssignment
   win.__isEvaluationSubmitted = isEvaluationSubmitted
+  win.__getLatestLockedSubmission = getLatestLockedSubmission
+  win.__getCompletedEntity = getCompletedEntity
+  win.__getCompletedHistory = getCompletedHistory
 }

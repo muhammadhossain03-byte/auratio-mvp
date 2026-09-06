@@ -18,6 +18,7 @@ import {
   VolunteerAvailabilityPage,
   VolunteerAvailabilityUnavailablePage,
   VolunteerCompletedApprovedPage,
+  VolunteerCompletedDetailPage,
   VolunteerCompletedHistoryPage,
   VolunteerCompletedPendingModerationPage,
   VolunteerCompletedProcessingPage,
@@ -205,7 +206,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/volunteer/completed/:submissionId',
-    element: <VolunteerCompletedPendingModerationPage />,
+    element: <VolunteerCompletedDetailPage />,
   },
   {
     path: portalRoutePaths.volunteer.reopenedEvaluation,
