@@ -7,6 +7,7 @@ import {
   getScoringDraft,
   saveCriterionScoreData,
   getCriteriaForTrack,
+  getTrackSlug,
   isValidTimestamp,
   isEvaluationSubmitted,
   getCompletedRouteForSubmission,
@@ -27,15 +28,17 @@ export function VolunteerCriterionFeedbackEditorPage() {
   const assignment = getVolunteerAssignment(submissionId)
   const isSubmitted = isEvaluationSubmitted(submissionId)
 
-  const trackSlug = assignment?.trackSlug || 'business-pitch'
-  const allCriteria = getCriteriaForTrack(trackSlug)
+  const trackSlug = assignment?.trackSlug
+    ? getTrackSlug(assignment.trackSlug) || assignment.trackSlug
+    : (assignment?.track ? getTrackSlug(assignment.track) : null)
+  const allCriteria = trackSlug ? getCriteriaForTrack(trackSlug) : null
 
   const activeCriterion =
-    allCriteria.find((c) => c.id === requestedCriterionId) ||
-    allCriteria[0] || {
+    (allCriteria && allCriteria.find((c) => c.id === requestedCriterionId)) ||
+    (allCriteria && allCriteria[0]) || {
       id: 'ud-pacing',
       name: 'Pacing, WPM calibration, and pause placement',
-      category: 'Universal Delivery',
+      category: 'Universal Delivery' as const,
       maxPoints: 5,
     }
 
@@ -63,16 +66,16 @@ export function VolunteerCriterionFeedbackEditorPage() {
   useEffect(() => {
     if (isSubmitted) {
       navigate(getCompletedRouteForSubmission(submissionId), { replace: true })
-    } else if (!assignment) {
+    } else if (!assignment || !allCriteria) {
       navigate(portalRoutePaths.volunteer.assignments, { replace: true })
     }
-  }, [isSubmitted, assignment, navigate, submissionId])
+  }, [isSubmitted, assignment, allCriteria, navigate, submissionId])
 
   if (isSubmitted) {
     return <Navigate to={getCompletedRouteForSubmission(submissionId)} replace />
   }
 
-  if (!assignment) {
+  if (!assignment || !allCriteria) {
     return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
   }
 

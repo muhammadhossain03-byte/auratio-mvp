@@ -9,28 +9,11 @@ import {
   saveInviteVolunteerTrackDraft,
   saveVolunteerTrackEligibility,
 } from '../data/mockAdminData'
-
-const PUBLIC_SPEAKING_TRACKS = [
-  'Informative',
-  'Extempore',
-  'Persuasive',
-  'Argumentative / Debate',
-  'Explanatory',
-]
-
-const PROFESSIONAL_PRESENTING_TRACKS = [
-  'News Delivery',
-  'Business Pitch / Sales Pitch',
-  'General Presentation / Multimedia',
-  'Academic — Poster / Project / Thesis',
-  'Corporate Report',
-]
-
-const CONTENT_CREATION_TRACKS = [
-  'Infotainment-Oriented',
-  'Academic — Lecture / Course',
-  'Marketing / Promotional',
-]
+import {
+  PUBLIC_SPEAKING_TRACKS,
+  PROFESSIONAL_PRESENTING_TRACKS,
+  CONTENT_CREATION_TRACKS,
+} from '../../volunteer/data/canonicalTrackRegistry'
 
 export function AdminVolunteerTrackEligibilityPage() {
   const navigate = useNavigate()

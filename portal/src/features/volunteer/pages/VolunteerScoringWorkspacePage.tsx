@@ -13,6 +13,7 @@ import {
   UNIVERSAL_DELIVERY_CRITERIA,
   STRUCTURAL_FLOW_CRITERIA,
   TRACK_SPECIFIC_CRITERIA,
+  getTrackSlug,
   type VolunteerSubmissionScoringDraft,
   type CriterionDefinition,
 } from '../data/mockVolunteerData'
@@ -64,8 +65,38 @@ export function VolunteerScoringWorkspacePage() {
     saveScoringDraft(updated)
   }
 
-  const trackSlug = assignment.trackSlug || 'business-pitch'
-  const trackCriteria = TRACK_SPECIFIC_CRITERIA[trackSlug] || TRACK_SPECIFIC_CRITERIA['business-pitch']
+  const trackSlug = assignment.trackSlug
+    ? getTrackSlug(assignment.trackSlug) || assignment.trackSlug
+    : (assignment.track ? getTrackSlug(assignment.track) : null)
+  const trackCriteria = trackSlug ? (TRACK_SPECIFIC_CRITERIA[trackSlug] ?? null) : null
+
+  if (!trackCriteria) {
+    return (
+      <VolunteerLayout
+        ariaLabel="Unsupported Track Rubric"
+        topbarTitle="Human Evaluation Workspace"
+        activeNav="assignments"
+      >
+        <div
+          className="auratio-volunteer-panel"
+          style={{
+            left: '30px',
+            top: '120px',
+            width: '1076px',
+            padding: '32px',
+            boxSizing: 'border-box',
+          }}
+        >
+          <h2 style={{ fontFamily: 'var(--auratio-font-family-inter)', fontSize: '20px', fontWeight: 600, color: 'var(--auratio-neutral-900)' }}>
+            Unsupported Track Rubric
+          </h2>
+          <p style={{ marginTop: '12px', fontFamily: 'var(--auratio-font-family-inter)', fontSize: '14px', color: 'var(--auratio-neutral-600)' }}>
+            The track &quot;{assignment.track}&quot; does not have an authoritative scoring rubric.
+          </p>
+        </div>
+      </VolunteerLayout>
+    )
+  }
 
   const renderCriterionRow = (c: CriterionDefinition, index: number, topOffset: number) => {
     const cData = draft.criteria[c.id] || {

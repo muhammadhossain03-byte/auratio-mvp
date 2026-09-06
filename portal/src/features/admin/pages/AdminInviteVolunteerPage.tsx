@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { getInviteVolunteerTrackDraft, addAdminVolunteer, resetInviteVolunteerTrackDraft } from '../data/mockAdminData'
+import {
+  PUBLIC_SPEAKING_TRACKS,
+  PROFESSIONAL_PRESENTING_TRACKS,
+  CONTENT_CREATION_TRACKS,
+} from '../../volunteer/data/canonicalTrackRegistry'
 
 export function AdminInviteVolunteerPage() {
   const navigate = useNavigate()
@@ -59,31 +64,15 @@ export function AdminInviteVolunteerPage() {
   }
 
   const publicSpeakingSelected = inviteTracks.filter((t) =>
-    [
-      'Informative',
-      'Extempore',
-      'Persuasive',
-      'Argumentative / Debate',
-      'Explanatory',
-    ].includes(t),
+    (PUBLIC_SPEAKING_TRACKS as readonly string[]).includes(t),
   )
 
   const professionalPresentingSelected = inviteTracks.filter((t) =>
-    [
-      'News Delivery',
-      'Business Pitch / Sales Pitch',
-      'General Presentation / Multimedia',
-      'Academic — Poster / Project / Thesis',
-      'Corporate Report',
-    ].includes(t),
+    (PROFESSIONAL_PRESENTING_TRACKS as readonly string[]).includes(t),
   )
 
   const contentCreationSelected = inviteTracks.filter((t) =>
-    [
-      'Infotainment-Oriented',
-      'Academic — Lecture / Course',
-      'Marketing / Promotional',
-    ].includes(t),
+    (CONTENT_CREATION_TRACKS as readonly string[]).includes(t),
   )
 
   return (

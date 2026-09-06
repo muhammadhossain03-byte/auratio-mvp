@@ -742,6 +742,126 @@ async function run() {
       console.log(`  ✓ ${route.path} successfully resolved exact entity "${route.expectedLabel}".`)
     }
 
+    console.log('\n[7/7] Testing 13 Authoritative Human Evaluation Track Rubrics & Fallback Eradication...')
+
+    const rubricCheckResult = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `
+        (() => {
+          const win = window
+          const registry = win.__CANONICAL_TRACK_REGISTRY || {}
+          const authoritative = win.__AUTHORITATIVE_MVP_TRACKS || []
+          const slugs = Object.keys(registry)
+
+          if (slugs.length !== 13) return { error: \`Expected 13 registered tracks, got \${slugs.length}\` }
+          if (authoritative.length !== 13) return { error: \`Expected 13 authoritative track names, got \${authoritative.length}\` }
+
+          const expectedRubrics = {
+            'informative': ['Objective clarity', 'Audience comprehension', 'Neutrality and factual accuracy', 'Complex concept breakdown'],
+            'extempore': ['Rapid time-to-thesis', 'Spontaneous structure', 'Narrative continuity', 'Composure and hesitation control'],
+            'persuasive': ['Ethos, Pathos, and Logos balance', 'Audience emotional resonance', 'Urgency and conviction', 'Objection anticipation and resistance handling'],
+            'argumentative-debate': ['Premise-claim alignment', 'Evidence rigour', 'Logical validity and signposting', 'Counterarguments and rebuttals'],
+            'explanatory': ['Pedagogical simplification', 'Analogies and mental models', 'Jargon control', 'Step-by-step deconstruction'],
+            'news-delivery': ['Teleprompter-style cadence', 'Objective authoritative tone', 'Headline-shift signposting', 'Accuracy and composure'],
+            'business-pitch': ['Problem-solution fit', 'Value proposition clarity', 'Traction and investor appeal', 'Competitive differentiation'],
+            'general-presentation-multimedia': ['Slide-to-speech synchronisation', 'Narrative continuity across media', 'Visual support without reading', 'Media pacing and accessibility'],
+            'academic-poster-project-thesis': ['Specialised terminology precision', 'Methodology defensibility', 'Citation and evidence rigour', 'Findings and claim support'],
+            'corporate-report': ['Bottom-Line Up Front orientation', 'Complex data translation', 'Actionable business insight', 'Decision-oriented recommendation'],
+            'infotainment-oriented': ['Information-entertainment balance', 'Fast-paced narrative progression', 'Engagement triggers', 'Personality and visual energy'],
+            'academic-lecture-course': ['Structured learning outcomes', 'Instructional sequence', 'Concept check-in pacing', 'Instructional takeaway clarity'],
+            'marketing-promotional': ['Audience pain-point positioning', 'Product or service payoff clarity', 'Conversion drivers', 'Brand-message alignment']
+          }
+
+          for (const [slug, expectedNames] of Object.entries(expectedRubrics)) {
+            const def = registry[slug]
+            if (!def) return { error: \`Missing track definition for \${slug}\` }
+            const criteria = win.__getCriteriaForTrack(slug)
+            if (!criteria || criteria.length !== 16) return { error: \`Expected 16 criteria for \${slug}, got \${criteria ? criteria.length : 'null'}\` }
+
+            const universal = criteria.filter(c => c.category === 'Universal Delivery')
+            const structural = criteria.filter(c => c.category === 'Structural Flow')
+            const trackSpec = criteria.filter(c => c.category === 'Track Specialisation')
+
+            if (universal.length !== 8) return { error: \`Expected 8 Universal Delivery for \${slug}\` }
+            if (structural.length !== 4) return { error: \`Expected 4 Structural Flow for \${slug}\` }
+            if (trackSpec.length !== 4) return { error: \`Expected 4 Track Specialisation for \${slug}\` }
+
+            const universalPts = universal.reduce((acc, c) => acc + c.maxPoints, 0)
+            const structuralPts = structural.reduce((acc, c) => acc + c.maxPoints, 0)
+            const trackSpecPts = trackSpec.reduce((acc, c) => acc + c.maxPoints, 0)
+
+            if (universalPts !== 40 || structuralPts !== 20 || trackSpecPts !== 40) {
+              return { error: \`Invalid point totals for \${slug}: universal=\${universalPts}, structural=\${structuralPts}, trackSpec=\${trackSpecPts}\` }
+            }
+
+            const names = trackSpec.map(c => c.name)
+            for (let i = 0; i < 4; i++) {
+              if (names[i] !== expectedNames[i]) {
+                return { error: \`Mismatch in \${slug} criterion \${i}: expected "\${expectedNames[i]}", got "\${names[i]}"\` }
+              }
+            }
+          }
+
+          // Negative fallback tests
+          const badInputs = ['unknown', 'Motivational', 'motivational', 'nonexistent', '']
+          for (const bad of badInputs) {
+            if (win.__getTrackSlug(bad) !== null) return { error: \`__getTrackSlug("\${bad}") must return null\` }
+            if (win.__getCriteriaForTrack(bad) !== null) return { error: \`__getCriteriaForTrack("\${bad}") must return null\` }
+          }
+
+          // Persuasive CTA check
+          const persuasiveCriteria = win.__getCriteriaForTrack('Persuasive')
+          const persuasiveNames = persuasiveCriteria.filter(c => c.category === 'Track Specialisation').map(c => c.name)
+          if (persuasiveNames.some(n => n.includes('Call to action') || n.includes('Argument strength'))) {
+            return { error: 'Persuasive rubric still contains outdated CTA or argument strength criteria!' }
+          }
+
+          return { success: true }
+        })()
+      `,
+      returnByValue: true,
+    })
+
+    if (rubricCheckResult.result.value?.error) {
+      throw new Error(rubricCheckResult.result.value.error)
+    }
+    console.log('  ✓ All 13 authoritative track rubrics, criteria, and weights verified against Specification v3.7.')
+    console.log('  ✓ Generic Business Pitch fallback eradication confirmed.')
+    console.log('  ✓ Persuasive rubric CTA overlap removal confirmed.')
+
+    // Real-browser scoring workspace test for representative tracks
+    const representativeTracks = [
+      { id: 'SUB-SYNTH-PER', label: 'Persuasive', criteria: ['Ethos, Pathos, and Logos balance', 'Audience emotional resonance', 'Urgency and conviction', 'Objection anticipation and resistance handling'] },
+      { id: 'SUB-SYNTH-ARG', label: 'Argumentative / Debate', criteria: ['Premise-claim alignment', 'Evidence rigour', 'Logical validity and signposting', 'Counterarguments and rebuttals'] },
+      { id: 'SUB-SYNTH-ND', label: 'News Delivery', criteria: ['Teleprompter-style cadence', 'Objective authoritative tone', 'Headline-shift signposting', 'Accuracy and composure'] },
+      { id: 'SUB-SYNTH-AP', label: 'Academic — Poster / Project / Thesis', criteria: ['Specialised terminology precision', 'Methodology defensibility', 'Citation and evidence rigour', 'Findings and claim support'] },
+      { id: 'SUB-SYNTH-CR', label: 'Corporate Report', criteria: ['Bottom-Line Up Front orientation', 'Complex data translation', 'Actionable business insight', 'Decision-oriented recommendation'] },
+      { id: 'SUB-SYNTH-INFO', label: 'Infotainment-Oriented', criteria: ['Information-entertainment balance', 'Fast-paced narrative progression', 'Engagement triggers', 'Personality and visual energy'] },
+      { id: 'SUB-SYNTH-MKT', label: 'Marketing / Promotional', criteria: ['Audience pain-point positioning', 'Product or service payoff clarity', 'Conversion drivers', 'Brand-message alignment'] },
+    ]
+
+    for (const t of representativeTracks) {
+      const url = `http://127.0.0.1:${PORT}/volunteer/evaluation/${t.id.toLowerCase()}`
+      await sendCdp(ws, 'Page.navigate', { url })
+      await new Promise((res) => setTimeout(res, 400))
+      bodyText = await getBodyText()
+
+      if (!bodyText.includes(t.id)) {
+        throw new Error(`Expected workspace for ${t.id} to contain submission ID "${t.id}"`)
+      }
+      if (!bodyText.includes(t.label)) {
+        throw new Error(`Expected workspace for ${t.id} to contain track name "${t.label}"`)
+      }
+      if (!bodyText.includes(`Track Specialisation (${t.label}) — 0 / 40 points`)) {
+        throw new Error(`Expected workspace for ${t.id} to contain Track Specialisation header for "${t.label}"`)
+      }
+      for (const criterion of t.criteria) {
+        if (!bodyText.includes(criterion)) {
+          throw new Error(`Expected workspace for ${t.id} to display criterion "${criterion}"`)
+        }
+      }
+      console.log(`  ✓ Workspace for ${t.id} correctly rendered 4 criteria for "${t.label}".`)
+    }
+
     console.log('\n==================================================')
     console.log('ALL STEP IV INTEGRITY HARDENING TESTS PASSED 100%!')
     console.log('==================================================')

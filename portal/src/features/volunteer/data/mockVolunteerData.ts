@@ -8,13 +8,36 @@ export interface ActiveAssignment {
 
 export type QualitativeAnchor = 'Low' | 'Competent' | 'Excellent'
 
-export interface CriterionDefinition {
-  id: string
-  name: string
-  category: 'Universal Delivery' | 'Structural Flow' | 'Track Specialisation'
-  maxPoints: number
-  description?: string
-}
+export type {
+  CriterionDefinition,
+  TrackDefinition,
+  AuthoritativeTrack,
+  AuratioPath,
+} from './canonicalTrackRegistry'
+
+export {
+  UNIVERSAL_DELIVERY_CRITERIA,
+  STRUCTURAL_FLOW_CRITERIA,
+  PUBLIC_SPEAKING_TRACKS,
+  PROFESSIONAL_PRESENTING_TRACKS,
+  CONTENT_CREATION_TRACKS,
+  AUTHORITATIVE_MVP_TRACKS,
+  AUTHORITATIVE_TRACK_SLUGS,
+  CANONICAL_TRACK_REGISTRY,
+  TRACK_SPECIFIC_CRITERIA,
+  getTrackDefinition,
+  getTrackSlug,
+  getTrackLabel,
+  getCriteriaForTrack,
+} from './canonicalTrackRegistry'
+
+import {
+  AUTHORITATIVE_MVP_TRACKS,
+  CANONICAL_TRACK_REGISTRY,
+  getTrackSlug,
+  getTrackLabel,
+  getCriteriaForTrack,
+} from './canonicalTrackRegistry'
 
 export interface CriterionScoreData {
   id: string
@@ -52,70 +75,6 @@ export interface CompletedAssignmentRecord {
   score?: number
 }
 
-// 8 Universal Delivery Criteria (5 pts each = 40 pts)
-export const UNIVERSAL_DELIVERY_CRITERIA: CriterionDefinition[] = [
-  { id: 'ud-pacing', name: 'Pacing, WPM calibration, and pause placement', category: 'Universal Delivery', maxPoints: 5 },
-  { id: 'ud-tone', name: 'Tone, modulation, and energy', category: 'Universal Delivery', maxPoints: 5 },
-  { id: 'ud-variety', name: 'Vocal variety', category: 'Universal Delivery', maxPoints: 5 },
-  { id: 'ud-filler', name: 'Filler-word and silence control', category: 'Universal Delivery', maxPoints: 5 },
-  { id: 'ud-eye-contact', name: 'Eye contact and gaze stability', category: 'Universal Delivery', maxPoints: 5 },
-  { id: 'ud-posture', name: 'Posture and body positioning', category: 'Universal Delivery', maxPoints: 5 },
-  { id: 'ud-gestures', name: 'Purposeful gestures', category: 'Universal Delivery', maxPoints: 5 },
-  { id: 'ud-framing', name: 'Framing and movement control', category: 'Universal Delivery', maxPoints: 5 },
-]
-
-// 4 Structural Flow Criteria (5 pts each = 20 pts)
-export const STRUCTURAL_FLOW_CRITERIA: CriterionDefinition[] = [
-  { id: 'sf-hook', name: 'Hook strength', category: 'Structural Flow', maxPoints: 5 },
-  { id: 'sf-transitions', name: 'Logical transitions', category: 'Structural Flow', maxPoints: 5 },
-  { id: 'sf-thesis', name: 'Central thesis clarity', category: 'Structural Flow', maxPoints: 5 },
-  { id: 'sf-conclusion', name: 'Track-appropriate conclusion', category: 'Structural Flow', maxPoints: 5 },
-]
-
-// Track-specific rubrics (4 criteria each, 10 pts each = 40 pts)
-export const TRACK_SPECIFIC_CRITERIA: Record<string, CriterionDefinition[]> = {
-  'business-pitch': [
-    { id: 'bp-problem', name: 'Problem-solution fit', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'bp-value', name: 'Value proposition clarity', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'bp-traction', name: 'Traction and investor appeal', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'bp-diff', name: 'Competitive differentiation', category: 'Track Specialisation', maxPoints: 10 },
-  ],
-  'extempore': [
-    { id: 'ex-thesis', name: 'Rapid time-to-thesis', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'ex-structure', name: 'Spontaneous structure', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'ex-narrative', name: 'Narrative continuity', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'ex-composure', name: 'Composure and hesitation control', category: 'Track Specialisation', maxPoints: 10 },
-  ],
-  'informative': [
-    { id: 'inf-clarity', name: 'Objective clarity', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'inf-comprehension', name: 'Audience comprehension', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'inf-neutrality', name: 'Neutrality and factual accuracy', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'inf-breakdown', name: 'Complex concept breakdown', category: 'Track Specialisation', maxPoints: 10 },
-  ],
-  'persuasive': [
-    { id: 'per-hook', name: 'Call to action and influence', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'per-argument', name: 'Argument strength and credibility', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'per-objection', name: 'Objection anticipation and resistance handling', category: 'Track Specialisation', maxPoints: 10 },
-    { id: 'per-appeal', name: 'Emotional and logical appeal', category: 'Track Specialisation', maxPoints: 10 },
-  ],
-}
-
-export const AUTHORITATIVE_MVP_TRACKS = [
-  'Informative',
-  'Extempore',
-  'Persuasive',
-  'Argumentative / Debate',
-  'Explanatory',
-  'News Delivery',
-  'Business Pitch / Sales Pitch',
-  'General Presentation / Multimedia',
-  'Academic — Poster / Project / Thesis',
-  'Corporate Report',
-  'Infotainment-Oriented',
-  'Academic — Lecture / Course',
-  'Marketing / Promotional',
-] as const
-
 export const CANONICAL_ACTIVE_ASSIGNMENTS: ActiveAssignment[] = [
   {
     id: 'SUB-8821',
@@ -135,6 +94,100 @@ export const CANONICAL_ACTIVE_ASSIGNMENTS: ActiveAssignment[] = [
     id: 'SUB-8799',
     track: 'Informative',
     trackSlug: 'informative',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+]
+
+export const SYNTHETIC_ALL_TRACK_ASSIGNMENTS: ActiveAssignment[] = [
+  {
+    id: 'SUB-SYNTH-INF',
+    track: 'Informative',
+    trackSlug: 'informative',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-EXT',
+    track: 'Extempore',
+    trackSlug: 'extempore',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-PER',
+    track: 'Persuasive',
+    trackSlug: 'persuasive',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-ARG',
+    track: 'Argumentative / Debate',
+    trackSlug: 'argumentative-debate',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-EXP',
+    track: 'Explanatory',
+    trackSlug: 'explanatory',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-ND',
+    track: 'News Delivery',
+    trackSlug: 'news-delivery',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-BP',
+    track: 'Business Pitch / Sales Pitch',
+    trackSlug: 'business-pitch',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-GP',
+    track: 'General Presentation / Multimedia',
+    trackSlug: 'general-presentation-multimedia',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-AP',
+    track: 'Academic — Poster / Project / Thesis',
+    trackSlug: 'academic-poster-project-thesis',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-CR',
+    track: 'Corporate Report',
+    trackSlug: 'corporate-report',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-INFO',
+    track: 'Infotainment-Oriented',
+    trackSlug: 'infotainment-oriented',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-AL',
+    track: 'Academic — Lecture / Course',
+    trackSlug: 'academic-lecture-course',
+    assignmentStatus: 'In Evaluation',
+    publicationStatus: 'Processing',
+  },
+  {
+    id: 'SUB-SYNTH-MKT',
+    track: 'Marketing / Promotional',
+    trackSlug: 'marketing-promotional',
     assignmentStatus: 'In Evaluation',
     publicationStatus: 'Processing',
   },
@@ -177,24 +230,6 @@ const COMPLETED_HISTORY_KEY = 'auratio_volunteer_completed_history'
 const DRAFT_PREFIX = 'auratio_volunteer_draft_'
 const LOCKED_VERSION_PREFIX = 'auratio_volunteer_locked_'
 
-function getTrackSlug(trackName: string): string {
-  const norm = trackName.toLowerCase()
-  if (norm.includes('business') || norm.includes('sales')) return 'business-pitch'
-  if (norm.includes('extempore')) return 'extempore'
-  if (norm.includes('informative')) return 'informative'
-  if (norm.includes('persuasive')) return 'persuasive'
-  return 'business-pitch'
-}
-
-export function getCriteriaForTrack(trackSlug: string): CriterionDefinition[] {
-  const trackCriteria = TRACK_SPECIFIC_CRITERIA[trackSlug] || TRACK_SPECIFIC_CRITERIA['business-pitch']
-  return [
-    ...UNIVERSAL_DELIVERY_CRITERIA,
-    ...STRUCTURAL_FLOW_CRITERIA,
-    ...trackCriteria,
-  ]
-}
-
 export function getVolunteerAssignments(): ActiveAssignment[] {
   try {
     const raw = window.sessionStorage?.getItem(ASSIGNMENTS_KEY)
@@ -214,7 +249,9 @@ export function saveVolunteerAssignments(assignments: ActiveAssignment[]): void 
 export function getVolunteerAssignment(submissionId: string): ActiveAssignment | null {
   const normalizedId = submissionId.toUpperCase()
   const assignments = getVolunteerAssignments()
-  return assignments.find((a) => a.id.toUpperCase() === normalizedId) ?? null
+  const found = assignments.find((a) => a.id.toUpperCase() === normalizedId)
+  if (found) return found
+  return SYNTHETIC_ALL_TRACK_ASSIGNMENTS.find((a) => a.id.toUpperCase() === normalizedId) ?? null
 }
 
 export function updateAssignmentStatus(submissionId: string, status: ActiveAssignment['assignmentStatus']): void {
@@ -252,10 +289,12 @@ export function isCriterionComplete(criterion: CriterionScoreData): boolean {
   )
 }
 
-export function createFreshDraft(submissionId: string, trackName: string): VolunteerSubmissionScoringDraft {
+export function createFreshDraft(submissionId: string, trackName: string): VolunteerSubmissionScoringDraft | null {
   const normalizedId = submissionId.toUpperCase()
   const trackSlug = getTrackSlug(trackName)
+  if (!trackSlug) return null
   const allCriteria = getCriteriaForTrack(trackSlug)
+  if (!allCriteria) return null
 
   const criteriaRecord: Record<string, CriterionScoreData> = {}
   for (const c of allCriteria) {
@@ -274,9 +313,11 @@ export function createFreshDraft(submissionId: string, trackName: string): Volun
     }
   }
 
+  const exactLabel = getTrackLabel(trackName) || trackName
+
   return {
     submissionId: normalizedId,
-    track: trackName,
+    track: exactLabel,
     trackSlug,
     criteria: criteriaRecord,
     overallSummary: '',
@@ -300,6 +341,9 @@ export function getScoringDraft(submissionId: string): VolunteerSubmissionScorin
     else return null
   }
 
+  const trackSlug = getTrackSlug(trackName)
+  if (!trackSlug) return null
+
   try {
     const raw = window.sessionStorage?.getItem(`${DRAFT_PREFIX}${normalizedId}`)
     if (raw) {
@@ -312,7 +356,9 @@ export function getScoringDraft(submissionId: string): VolunteerSubmissionScorin
 
   // Return fresh empty draft starting at 0/100, 0/16
   const fresh = createFreshDraft(normalizedId, trackName)
-  saveScoringDraft(fresh)
+  if (fresh) {
+    saveScoringDraft(fresh)
+  }
   return fresh
 }
 
@@ -660,4 +706,10 @@ if (typeof window !== 'undefined') {
   win.__getLatestLockedSubmission = getLatestLockedSubmission
   win.__getCompletedEntity = getCompletedEntity
   win.__getCompletedHistory = getCompletedHistory
+  win.__getTrackSlug = getTrackSlug
+  win.__getTrackLabel = getTrackLabel
+  win.__getCriteriaForTrack = getCriteriaForTrack
+  win.__CANONICAL_TRACK_REGISTRY = CANONICAL_TRACK_REGISTRY
+  win.__AUTHORITATIVE_MVP_TRACKS = AUTHORITATIVE_MVP_TRACKS
+  win.__SYNTHETIC_ALL_TRACK_ASSIGNMENTS = SYNTHETIC_ALL_TRACK_ASSIGNMENTS
 }
