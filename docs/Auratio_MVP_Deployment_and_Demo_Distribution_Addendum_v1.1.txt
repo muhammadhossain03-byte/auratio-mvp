@@ -1,10 +1,13 @@
 AURATIO MVP — DEPLOYMENT & DEMO DISTRIBUTION ADDENDUM
-Version 1.0
-Effective: 31 August 2026
+Version 1.1
+Effective: 6 September 2026
 Status: Authoritative project change declaration
 
 PURPOSE
 This addendum locks the MVP delivery/deployment choices for Auratio without forcing immediate edits to older product, scoring, UI, and planning documents.
+
+REVISION NOTE — VERSION 1.1
+Version 1.1 supersedes Version 1.0 only for the web-portal domain/origin decision. The production portal origin is now https://auratio.cloud. The previous auratio.space target is no longer authoritative. All other Version 1.0 delivery decisions remain unchanged, including direct Android APK delivery for the academic demo, optional Play Store publication, React/Vite static hosting on the existing Hostinger plan, HTTPS, and SPA route fallback.
 
 LOCKED MVP DELIVERY DECISIONS
 
@@ -16,9 +19,9 @@ LOCKED MVP DELIVERY DECISIONS
 
 2. WEB PORTAL HOSTING
 - The Auratio web portal will be hosted using the existing Hostinger hosting plan associated with the domain:
-  auratio.space
+  auratio.cloud
 - The intended public portal origin is:
-  https://auratio.space
+  https://auratio.cloud
 - The current portal stack is React + TypeScript + Vite. The production Vite build is therefore expected to be deployed as static web assets to Hostinger.
 - Hostinger must be configured for SPA routing so direct navigation/refreshes on portal routes resolve to the portal entry point rather than returning 404 errors.
 - HTTPS must be enabled for the deployed portal.
@@ -44,17 +47,17 @@ LOCKED MVP DELIVERY DECISIONS
 Before the instructor demo, the project should include:
 - an installable, tested Android APK;
 - at least one real Android-device or Android-emulator QA pass;
-- the deployed web portal at https://auratio.space;
+- the deployed web portal at https://auratio.cloud;
 - HTTPS and SPA route-refresh behavior verified on Hostinger;
 - the app and portal tested against the final production-facing configuration that is appropriate for the MVP.
 
 PHASE INTERPRETATION
-- Step IX — Deployment / Cloud Hosting remains a later phase, but its web target is now locked to Hostinger + auratio.space for the portal.
+- Step IX — Deployment / Cloud Hosting remains a later phase, but its web target is now locked to Hostinger + auratio.cloud for the portal.
 - Step X — App Store Launch is no longer a mandatory academic-MVP deliverable. For the instructor presentation, direct APK distribution replaces Play Store publication.
 - Play Store publication remains an optional future/post-MVP activity.
 
 PRECEDENCE
-Where an older Auratio planning/status file implies that Play Store publication is mandatory for the academic MVP, or leaves the web-portal hosting target undefined, this addendum prevails for those delivery/deployment matters.
+Where an older Auratio planning/status file implies that Play Store publication is mandatory for the academic MVP, leaves the web-portal hosting target undefined, or identifies auratio.space as the production portal origin, this addendum prevails for those delivery/deployment matters.
 
 This addendum does NOT change Auratio's product requirements, scoring rules, Path-selection behavior, evaluation workflows, governance, or UI source of truth.
 

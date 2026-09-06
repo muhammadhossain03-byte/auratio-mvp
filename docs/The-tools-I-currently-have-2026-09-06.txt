@@ -1,0 +1,22 @@
+CURRENT TOOLS / SERVICES — AURATIO
+Updated: 6 September 2026
+
+Subscriptions and development tools:
+- 1 ChatGPT Plus subscription (Codex included)
+- 1 Claude Pro subscription (Claude Code included; low usage allowance per 5-hour window)
+- 1 Kimi basic paid subscription (Kimi Code included)
+- 11 Gemini Pro subscriptions (Antigravity included; Opus 4.6 limited usage and Gemini 3.7 Flash generous usage)
+- 2 Figma Education accounts
+- 2 FlutterFlow student subscriptions
+
+Hosting / domain:
+- Hostinger hosting plan
+- Domain: auratio.cloud
+- Locked MVP use: host the Auratio web portal at https://auratio.cloud
+
+Local development environment confirmed on 31 August 2026:
+- Flutter 3.47.1 (stable)
+- Dart 3.13.1
+- Chrome/web toolchain available
+- Android SDK/toolchain not installed yet; install before Android device/emulator QA and final APK build
+- Visual Studio not installed and not required for the current Android + web delivery target

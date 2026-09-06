@@ -1,0 +1,342 @@
+Auratio Project Status — 6 September 2026
+Version 10 — Step IV Provisionally Reopened for Human-Acceptance Hardening
+
+CURRENT MILESTONE
+
+Auratio has completed Steps I–III and has a fully implemented Step-IV frontend inventory of 93 canonical screens:
+- 41 User Mobile
+- 8 Shared Portal Authentication
+- 16 Volunteer Evaluator
+- 23 Admin
+- 5 Super Admin
+
+The UI implementation itself remains complete at 93 / 93 canonical screens.
+
+However, Step IV is NOT currently closed.
+
+Step IV was provisionally reopened after real Android-emulator and localhost human testing exposed interaction/state defects that earlier visual and automated QA did not fully catch. A large repair and regression-hardening cycle has now been completed, but final human portal acceptance is still pending and two known Volunteer portal defect groups remain unresolved.
+
+Step V — Database is BLOCKED until Step IV is formally re-closed.
+
+AUTHORITATIVE MVP BASELINE
+
+Primary written sources remain:
+- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8.2
+- Auratio MVP Concepts & Requirements v1.8
+- Auratio Execution Specification / Master Brand Specification & Execution Plan v1.8
+- Auratio Scoring & Leaderboard System Specification v3.7
+- Auratio MVP — Path Selection Addendum v1.0
+- Auratio MVP — Deployment & Demo Distribution Addendum v1.1
+- Auratio Step IV Runtime Visual QA Protocol v1.1
+- Auratio Step IV Zero-Known-Defects Re-close Strategy Addendum v1.1
+- Auratio Final Pre-Launch QA Flow v1.0
+
+Figma page:
+03 — Interactive Prototype — MVP v1.8
+
+Written product semantics prevail over purely visual prototype affordances where the two conflict.
+
+DEPLOYMENT TARGET UPDATE — 6 SEPTEMBER 2026
+
+The authoritative production React/Vite portal origin is now:
+https://auratio.cloud
+
+The previous https://auratio.space target is superseded. The existing Hostinger hosting-plan assumption remains unchanged unless a later deployment decision explicitly changes the provider. Direct Android APK delivery remains the locked academic-demo mobile distribution method. This domain update does not change the current Step-IV hardening state or authorize Step V.
+
+DEVELOPMENT STATUS
+
+Step I — Concepts & Requirements: COMPLETE AND LOCKED.
+Step II — Wireframing: COMPLETE AND LOCKED.
+Step III — High-Fidelity UI/UX Design: COMPLETE AND LOCKED.
+Step III — Interactive Figma Prototype: COMPLETE AND LOCKED.
+
+Step IV — UI Coding:
+- implementation inventory: COMPLETE — 93 / 93
+- mobile interaction hardening: COMPLETE and independently reviewed
+- portal discovery audit: COMPLETE
+- portal repair batches P1, P1.1, P2: COMPLETE and independently reviewed
+- Playwright critical regression layer: COMPLETE
+- adversarial QA: COMPLETE through the pre-human-acceptance checkpoint
+- final 93-screen regression at pre-human-acceptance checkpoint: PASSED
+- human acceptance: IN PROGRESS
+- final Step-IV re-close: NOT YET AUTHORIZED
+
+Step V — Database: NOT STARTED / BLOCKED.
+Step VI — Backend: NOT STARTED.
+Step VII — API Integration: NOT STARTED.
+Step VIII — Dedicated full-system QA: NOT STARTED.
+Step IX — Deployment / Cloud Hosting: NOT STARTED.
+Step X — Play Store publication: NOT required for the academic MVP; direct Android APK delivery remains the locked demo-distribution path.
+
+CURRENT REPOSITORY CHECKPOINT
+
+GitHub repository:
+muhammadhossain03-byte/auratio-mvp
+
+Branch:
+step-iv/ui-foundation
+
+CURRENT REVIEWED HEAD:
+c30e5b13b41250fc86686f5eb7a2f007218ca722
+
+Commit:
+fix(portal): enforce submitted evaluation locking
+
+This is the current working checkpoint for tomorrow's portal human-acceptance continuation.
+
+It is NOT yet the final approved Step-IV baseline.
+
+IMPORTANT RECENT CHECKPOINTS
+
+Original locked frontend baseline:
+9e75888c33e9c311d67a3b321fdd30b6c3ab0794
+
+Mobile hardening:
+- e224de07e241095e50afb1ae16fa6f8f6cf42a76 — R1 final
+- d87031c5cf1559f4048d5598798fec7d8275409b — R2A final
+- f6dc1cd447d07e800353fbac3f9e9e12a25611f2 — R2B final
+
+Portal hardening:
+- f268e12c221da5a91630b7497c5d5c2f84102c8c — P1
+- 5605fa278d0b5e89d4b7917ce840a1168edb5462 — P1.1
+- b09e4ed88641234789d0f34544501d1a481382da — Playwright regression layer
+- a381d475922d79a20f78db157bfdecec2af62927 — P2 + pre-human-acceptance final 93-screen candidate
+
+Human-acceptance Volunteer repairs:
+- b17eee66b9e24bd10b597494ccca98f90bff2b02 — H1
+- 676dc30880f5a8e2c13f6d9887f207db1eea1a84 — H1.1
+- c30e5b13b41250fc86686f5eb7a2f007218ca722 — H1.2 current checkpoint
+
+MOBILE STATUS
+
+Mobile source has remained stable through the later portal-only repair batches.
+
+Completed mobile hardening includes:
+- working bottom navigation
+- all 13 tracks selectable
+- selected-track state integrity
+- AI/Human evaluation route correctness
+- historical-result track isolation
+- Events filters
+- History filters
+- All-Time/Monthly leaderboards
+- Manage Paths behavior
+- Android Back sanity
+- runtime visual QA
+
+The 41-screen mobile full regression and adversarial sanity previously passed as Zero-Known-Defects Candidates.
+
+Mobile must still be included in the final post-repair 93-screen regression before Step IV is formally re-closed.
+
+PORTAL STATUS — COMPLETED HARDENING
+
+The portal has undergone:
+- real-browser discovery audit
+- entity-integrity repair
+- dead-control repair
+- Volunteer/Admin/Super Admin entity isolation
+- moderation arbitrary-ID protection
+- functional Event filtering
+- functional Audit Log filtering
+- Event Publish/Delete lifecycle implementation
+- invalid request fallback handling
+- Playwright critical regression coverage
+- adversarial route/state testing
+- viewport/keyboard/runtime checks
+- multiple focused repair batches
+
+Key fixed defect classes include:
+- wrong request/submission/person opening
+- stale entity routes
+- dead event filters
+- dead audit filters
+- dead Volunteer assignment controls
+- fabricated arbitrary moderation entities
+- incorrect Volunteer/Admin mutation targeting
+- misleading presentation-only Event buttons
+- raw React Router invalid-request error page
+- incomplete Human Evaluation scoring workflow
+- fake pre-completed scoring
+- missing anchor-first score entry
+- missing required timestamp enforcement
+- direct-review submission bypass
+- unauthorized anchor-to-score numeric bands
+- submitted evaluation editability
+- duplicate submission of the same locked version
+
+HUMAN EVALUATION SCORING NOW IMPLEMENTED
+
+Current local/mock Step-IV Human Evaluation supports:
+- 8 Universal Delivery criteria = 40 points
+- 4 Structural Flow criteria = 20 points
+- 4 track-specific criteria = 40 points
+- 16 criteria total
+- Low / Competent / Excellent qualitative anchor selected first
+- exact integer score enabled only after anchor selection
+- exact score may use the full criterion range
+- required mm:ss evidence timestamp
+- required evidence narrative
+- required strength
+- required weakness
+- required actionable improvement advice
+- required Overall Summary
+- calculated category subtotals and total /100
+- Review & Submit disabled until genuinely complete
+- submitted version locking
+- Active Assignments -> Completed / History transition
+- formal Re-review / Reopened versioning path
+
+CURRENT KNOWN DEFECTS — MUST BE RESOLVED TOMORROW
+
+Two Volunteer portal defect groups are currently known.
+
+KNOWN DEFECT V-01 — Reopened Evaluation route can fabricate / mishandle unsupported or repeated reopen state.
+
+Current concern:
+- `/volunteer/evaluation/:submissionId/reopened` does not yet sufficiently require a legitimate submitted/locked prior version.
+- invalid IDs can potentially enter a fabricated correction workflow.
+- reopen logic may fall back to default Business Pitch data when no legitimate prior submission exists.
+- version lookup defaults to version 1, creating risk that repeated reopen cycles rebuild from an old locked version instead of the latest valid submitted version.
+
+Required future correction:
+- invalid/unsubmitted IDs must not enter Reopened Evaluation.
+- formal reopen must require a real completed/locked prior evaluator version.
+- repeated re-review must always advance from the latest valid locked version.
+- prior locked versions must remain immutable and reconstructible.
+
+KNOWN DEFECT V-02 — Generic Completed-detail route is hard-coded to SUB-8821.
+
+Current route:
+`/volunteer/completed/:submissionId`
+
+Current component:
+VolunteerCompletedPendingModerationPage
+
+Current problem:
+- page content is hard-coded to SUB-8821
+- score is hard-coded to 85 / 100
+- if another submission such as SUB-8814 is actually submitted and its history row opens `/volunteer/completed/sub-8814`, the page can display SUB-8821 data
+
+Required future correction:
+- Completed-detail rendering must resolve the exact selected submission.
+- route ID, displayed ID, track, score, and publication state must agree.
+- unknown IDs must fail/redirect safely.
+- no entity A may render entity B.
+
+These defects are known and Step IV therefore cannot be declared Zero Known Defects yet.
+
+CURRENT QA / EVIDENCE STATUS
+
+Before human acceptance, the project successfully completed:
+- Flutter format/analyze/tests
+- portal lint/build/tests
+- Playwright critical regression
+- three consecutive Playwright passes per repair gate
+- portal geometry suites
+- real Android-emulator sanity
+- adversarial QA
+- a complete 93-screen canonical regression at the then-current checkpoint
+
+Canonical inventory:
+- Mobile: 41
+- Portal/Auth: 52
+- Total: 93
+
+Standard capture dimensions:
+- Mobile: 390 x 844
+- Portal: 1366 x 900
+
+Important:
+The earlier final 93-screen regression at commit a381d475... is no longer the final Step-IV regression because H1/H1.1/H1.2 modified portal code afterwards.
+
+Therefore, after the LAST future Step-IV repair:
+1. rerun the complete final 93-screen regression,
+2. complete human acceptance,
+3. verify Zero Known Defects,
+4. only then formalize the new approved Step-IV HEAD.
+
+TOMORROW'S REQUIRED WORKFLOW
+
+Start from:
+c30e5b13b41250fc86686f5eb7a2f007218ca722
+
+First:
+1. run the portal locally:
+   cd /d D:\auratio-mvp\portal
+   npm run dev
+
+2. manually verify the H1/H1.1/H1.2 Volunteer repairs.
+
+3. continue human testing of the portal:
+   - Volunteer
+   - Admin
+   - Super Admin
+
+4. collect all remaining bugs rather than repairing each one immediately.
+
+5. independently verify each finding against source/spec.
+
+6. repair confirmed findings in controlled Antigravity batches.
+
+7. after the LAST repair:
+   - run lint/build/tests
+   - run Playwright regression
+   - run geometry suites
+   - run adversarial sanity where relevant
+   - rerun the exact final 93-screen canonical regression
+   - perform final human acceptance
+
+8. if all pass:
+   - declare Zero Known Defects
+   - lock the final Step-IV HEAD
+   - update Project Status and Implementation Handoff
+   - authorize Step V
+
+STEP IV SCOPE BOUNDARY
+
+Step IV implements:
+- locked UI
+- frontend routing
+- prototype-visible interactions
+- local/mock frontend state
+- local validation
+- durable frontend regression tests
+
+Step IV still does NOT implement production:
+- Supabase database persistence
+- production authentication
+- backend-enforced RBAC
+- production storage/video processing
+- Gemini API evaluation
+- Edge Functions / backend APIs
+- production assignment queue persistence
+- production scoring/mastery/ALR/leaderboard engines
+- deterministic report generation
+- production moderation enforcement
+- deployment/hosting configuration
+
+These remain Steps V onward.
+
+FRESH CHATGPT CONVERSATION STARTING INSTRUCTION
+
+Continue Auratio from checkpoint `c30e5b13b41250fc86686f5eb7a2f007218ca722` on branch `step-iv/ui-foundation`.
+
+Step IV remains provisionally reopened for final human-acceptance hardening.
+
+Yesterday we completed H1, H1.1, and H1.2 Volunteer portal repairs. H1.2 technically fixed submitted-evaluation locking, but two known Volunteer issues remain:
+1. unsafe/fabricating Reopened Evaluation routing/versioning;
+2. dynamic `/volunteer/completed/:submissionId` detail rendering still uses hard-coded SUB-8821 content.
+
+Do not start Step V.
+
+First help me run the portal locally and manually test it from localhost. I want to collect the remaining Volunteer/Admin/Super Admin bugs, then repair confirmed findings in controlled batches. After the final repair, rerun the final 93-screen regression, complete human acceptance, formally re-lock Step IV, update the project documentation, and only then authorize Step V.
+
+BOTTOM LINE
+
+Frontend inventory implemented: 93 / 93.
+Current reviewed branch HEAD: c30e5b13b41250fc86686f5eb7a2f007218ca722.
+Step IV: PROVISIONALLY REOPENED.
+Known unresolved Step-IV defects: 2 Volunteer defect groups.
+Final human portal acceptance: PENDING.
+Final post-repair 93-screen regression: PENDING.
+Step V: BLOCKED.

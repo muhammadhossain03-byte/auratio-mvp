@@ -1,0 +1,637 @@
+Auratio Step IV — Zero-Known-Defects Re-Close Strategy Addendum
+Version 1.1
+Date: 6 September 2026
+Status: LOCKED FOR STEP IV RE-CLOSE WORK
+
+REVISION NOTE: Version 1.1 is maintenance-only. It updates references to the current Authoritative Clarifications v1.8.2 and Deployment & Demo Distribution Addendum v1.1. The Step-IV re-close process and exit gates are unchanged.
+
+======================================================================
+1. PURPOSE
+======================================================================
+
+This addendum governs the reopening, hardening, verification, and final re-closing of
+Auratio Step IV — UI Coding after Android runtime testing exposed real interaction
+defects that had not been detected by the previous visual and automated QA passes.
+
+The purpose is NOT to redesign Auratio or expand MVP scope.
+
+The purpose is to establish a stricter Step-IV completion standard so that Auratio moves
+to Step V only after the complete frontend has:
+
+- zero known functional defects,
+- zero known navigation defects,
+- zero known misleading/dead interactive controls,
+- zero known material visual discrepancies,
+- zero known role-boundary defects,
+- clean automated test results,
+- successful real runtime interaction QA,
+- successful adversarial QA,
+- successful final human acceptance testing.
+
+No non-trivial software process can mathematically guarantee that absolutely no latent
+bug exists. Therefore, the authoritative release criterion in this addendum is:
+
+                         ZERO KNOWN DEFECTS
+
+Step IV must not be described as complete or locked again until every gate in this
+addendum has passed after the final Step-IV code change.
+
+
+======================================================================
+2. AUTHORITY AND SCOPE
+======================================================================
+
+This addendum has scoped authority over:
+
+- Step-IV defect-hardening strategy,
+- Step-IV runtime interaction QA,
+- Step-IV regression testing,
+- Step-IV browser QA,
+- Step-IV adversarial QA,
+- Step-IV acceptance criteria,
+- Step-IV final re-close procedure.
+
+It does NOT override unrelated product, scoring, moderation, governance, architecture,
+database, backend, API, deployment, or business rules.
+
+Existing authoritative sources remain controlling for those matters, including:
+
+- Auratio — Authoritative Clarifications & MVP Source-of-Truth v1.8.2
+- Auratio Scoring & Leaderboard System Specification v3.7
+- Auratio MVP — Path Selection Addendum v1.0
+- Auratio MVP — Deployment & Demo Distribution Addendum v1.1
+- applicable Auratio concepts/execution specifications
+
+Figma page:
+03 — Interactive Prototype — MVP v1.8
+
+remains authoritative for approved visual appearance and prototype-visible behavior,
+subject to written specifications prevailing where product semantics require behavior
+that a stale or incomplete prototype does not fully express.
+
+This addendum does not authorize Step V, VI, VII, VIII, IX, or X implementation work.
+
+
+======================================================================
+3. STEP IV STATUS CHANGE
+======================================================================
+
+The previous Step-IV closeout is provisionally REOPENED for frontend interaction
+hardening.
+
+Previously approved visual work remains valid unless a verified defect requires a narrow
+correction.
+
+The previously approved repository checkpoint:
+
+9e75888c33e9c311d67a3b321fdd30b6c3ab0794
+
+remains the historical pre-repair Step-IV baseline.
+
+It must NOT be described as the final approved Step-IV HEAD after repair work begins.
+
+A new final approved Step-IV HEAD shall be declared only after every gate in this
+addendum has passed.
+
+
+======================================================================
+4. CORE PRINCIPLE — TEST BEHAVIOR, NOT ONLY SCREENS
+======================================================================
+
+The prior Step-IV process proved that:
+
+- a screen can visually match Figma,
+- source code can compile,
+- automated tests can pass,
+- route declarations can exist,
+
+while a real user can still encounter controls that do nothing or behavior that violates
+the specification.
+
+Therefore, Step-IV re-close QA must validate BOTH:
+
+A. Visual correctness
+B. Runtime behavioral correctness
+
+Visual QA alone is insufficient.
+Widget/unit tests alone are insufficient.
+Source-code review alone is insufficient.
+Manual testing alone is insufficient.
+
+The final Step-IV decision must be supported by multiple independent verification layers.
+
+
+======================================================================
+5. PHASE A — MOBILE REPAIR
+======================================================================
+
+Mobile repair shall be performed in controlled batches.
+
+----------------------------------------------------------------------
+5.1 REPAIR BATCH R1 — CORE INTERACTION INTEGRITY
+----------------------------------------------------------------------
+
+R1 covers only the confirmed high-priority mobile defects and their direct dependencies.
+
+Required R1 scope:
+
+1. Canonical mobile bottom navigation
+   - Home
+   - Tracks
+   - Progress
+   - Profile
+   - Every non-current canonical destination must navigate correctly.
+
+2. All 13 tracks
+   - Every track must be browsable.
+   - Every track must be selectable for evaluation.
+   - Path selection must remain personalization only and must not restrict track access.
+
+3. Reusable selected-track state
+   - Avoid duplicating 13 Track Details screens.
+   - Use one reusable local/mock track model/state.
+   - Preserve exact user-facing track labels and durations.
+   - Give tracks stable technical identifiers.
+
+4. Active evaluation journey parameterization
+   - Current selected track information must propagate through the applicable evaluation
+     journey instead of remaining hard-coded to Business Pitch / Sales Pitch.
+   - Historical/demo data must not be blindly rewritten.
+
+5. Pending Moderation
+   - Normal runtime must remain pending until an external/mock state change or explicit
+     navigation occurs.
+   - It must not auto-approve or auto-transition after a timer.
+
+6. Rejected evaluation
+   - “Start a New Evaluation” must be a real accessible interactive control.
+   - It must release the user into the new-evaluation journey as defined by the approved
+     frontend behavior.
+
+7. Regression tests
+   - Navigation regression coverage.
+   - All 13 tracks accessible.
+   - Selected-track consistency.
+   - Pending Moderation does not auto-transition.
+   - Rejected retry works.
+
+8. Runtime QA
+   - Actual Flutter runtime interaction testing.
+   - Runtime visual captures for visually affected states.
+   - Figma comparison where visuals changed.
+
+R1 must be completed, reviewed, and approved before R2 begins.
+
+
+----------------------------------------------------------------------
+5.2 REPAIR BATCH R2 — RESIDUAL INTERACTION INTEGRITY
+----------------------------------------------------------------------
+
+R2 begins with an AUDIT before any implementation.
+
+Required audit targets include, at minimum:
+
+- Tracks category/filter controls
+- Events Division filter
+- Events Path filter
+- Events Date filter
+- Monthly leaderboard control
+- AI/Human leaderboard switching
+- Home CTAs
+- Home active-evaluation entry
+- Settings actions
+- Sign Out behavior
+- “How Ranking Works”
+- all chips/tabs/buttons/links/cards that visually imply interactivity
+- all remaining hard-coded current-evaluation assumptions
+- Android Back behavior
+- modal/dialog actions
+- scrolling and keyboard interaction
+- navigation edge cases
+
+For each suspect control, determine whether it is:
+
+A. intentionally presentation-only according to the authoritative product/prototype, or
+B. expected to be interactive and therefore defective.
+
+Only verified defects are repaired.
+
+R2 must not introduce backend/database/API behavior. Step-IV behavior remains local/mock
+where production services belong to later steps.
+
+
+======================================================================
+6. PHASE B — COMPLETE MOBILE REGRESSION
+======================================================================
+
+After R1 and R2 are complete, perform a fresh regression of the full 41-screen mobile
+inventory.
+
+Every relevant screen must be checked across these dimensions:
+
+VISUAL
+- Figma fidelity
+- typography
+- spacing
+- icons/images/assets
+- clipping
+- overflow
+- scrolling
+- safe areas
+- Android system bars
+- responsive behavior
+- keyboard overlap
+
+INTERACTION
+- every intended button
+- every intended link
+- tabs
+- chips
+- cards with navigation semantics
+- bottom navigation
+- forms
+- validation
+- dialogs
+- Android Back
+- state transitions
+- retry/cancel behavior
+- current-evaluation continuity
+
+TECHNICAL
+- dart format
+- flutter analyze
+- complete Flutter test suite
+- regression tests added for repaired defects
+- no unexplained runtime exceptions
+- no unexplained crashes/freezes
+
+RUNTIME
+- Android emulator/device execution
+- install/build/launch succeeds
+- critical end-user journey succeeds in actual Android runtime
+- affected screens visually rechecked after the final code modification
+
+
+======================================================================
+7. PHASE C — PORTAL RUNTIME AUDIT AND REPAIR
+======================================================================
+
+The portal must receive the same behavior-first scrutiny as the mobile app.
+
+The locked process is:
+
+Antigravity browser audit
+→ independent ChatGPT/spec review
+→ controlled repair batches
+→ Playwright regression tests
+→ manual sanity test
+
+----------------------------------------------------------------------
+7.1 ANTIGRAVITY EXPLORATORY BROWSER AUDIT
+----------------------------------------------------------------------
+
+The initial audit must be READ/TEST ONLY.
+
+Antigravity must not modify code during the discovery pass.
+
+It shall run the portal in a real browser and systematically test:
+
+SHARED AUTH
+- Sign In
+- Forgot Password
+- Reset Password
+- validation
+- navigation
+- direct-route behavior
+
+VOLUNTEER
+- authentication
+- assignments
+- evaluation workflow
+- submission
+- status transitions
+- navigation
+- restricted functionality
+
+ADMIN
+- authentication
+- moderation
+- volunteer management
+- assignment/reassignment
+- evaluation management
+- event CRUD
+- filters
+- dialogs
+- tables
+- navigation
+- state changes
+
+SUPER ADMIN
+- all applicable Admin behavior
+- Admin-account governance
+- Super-Admin-only controls
+- protected Root Super Admin behavior
+- role boundaries
+
+GLOBAL PORTAL INTERACTION AUDIT
+- sidebar items
+- buttons
+- links
+- tabs
+- dropdowns
+- search
+- filters
+- pagination where applicable
+- checkboxes/radios
+- row actions
+- contextual menus
+- modals/dialogs
+- forms
+- browser Back/Forward
+- page refresh
+- direct URL entry
+- scrolling
+- responsive viewport behavior
+- horizontal overflow
+- console/runtime errors
+
+Every suspected defect should include reproducible steps and evidence such as screenshots,
+browser recordings, console output, or source references.
+
+
+----------------------------------------------------------------------
+7.2 INDEPENDENT REVIEW BEFORE FIXING
+----------------------------------------------------------------------
+
+Antigravity findings are not automatically accepted as product defects.
+
+Each finding must be checked against:
+
+- authoritative Auratio specifications,
+- Figma,
+- role semantics,
+- frontend source code.
+
+Only confirmed defects are authorized for repair.
+
+This prevents accidental “fixes” to intentional presentation-only behavior or scope that
+belongs to later database/backend/API work.
+
+
+----------------------------------------------------------------------
+7.3 CONTROLLED PORTAL REPAIR
+----------------------------------------------------------------------
+
+Confirmed portal defects shall be repaired in narrow batches.
+
+Each batch must:
+
+- have an explicit defect list,
+- preserve approved visuals,
+- avoid unrelated redesign,
+- avoid Step V+ work,
+- include appropriate tests,
+- include browser/runtime evidence,
+- end in a clean focused commit,
+- receive review before the next batch begins.
+
+
+----------------------------------------------------------------------
+7.4 PLAYWRIGHT REGRESSION SUITE
+----------------------------------------------------------------------
+
+Critical portal journeys must receive repeatable browser regression coverage.
+
+At minimum, cover representative flows for:
+
+- Shared authentication
+- Volunteer assignment/evaluation journey
+- Admin Volunteer CRUD
+- Admin assignment/reassignment
+- Admin Event CRUD
+- moderation workflow where represented in Step IV
+- Super Admin Admin-account lifecycle
+- protected Root Super Admin behavior
+- Volunteer denied access to Admin routes
+- Admin denied access to Super-Admin-only routes
+- direct protected-route access
+- important filters/tabs/dialogs that were repaired
+
+Playwright tests must validate actual outcomes, not merely that elements exist.
+
+
+======================================================================
+8. PHASE D — ADVERSARIAL QA
+======================================================================
+
+Before Step IV can re-close, deliberately attempt to break the frontend.
+
+Examples include:
+
+- repeated rapid taps/clicks
+- unusual Back navigation
+- rapid primary-tab switching
+- browser refresh mid-flow
+- direct URL entry
+- empty form submission
+- invalid form values
+- canceling dialogs
+- reopening dialogs
+- long-content scrolling
+- keyboard opening/closing
+- switching away mid-flow
+- revisiting completed states
+- attempting forbidden role routes
+- small/large portal viewports
+- horizontal-overflow scenarios
+- repeated action submission where relevant
+- stale mock-state transitions
+- navigation after state mutation
+
+Adversarial QA is not optional for the final Step-IV gate.
+
+
+======================================================================
+9. PHASE E — FINAL 93-SCREEN REGRESSION
+======================================================================
+
+After the LAST Step-IV code modification, perform one final regression.
+
+Inventory:
+
+- 41 User Mobile screens
+- 8 Shared Portal Authentication screens
+- 16 Volunteer Evaluator screens
+- 23 Admin screens
+- 5 Super Admin screens
+
+Total:
+93 screens
+
+The final regression must not reuse an earlier “all clear” result if code changed after
+that result.
+
+Any correction made after final regression begins invalidates affected evidence and
+requires appropriate re-testing.
+
+
+======================================================================
+10. PHASE F — FINAL HUMAN ACCEPTANCE TEST
+======================================================================
+
+The project owner performs a short final sanity pass only after automated and agentic QA
+has passed.
+
+The project owner is NOT expected to discover defects from scratch.
+
+Recommended final acceptance journeys:
+
+MOBILE
+Sign In / Sign Up
+→ onboarding
+→ Path selection
+→ Home
+→ Tracks
+→ representative evaluations from multiple paths
+→ evaluation status/result behavior
+→ Progress
+→ Leaderboards
+→ Events
+→ Profile / Settings / Manage Paths
+
+PORTAL
+- Volunteer: principal assigned-evaluation journey
+- Admin: principal management/moderation journey
+- Super Admin: principal governance journey
+
+Any newly discovered defect reopens the relevant Step-IV repair gate.
+
+
+======================================================================
+11. STEP IV — ZERO KNOWN DEFECTS EXIT GATE
+======================================================================
+
+Step IV may be declared COMPLETE AND LOCKED again only when ALL of the following are true:
+
+[ ] No known functional frontend defect remains.
+[ ] No known navigation defect remains.
+[ ] No known misleading dead control remains.
+[ ] No known material visual discrepancy remains.
+[ ] No known role-boundary defect remains.
+[ ] All 13 tracks behave according to the authoritative MVP rules.
+[ ] Current selected-track behavior is consistent through the applicable evaluation flow.
+[ ] Pending Moderation behavior is correct.
+[ ] Rejected/new-evaluation behavior is correct.
+[ ] Mobile intended controls have been interaction-audited.
+[ ] Portal intended controls have been interaction-audited.
+[ ] Flutter formatting passes.
+[ ] Flutter analyzer passes.
+[ ] Complete Flutter tests pass.
+[ ] Portal lint/build/tests pass.
+[ ] Playwright critical regression suite passes.
+[ ] Android runtime QA passes.
+[ ] Portal real-browser runtime QA passes.
+[ ] No unexplained application-level console/runtime errors remain.
+[ ] Adversarial mobile QA passes.
+[ ] Adversarial portal QA passes.
+[ ] Final 93-screen regression passes after the last code modification.
+[ ] Final human acceptance sanity test passes.
+[ ] Final independent review approves the new clean repository HEAD.
+
+Only then may a new final approved Step-IV commit SHA be declared.
+
+
+======================================================================
+12. STEP V BLOCK
+======================================================================
+
+Step V — Database must NOT begin while this Step-IV re-close process is incomplete.
+
+No database, backend, Supabase production integration, Gemini integration, production API,
+deployment, or later-step work may be used to conceal or defer a genuine Step-IV
+frontend defect.
+
+Once the Zero Known Defects Exit Gate passes, Step IV may be re-locked and Step V may
+begin from the newly approved clean frontend baseline.
+
+
+======================================================================
+13. PROJECT STATUS FILE — LIVE EXECUTION LEDGER
+======================================================================
+
+The Project Status file shall be the LIVE execution ledger for this strategy.
+
+This addendum defines the stable process and exit criteria.
+The Project Status file records what has actually happened.
+
+The Project Status file should be versioned rather than silently rewriting historical
+status files.
+
+After this addendum is adopted, create a new Project Status version that explicitly states:
+
+- Step IV is PROVISIONALLY REOPENED FOR INTERACTION HARDENING.
+- The previous approved SHA
+  9e75888c33e9c311d67a3b321fdd30b6c3ab0794
+  is the historical pre-repair baseline, not the new final Step-IV HEAD.
+- Step V remains NOT STARTED / BLOCKED until this addendum's exit gate passes.
+- the currently active repair/audit phase,
+- discovered confirmed defects,
+- repaired defects,
+- current branch and HEAD,
+- tests completed,
+- runtime QA evidence completed,
+- remaining blockers,
+- exact next action.
+
+Recommended live status fields:
+
+CURRENT STEP-IV RE-CLOSE PHASE:
+CURRENT REPAIR/AUDIT BATCH:
+CURRENT BRANCH:
+CURRENT HEAD:
+HISTORICAL PRE-REPAIR BASELINE:
+CONFIRMED OPEN DEFECTS:
+FIXED / VERIFIED DEFECTS:
+MOBILE QA STATUS:
+PORTAL QA STATUS:
+PLAYWRIGHT STATUS:
+ADVERSARIAL QA STATUS:
+FINAL 93-SCREEN REGRESSION STATUS:
+HUMAN ACCEPTANCE STATUS:
+STEP-IV EXIT GATE STATUS:
+STEP V STATUS:
+NEXT ACTION:
+
+When Step IV finally re-closes, create another Project Status version that records:
+
+- all exit gates passed,
+- zero known Step-IV defects,
+- new final approved Step-IV SHA,
+- final test/QA evidence,
+- Step IV COMPLETE AND LOCKED,
+- Step V authorized as the next development action.
+
+
+======================================================================
+14. FINAL LOCKED RULE
+======================================================================
+
+Step IV is not complete because screens exist.
+Step IV is not complete because screenshots match Figma.
+Step IV is not complete because automated tests pass.
+Step IV is not complete because one agent reports success.
+
+Step IV is complete only when:
+
+source review
++ automated testing
++ real runtime interaction testing
++ visual QA
++ role/security-boundary frontend testing
++ adversarial QA
++ final regression
++ human acceptance
+
+all agree that there are ZERO KNOWN STEP-IV DEFECTS.
+
+END OF ADDENDUM

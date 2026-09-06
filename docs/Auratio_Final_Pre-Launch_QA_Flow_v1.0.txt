@@ -1,0 +1,511 @@
+AURATIO — FINAL PRE-LAUNCH QA FLOW
+Version 1.0
+Date: 6 September 2026
+Status: Authoritative pre-launch QA procedure
+
+======================================================================
+1. PURPOSE
+======================================================================
+
+This file defines the final full-system QA process to use AFTER Auratio's implementation
+steps are complete and BEFORE the academic demo / public launch.
+
+The objective is not merely to verify that individual screens or modules work in
+isolation. The final QA must prove that the complete integrated system works across the
+real mobile release build, web portal, Supabase services, Gemini evaluation path,
+Human Evaluation workflow, report generation, storage lifecycle, scoring/progress/
+leaderboard logic, role boundaries, and deployment configuration.
+
+CORE RULE:
+
+Localhost is the first QA environment, not the final launch-acceptance environment.
+
+The locked QA sequence is:
+
+LOCAL INTEGRATION QA
+→ STAGING / PRODUCTION-LIKE QA
+→ PRODUCTION SMOKE QA
+→ FINAL LAUNCH GATE
+
+======================================================================
+2. PRODUCTION DELIVERY TARGETS
+======================================================================
+
+Current academic-MVP delivery targets:
+
+Mobile:
+- installable Android release APK
+- real Android device testing required before final acceptance
+
+Web portal:
+- production public origin: https://auratio.cloud
+- React + TypeScript + Vite portal
+- HTTPS required
+- SPA route fallback / refresh behavior must work correctly
+
+Backend / services:
+- Supabase/PostgreSQL system of record
+- Supabase Auth
+- Supabase Storage
+- Supabase Edge Functions / server-side orchestration
+- Gemini AI evaluation integration
+- deterministic Approved-only .docx report generation
+
+The final QA must test the actual production-facing architecture rather than a mock-only
+Step-IV frontend.
+
+======================================================================
+3. ENVIRONMENT A — LOCAL INTEGRATION QA
+======================================================================
+
+PURPOSE:
+Catch functional, state, integration, and developer-visible defects quickly before a
+staging release is produced.
+
+Run:
+- Flutter app locally on Android emulator
+- Flutter app on at least one real Android device where practical
+- React/Vite portal through localhost
+- test/non-production Supabase environment
+- test Gemini configuration
+- development/test email flows
+
+Required checks:
+
+A. End-user authentication
+- Create Account
+- email verification
+- Sign In
+- Forgot Password
+- Reset Password
+- Sign Out
+- expired/invalid session handling
+
+B. User personalization and tracks
+- onboarding
+- select one or multiple Paths
+- modify Paths later
+- confirm all 13 tracks remain accessible regardless of selected Paths
+- verify track labels and duration rules
+
+C. Submission journey
+- valid .mp4 upload
+- invalid file/type handling
+- speaker-visible video assumption
+- server-side duration eligibility
+- active-evaluation concurrency rule
+- cancel / retry behavior where supported
+
+D. AI Evaluation
+- successful Gemini evaluation
+- strict structured response validation
+- valid score arithmetic
+- required criterion feedback fields
+- failed/unusable Gemini result -> Rejected
+- no automatic AI retry in MVP
+- Approved-only product effects
+
+E. Human Evaluation
+- Admin assignment
+- evaluator Accept / Decline
+- reassignment
+- anchor-first scoring
+- exact criterion scoring
+- timestamped evidence
+- strengths / weaknesses / actionable advice
+- Overall Summary
+- evaluator submission locking
+- first-in-track moderation
+- >15-point anomaly moderation
+- re-review / versioning
+- Approved / Pending Moderation / Rejected behavior
+
+F. Progress and leaderboard logic
+- Approved-only counting
+- AI/Human public leaderboard separation
+- private unified mastery
+- 3-evaluation qualification threshold
+- 3-score / 4-score / 5+ score ALR behavior
+- one-lowest-of-five discard rule
+- All-Time decay
+- Monthly D = 1.00
+- Monthly attribution by submission date
+- tie-breaking
+- duplicate submissions remain permitted
+
+G. Reports
+- no report before Approved
+- Approved AI -> standardized .docx
+- Approved Human -> standardized .docx
+- correct TrackSlug filename
+- correct score / criterion data
+- timestamped feedback
+- no full transcript
+- correct versioning and report access
+
+H. Events
+- Admin create/edit/manage event
+- Bangladesh-only MVP behavior
+- Division filtering
+- Path filtering
+- Date filtering
+- users remain view-only
+
+I. Role and permission behavior
+- User
+- Volunteer Evaluator
+- Admin
+- Super Admin
+- Root Super Admin protection
+- direct-route access checks
+- forbidden actions rejected rather than merely hidden
+
+J. Video lifecycle
+- temporary upload succeeds
+- video remains accessible while evaluation/moderation requires it
+- final Approved/Rejected outcome triggers deletion workflow
+- deletion retry/logging behavior can be exercised or simulated safely
+
+K. Frontend regression
+- mobile canonical screens
+- portal canonical screens
+- navigation
+- scrolling
+- Back/Forward behavior
+- refresh/direct URL behavior
+- dialogs/forms/filters
+- no known dead controls
+- no material visual regressions
+
+LOCAL EXIT GATE:
+Do not promote to staging while a known reproducible integration defect remains.
+
+======================================================================
+4. ENVIRONMENT B — STAGING / PRODUCTION-LIKE QA
+======================================================================
+
+PURPOSE:
+Validate Auratio in an environment that behaves as closely as possible to production.
+This is the primary full-system release-candidate QA environment.
+
+Preferred setup:
+- release-candidate Android APK
+- staging web deployment; preferred origin if infrastructure permits:
+  https://staging.auratio.cloud
+- separate staging Supabase project/configuration from production
+- staging Auth redirect URLs
+- staging Storage buckets/policies
+- deployed Edge Functions
+- real HTTPS
+- real Gemini API integration using test data/credentials appropriate for staging
+- real .docx generation path
+
+If a dedicated staging subdomain is not available, use another isolated deployment URL.
+The important requirement is environment isolation from production data.
+
+WHY THIS STEP IS MANDATORY:
+Localhost can miss deployment-only failures such as:
+- CORS / origin configuration
+- HTTPS / mixed-content problems
+- wrong environment variables
+- Supabase RLS/policy mistakes
+- Auth redirect/callback URL mistakes
+- email-link problems
+- Vite production-build differences
+- SPA route-refresh 404s
+- storage-policy and signed-URL failures
+- Edge Function deployment/configuration errors
+- Android release-build networking differences
+- domain/DNS/certificate issues
+
+STAGING TEST PROCEDURE:
+
+1. Install the release-candidate APK as an ordinary user would.
+2. Open the deployed staging portal in real browsers.
+3. Create fresh test identities for each role.
+4. Run complete end-to-end journeys rather than isolated screen checks.
+5. Test both normal and failure paths.
+6. Record every defect with reproduction steps and evidence.
+7. Fix confirmed defects.
+8. Redeploy/rebuild.
+9. Re-test affected flows plus regression-critical flows.
+10. Repeat until the staging release candidate has ZERO KNOWN RELEASE-BLOCKING DEFECTS.
+
+MANDATORY END-TO-END STAGING JOURNEYS:
+
+Journey 1 — User + AI Evaluation
+Account creation
+→ email verification
+→ onboarding / Paths
+→ choose track
+→ upload valid video
+→ duration validation
+→ choose AI
+→ Gemini evaluation
+→ validation/publication
+→ Approved result
+→ progress update
+→ AI leaderboard effect where qualified
+→ .docx report
+→ video deletion lifecycle
+
+Journey 2 — User + Human Evaluation
+User request
+→ Admin assignment
+→ Volunteer Accept
+→ Volunteer scoring
+→ submit locked evaluator version
+→ moderation path as applicable
+→ Approved result
+→ progress update
+→ Human leaderboard effect where qualified
+→ .docx report
+→ video deletion lifecycle
+
+Journey 3 — Human anomaly / moderation
+Human result triggering moderation
+→ Pending Moderation
+→ no premature progress/leaderboard/report effect
+→ Admin approve/reject/re-review
+→ correct final effects
+
+Journey 4 — Volunteer operations
+assignment
+→ decline
+→ reassignment
+→ scoring
+→ submitted lock
+→ completed history
+→ re-review/versioning
+
+Journey 5 — Admin operations
+request routing
+→ evaluator management
+→ moderation
+→ Event CRUD
+→ filters
+→ audit visibility
+
+Journey 6 — Super Admin governance
+Admin invitation
+→ account management
+→ deactivation behavior
+→ Root Super Admin protection
+→ role boundaries
+
+Journey 7 — Failure handling
+invalid duration
+→ failed upload where appropriate
+→ unusable AI result
+→ invalid/direct portal route
+→ expired auth/session
+→ forbidden-role route
+→ network interruption/retry where relevant
+→ safe recovery without corrupted state
+
+======================================================================
+5. STAGING QUALITY DIMENSIONS
+======================================================================
+
+Every staging pass must cover these dimensions.
+
+FUNCTIONAL CORRECTNESS
+- intended actions work
+- state transitions are valid
+- no dead/misleading controls
+
+DATA INTEGRITY
+- IDs do not cross entities
+- scores match the correct submission/user/track/mode
+- report data matches Approved structured evaluation data
+- history, moderation, assignment, and leaderboard records remain consistent
+
+SECURITY / ROLE BOUNDARIES
+- RLS and server-side authorization enforce access
+- client-side hiding alone is not treated as security
+- Volunteer cannot perform Admin actions
+- Admin cannot perform Super-Admin-only actions
+- end user cannot access portal privileged operations
+
+INTEGRATION CORRECTNESS
+- Flutter <-> Supabase
+- Portal <-> Supabase
+- Supabase <-> Gemini
+- Storage <-> evaluation/moderation lifecycle
+- Approved structured data <-> report generator
+- Approved scores <-> progress/leaderboards
+
+VISUAL / UX
+- final mobile/portal visual regression
+- responsive portal behavior
+- no overflow/clipping
+- loading/error/empty states understandable
+
+RUNTIME / COMPATIBILITY
+- Android release APK
+- real Android device
+- Chrome minimum
+- at least one additional mainstream browser if practical
+- realistic network conditions
+
+PERFORMANCE / PRACTICALITY
+- portal pages load acceptably
+- uploads do not appear frozen without status
+- long operations expose meaningful progress/status
+- no obvious repeated requests or runaway loops
+
+FAILURE RECOVERY
+- failed requests do not corrupt state
+- safe retry behavior
+- terminal states remain terminal where required
+- duplicate actions do not create unintended duplicate state
+
+======================================================================
+6. ENVIRONMENT C — PRODUCTION SMOKE QA
+======================================================================
+
+PURPOSE:
+Verify the actual final production configuration after deployment and before the evaluator/
+users receive it.
+
+This is deliberately smaller than staging QA. Do not perform destructive stress testing
+against production.
+
+Production targets:
+- final release APK
+- https://auratio.cloud
+- production Supabase project/configuration
+- production Auth redirect configuration
+- production Storage/RLS
+- deployed production Edge Functions
+- production Gemini integration
+- production report generation
+
+Use dedicated disposable QA accounts and a short compliant test video.
+
+MINIMUM PRODUCTION SMOKE TEST:
+
+1. Portal loads at https://auratio.cloud over HTTPS.
+2. Direct route + browser refresh works without SPA 404.
+3. User account can authenticate correctly.
+4. One user submission can upload successfully.
+5. One AI evaluation can complete to the expected final state.
+6. Correct progress/report effects occur only after Approved.
+7. The generated .docx is accessible and valid.
+8. Video deletion lifecycle is triggered after final decision.
+9. Volunteer/Admin portal authentication works.
+10. One representative Human/admin operation works.
+11. Role boundaries reject at least one forbidden direct-route/action test.
+12. No unexpected application-level console/runtime errors appear in the tested flows.
+
+After successful smoke QA:
+- remove or clearly identify disposable QA data where appropriate
+- retain only evidence needed for project/demo verification
+
+======================================================================
+7. FINAL LAUNCH GATE
+======================================================================
+
+Auratio is ready for launch/demo only when all of the following are true:
+
+[ ] Local integration QA passed.
+[ ] No known release-blocking local defect remains.
+[ ] Staging environment is production-like and isolated from production data.
+[ ] Release-candidate APK passed staging QA.
+[ ] Staging web portal passed real-browser QA.
+[ ] End-to-end AI Evaluation passed.
+[ ] End-to-end Human Evaluation passed.
+[ ] Moderation/re-review passed.
+[ ] Report generation passed.
+[ ] Video lifecycle passed.
+[ ] Auth/email/reset flows passed.
+[ ] Supabase RLS/role boundaries passed.
+[ ] Progress/mastery/ALR/leaderboard calculations passed.
+[ ] Events behavior passed.
+[ ] Final mobile/portal regression passed.
+[ ] Adversarial/failure-path checks passed.
+[ ] Production deployment uses https://auratio.cloud with HTTPS.
+[ ] Production SPA direct-route/refresh behavior passed.
+[ ] Production release APK installs and launches on a real Android device.
+[ ] Production smoke QA passed.
+[ ] No known release-blocking defect remains.
+
+======================================================================
+8. DEFECT PRIORITY RULE
+======================================================================
+
+P0 — Launch blocker
+Examples: app cannot launch, auth unusable, data corruption, privilege bypass, evaluation
+cannot complete, report fundamentally wrong.
+Action: launch prohibited.
+
+P1 — Major
+Examples: major workflow broken, incorrect entity/score/report, important role rule broken,
+common navigation failure.
+Action: fix before launch.
+
+P2 — Moderate
+Examples: non-critical workflow defect with reasonable workaround, material visual problem,
+limited validation issue.
+Action: normally fix before evaluator demo; explicit acceptance required if deferred.
+
+P3 — Minor
+Examples: tiny visual polish issue with no functional/data/security effect.
+Action: may be documented and deferred if genuinely non-material.
+
+No P0 or P1 defect may be knowingly carried into launch.
+
+======================================================================
+9. TEST DATA RULE
+======================================================================
+
+Use clearly identifiable QA accounts/submissions.
+Do not use real user data for final system testing unless specifically necessary and
+properly authorized.
+
+Staging data should remain isolated from production.
+Production smoke data should be minimal and disposable.
+
+Never test destructive Admin/Super Admin actions against genuine production records when
+a dedicated QA entity can be used instead.
+
+======================================================================
+10. EVIDENCE TO RETAIN
+======================================================================
+
+Keep a concise final QA evidence package containing:
+- final release APK filename/version/hash or Git reference
+- final web deployment version/Git SHA
+- production configuration version references
+- automated test summaries
+- Playwright/E2E results
+- key Android runtime evidence
+- final canonical visual-regression evidence where applicable
+- staging end-to-end checklist/result
+- production smoke checklist/result
+- final known-defect list showing no open P0/P1 release blockers
+
+This evidence package should be sufficient to explain to the project evaluator how Auratio
+was verified before launch.
+
+======================================================================
+11. BOTTOM LINE
+======================================================================
+
+Do not perform Auratio's final QA only through localhost.
+
+Use:
+
+1. LOCALHOST / LOCAL DEVICE
+   Fast integration and regression QA.
+
+2. STAGING / PRODUCTION-LIKE ENVIRONMENT
+   Main full-system QA against a real release APK, deployed portal, real HTTPS, deployed
+   Supabase/Edge Functions, Gemini, Storage, Auth, and report-generation flow.
+
+3. PRODUCTION
+   Short controlled smoke QA on the actual final APK and https://auratio.cloud.
+
+Only after all three layers pass should Auratio be treated as launch-ready.
+
+END OF FILE

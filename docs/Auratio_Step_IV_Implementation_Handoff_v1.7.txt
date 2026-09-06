@@ -1,0 +1,515 @@
+Auratio Step IV Implementation Handoff
+Version 1.7 — 5 September 2026
+Status: Step IV Provisionally Reopened; Human-Acceptance Hardening In Progress
+
+PURPOSE
+
+This handoff supersedes Step IV Implementation Handoff v1.6 for continuation work.
+
+It records:
+- the current frontend implementation state,
+- the QA/hardening history,
+- the exact current Git checkpoint,
+- the Human Evaluation interaction changes introduced during human acceptance,
+- the remaining known defects,
+- and the exact continuation workflow for the next conversation.
+
+REPOSITORY
+
+GitHub:
+muhammadhossain03-byte/auratio-mvp
+
+Local root:
+D:\auratio-mvp
+
+Branch:
+step-iv/ui-foundation
+
+CURRENT REVIEWED HEAD:
+c30e5b13b41250fc86686f5eb7a2f007218ca722
+
+Latest commit:
+fix(portal): enforce submitted evaluation locking
+
+IMPORTANT:
+This is the current working checkpoint.
+It is NOT yet the final locked Step-IV baseline.
+
+PROJECT STATE
+
+Steps I–III:
+COMPLETE AND LOCKED.
+
+Step IV implementation:
+93 / 93 canonical screens implemented.
+
+Step IV closure:
+NOT COMPLETE.
+
+Reason:
+real Android-emulator and localhost human testing exposed interaction and entity-integrity defects after the original frontend had been considered locked.
+
+Step V:
+NOT STARTED / BLOCKED until Step IV re-close.
+
+CANONICAL INVENTORY
+
+Total = 93
+
+Mobile = 41
+Shared Portal Authentication = 8
+Volunteer Evaluator = 16
+Admin = 23
+Super Admin = 5
+
+Portal/Auth total = 52
+
+The canonical inventory count has not changed during hardening.
+Supplemental states, filter variants, repair evidence, and dynamic entity states do not increase the canonical count.
+
+MOBILE — EXACT CANONICAL 41
+
+01 Sign In
+02 Create Account
+03 Verify Email
+04 Email Verified
+05 Onboarding Intro
+06 Choose Paths
+07 Sign In New Account
+08 Forgot Password
+09 Reset Link Sent
+10 Reset Password
+11 Password Reset Complete
+12 Home
+13 Tracks
+14 Track Details
+15 Submission Requirements
+16 Upload Recording
+17 Checking Recording
+18 Recording Accepted
+19 Choose Evaluation — AI
+20 Choose Evaluation — Human
+21 Routing Assigned AI
+22 Routing Assigned Human
+23 Evaluation Processing AI
+24 Evaluation Processing Human
+25 Evaluation Result AI
+26 Evaluation Result Human
+27 Evaluation Report
+28 Evaluation Report — Download Simulated
+29 Pending Moderation
+30 Evaluation Rejected
+31 Private Progress
+32 Approved Evaluation History
+33 Leaderboard AI All-Time
+34 Leaderboard Human All-Time
+35 Events Discovery
+36 Event Details
+37 Profile
+38 Settings
+39 Manage Paths
+40 Manage Paths — Content Added
+41 Profile — Three Paths
+
+PORTAL — EXACT CANONICAL 52
+
+Shared Auth — 8
+01 portal_sign_in
+02 portal_role_authorization
+03 portal_email_verification_required
+04 portal_access_unavailable
+05 portal_forgot_password
+06 portal_reset_link_sent
+07 portal_reset_password
+08 portal_password_reset_complete
+
+Volunteer — 16
+09 volunteer_active_assignments
+10 volunteer_assigned_task
+11 volunteer_decline_assignment
+12 volunteer_availability
+13 volunteer_scoring_workspace
+14 volunteer_active_assignments_after_decline
+15 volunteer_availability_unavailable
+16 volunteer_criterion_feedback_editor
+17 volunteer_final_submission
+18 volunteer_evaluation_submitted
+19 volunteer_completed_history
+20 volunteer_completed_pending_moderation
+21 volunteer_reopened_evaluation
+22 volunteer_completed_approved
+23 volunteer_completed_rejected
+24 volunteer_completed_processing
+
+Admin — 23
+25 admin_operations_dashboard
+26 admin_evaluation_request_queue
+27 admin_request_details_routing
+28 admin_assignment_picker
+29 admin_confirm_reassignment
+30 admin_evaluation_records
+31 admin_request_assigned_ai
+32 admin_request_redirected_human
+33 admin_evaluation_processing_human
+34 admin_evaluation_approved_ai
+35 admin_moderation_queue
+36 admin_moderation_review
+37 admin_confirm_moderation_approval
+38 admin_confirm_moderation_rejection
+39 admin_request_rereview
+40 admin_volunteer_evaluators
+41 admin_invite_volunteer
+42 admin_volunteer_account
+43 admin_availability_override
+44 admin_volunteer_track_eligibility
+45 admin_event_management
+46 admin_event_editor
+47 admin_audit_log
+
+Super Admin — 5
+48 super_admin_accounts
+49 super_admin_invite_admin
+50 super_admin_admin_account
+51 super_admin_confirm_deactivation
+52 super_admin_protected_root
+
+IMPORTANT CHECKPOINT HISTORY
+
+Original Step-IV locked baseline:
+9e75888c33e9c311d67a3b321fdd30b6c3ab0794
+
+Mobile:
+e224de07e241095e50afb1ae16fa6f8f6cf42a76 — R1 final
+d87031c5cf1559f4048d5598798fec7d8275409b — R2A final
+f6dc1cd447d07e800353fbac3f9e9e12a25611f2 — R2B final
+
+Portal:
+f268e12c221da5a91630b7497c5d5c2f84102c8c — P1 entity-routing/filter repair
+5605fa278d0b5e89d4b7917ce840a1168edb5462 — P1.1 moderation/Volunteer integrity
+b09e4ed88641234789d0f34544501d1a481382da — Playwright critical regression
+a381d475922d79a20f78db157bfdecec2af62927 — P2 Event lifecycle + invalid-request fallback
+
+Human acceptance:
+b17eee66b9e24bd10b597494ccca98f90bff2b02 — H1 Volunteer active-assignment + editable scoring
+676dc30880f5a8e2c13f6d9887f207db1eea1a84 — H1.1 scoring/state corrections
+c30e5b13b41250fc86686f5eb7a2f007218ca722 — H1.2 submitted-evaluation locking
+
+MOBILE HARDENING SUMMARY
+
+R1/R2A/R2B corrected:
+- bottom navigation
+- Track selection
+- selected-track state
+- current vs historical evaluation identity
+- Home active-evaluation navigation
+- Events Home navigation
+- Settings Sign Out mock
+- header Back behavior
+- Event detail identity
+- Tracks filters
+- Events filters
+- Approved History filters
+- All-Time/Monthly leaderboard state
+- How Ranking Works modal
+- Events filter label truncation
+
+Mobile regression:
+- 314 Flutter tests at the pre-human-acceptance checkpoint
+- analyzer clean
+- 41 canonical captures
+- Android emulator sanity
+- adversarial sanity passed
+
+Mobile has not been modified by H1/H1.1/H1.2.
+
+PORTAL HARDENING SUMMARY
+
+P1 fixed:
+- Event All Events / Published controls
+- REQ-1038 wrong request routing
+- SUB-8730 wrong moderation entity
+- Rakib/Mehnaz/Nusrat routing to Farhana
+- Imran routing to Nadia
+- Audit Log filters
+
+P1.1 fixed:
+- arbitrary moderation-ID fabrication
+- active Volunteer management isolation
+- Volunteer track/availability state by entity
+
+P2 fixed:
+- raw invalid request developer error
+- real Publish Event behavior
+- real Delete Event behavior
+- Event lifecycle identity integrity
+
+Playwright added:
+- real Chromium E2E regression
+- auth smoke
+- Volunteer
+- Admin requests/evaluations
+- moderation integrity
+- Volunteer management
+- Events
+- Audit Log
+- Super Admin
+- role-shell consistency
+- browser history/refresh
+- accessibility smoke
+
+HUMAN ACCEPTANCE H1 — VOLUNTEER SCORING IMPLEMENTATION
+
+Human testing found:
+1. SUB-8814 and SUB-8799 looked actionable but were not actually clickable.
+2. Volunteer Scoring Workspace was fake/pre-completed and did not let the evaluator perform a real Human Evaluation.
+
+H1 introduced a real local/mock scoring model.
+
+Current Human Evaluation structure:
+- Universal Delivery: 8 criteria x 5 = 40
+- Structural Flow: 4 criteria x 5 = 20
+- Track Specialisation: 4 criteria x 10 = 40
+- 16 total criteria
+- 100 total points
+
+Supported track-specific mock rubrics currently include at minimum:
+- Business Pitch / Sales Pitch
+- Extempore
+- Informative
+
+Current scoring interaction:
+- select qualitative anchor first:
+  Low / Competent / Excellent
+- exact score input then becomes enabled
+- exact score uses full criterion range
+- integer scores only for current Step-IV portal mock
+- required evidence timestamp in mm:ss
+- required timestamped evidence narrative
+- required Strength
+- required Weakness
+- required Actionable Improvement Advice
+- required Overall Summary
+
+Completion:
+- category subtotals are calculated
+- total /100 is calculated
+- criterion completeness is calculated
+- Review & Submit is disabled until all required inputs are complete
+- submitted evaluator version locks
+- submitted task leaves Active Assignments
+- submitted task moves to Completed / History
+- publication state remains independent
+
+H1.1 CORRECTIONS
+
+Corrected:
+- Accepted assignment no longer asks Accept/Decline again
+- In Evaluation resumes directly
+- evidence timestamp is real/required
+- no fabricated `01:00`
+- direct review cannot bypass completion
+- `submitEvaluation()` enforces readiness
+- hard anchor-to-score bands were removed from behavior
+
+H1.2 CORRECTIONS
+
+Corrected:
+- active assignment state no longer resurrects submitted canonical rows
+- submitted scoring route is blocked
+- submitted criterion route is blocked
+- submitted review route is blocked
+- `saveCriterionScoreData()` rejects locked submitted drafts
+- Overall Summary mutation rejects locked submitted drafts
+- duplicate submission of same locked version is blocked
+- formal reopen creates a higher editable version
+- prior locked submitted version is preserved
+- stale anchor-band function was removed
+
+CURRENT KNOWN DEFECTS
+
+V-01 — REOPENED EVALUATION ROUTE / VERSIONING SAFETY
+
+Current risk:
+`/volunteer/evaluation/:submissionId/reopened`
+
+The current page can use fallback values if no legitimate prior submitted version exists.
+
+`reopenEvaluation()` can potentially create active correction work for an invalid or unsupported ID.
+
+`getPreservedLockedSubmission()` defaults to version 1, so repeated reopen cycles may not reliably advance from the latest legitimate submitted version.
+
+Required:
+- Reopened Evaluation requires a real locked/completed evaluator submission.
+- invalid/unsubmitted ID -> safe redirect.
+- no fabricated Business Pitch / 85 fallback.
+- reopening must use the latest valid locked submission.
+- version N re-review -> version N+1.
+- every prior locked version remains immutable.
+
+V-02 — GENERIC COMPLETED DETAIL DISPLAYS HARD-CODED SUB-8821
+
+Current route:
+`/volunteer/completed/:submissionId`
+
+Current page:
+VolunteerCompletedPendingModerationPage
+
+Problem:
+it is still hard-coded to:
+- SUB-8821
+- score 85 / 100
+- fixed Pending Moderation copy
+
+But H1/H1.2 can now submit other active assignments dynamically.
+
+Therefore:
+SUB-8814 history route can potentially display SUB-8821 detail.
+
+Required entity invariant:
+history row ID
+=
+route ID
+=
+displayed ID
+=
+track
+=
+score
+=
+publication state
+
+Unknown IDs must fail safely.
+
+TOMORROW — DO NOT FIX THESE IMMEDIATELY
+
+Tomorrow starts with HUMAN localhost testing.
+
+Do not immediately send an isolated repair prompt.
+
+Workflow:
+1. start portal:
+   cd /d D:\auratio-mvp\portal
+   npm run dev
+
+2. manually verify:
+   - SUB-8814 Open
+   - SUB-8799 Open
+   - editable scoring
+   - timestamp
+   - completion gating
+   - submitted locking
+   - formal reopen behavior where reachable
+
+3. continue testing all remaining Volunteer screens.
+
+4. then Admin screens.
+
+5. then Super Admin screens.
+
+6. collect all findings.
+
+7. verify findings against source/spec.
+
+8. repair confirmed findings in controlled batches.
+
+FINAL RE-CLOSE GATE AFTER LAST REPAIR
+
+Do not reuse the a381d475 final-regression result as final evidence after H1/H1.1/H1.2.
+
+After the final Step-IV code change:
+
+Mobile:
+- flutter pub get
+- format check
+- flutter analyze
+- flutter test
+- fresh exact 41 canonical captures
+- concise Android-emulator sanity
+
+Portal:
+- npm run lint
+- npm run build
+- npm run test
+- Playwright 3 complete consecutive runs
+- all six geometry suites
+- fresh exact 52 canonical captures
+
+Then:
+- exact canonical evidence accounting:
+  41 mobile
+  52 portal
+  93 total
+- visual inspection of every canonical PNG
+- targeted post-repair adversarial checks
+- human acceptance pass
+
+Only if ZERO KNOWN DEFECTS:
+- formally close Step IV
+- declare final approved HEAD
+- update Project Status
+- update this Handoff
+- authorize Step V
+
+IMPORTANT SCOPE BOUNDARY
+
+Step IV:
+- UI
+- routing
+- frontend interactions
+- local/mock state
+- local form validation
+- frontend QA/test harnesses
+
+Not Step IV:
+- Supabase DB
+- production Auth
+- production RBAC
+- backend
+- APIs
+- Gemini
+- real storage/video processing
+- production scoring engine
+- report generator
+- deployment
+
+FRESH CHATGPT CONTINUATION PROMPT
+
+Continue Auratio from checkpoint `c30e5b13b41250fc86686f5eb7a2f007218ca722` on `step-iv/ui-foundation`.
+
+Use Project Status v9 and Step IV Implementation Handoff v1.7.
+
+Step IV is provisionally reopened and Step V is blocked.
+
+H1/H1.1/H1.2 Volunteer scoring/locking repairs are implemented but have not yet been manually verified by me in localhost.
+
+Two known Volunteer defect groups remain:
+1. unsafe/fabricating Reopened Evaluation routing/versioning;
+2. generic `/volunteer/completed/:submissionId` currently renders hard-coded SUB-8821 content.
+
+First guide me through localhost portal human testing. I want to continue finding the remaining Volunteer/Admin/Super Admin bugs. Collect findings before repairing them. After the final repair, rerun the complete final 93-screen regression, complete human acceptance, formally lock Step IV, then proceed to Step V.
+
+BOTTOM LINE
+
+Current branch:
+step-iv/ui-foundation
+
+Current reviewed HEAD:
+c30e5b13b41250fc86686f5eb7a2f007218ca722
+
+Implementation:
+93 / 93 canonical screens
+
+Step IV:
+PROVISIONALLY REOPENED
+
+Human portal acceptance:
+IN PROGRESS / DEFERRED TO NEXT SESSION
+
+Known unresolved Step-IV defects:
+2 Volunteer groups
+
+Final post-repair 93-screen regression:
+PENDING
+
+Step V:
+BLOCKED
