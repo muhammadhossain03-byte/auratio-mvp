@@ -22,42 +22,14 @@ export const CANONICAL_REQUEST_SUBMISSION_MAP: Record<string, RequestSubmissionM
     evaluationId: 'HE-0142',
     destinationPath: '/admin/requests/req-1042',
   },
-  'SUB-8814': {
-    requestId: 'REQ-1038',
-    submissionId: 'SUB-8814',
-    user: 'Taylor Kim',
-    track: 'Extempore',
-    trackSlug: 'extempore',
-    requestedMethod: 'Human',
-    evaluationId: 'HE-0138',
-    destinationPath: '/admin/requests/req-1038',
-  },
-  'SUB-8799': {
-    requestId: 'REQ-1041',
-    submissionId: 'SUB-8799',
-    user: 'Sam Lee',
-    track: 'Informative',
-    trackSlug: 'informative',
-    requestedMethod: 'AI',
-    destinationPath: '/admin/requests/req-1041',
-  },
 }
 
-export function getMappingBySubmissionId(submissionId: string): RequestSubmissionMapping {
+export function getMappingBySubmissionId(submissionId: string): RequestSubmissionMapping | null {
   const norm = (submissionId || '').trim().toUpperCase()
   if (CANONICAL_REQUEST_SUBMISSION_MAP[norm]) {
     return CANONICAL_REQUEST_SUBMISSION_MAP[norm]
   }
-  const numeric = norm.replace(/\D/g, '') || '0000'
-  const reqId = `REQ-${numeric}`
-  return {
-    requestId: reqId,
-    submissionId: norm,
-    user: 'Evaluated Speaker',
-    track: 'Business Pitch / Sales Pitch',
-    requestedMethod: 'Human',
-    destinationPath: `/admin/requests/${reqId.toLowerCase()}`,
-  }
+  return null
 }
 
 export function getMappingByRequestId(requestId: string): RequestSubmissionMapping | null {

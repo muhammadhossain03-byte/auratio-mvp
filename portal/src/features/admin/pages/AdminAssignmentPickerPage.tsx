@@ -1,19 +1,19 @@
 import { useNavigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { adminCandidates, assignHE0142Candidate, getHE0142AssignmentState } from '../data/mockAdminData'
+import { adminCandidates, assignHE0142Candidate, getREQ1042RoutingState } from '../data/mockAdminData'
 import { AdminLayout } from '../components/AdminLayout'
 
 export function AdminAssignmentPickerPage() {
   const navigate = useNavigate()
-  const he0142State = getHE0142AssignmentState()
+  const routingState = getREQ1042RoutingState()
 
   function handleSelectCandidate(name: string) {
     assignHE0142Candidate(name)
     navigate(portalRoutePaths.admin.requests)
   }
 
-  const activeOwner = he0142State.activeOwner || 'None'
-  const assignmentState = he0142State.activeOwner ? 'Assigned' : 'Unassigned'
+  const activeOwner = routingState.activeOwner || 'None'
+  const assignmentState = routingState.routing === 'Assigned Human' ? 'Assigned' : 'Unassigned'
 
   return (
     <AdminLayout

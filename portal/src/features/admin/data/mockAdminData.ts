@@ -633,6 +633,9 @@ export function confirmHE0142Reassignment() {
       window.sessionStorage?.setItem(ADMIN_HE0142_STORAGE_KEY, JSON.stringify(state))
     } catch {}
   }
+  // Remove REQ-1042 / SUB-8821 from unassigned declined queue
+  removeAdminUnassignedDeclinedQueue('REQ-1042')
+  removeAdminUnassignedDeclinedQueue('SUB-8821')
   return state
 }
 
@@ -675,6 +678,53 @@ export function resetHE0142Reassignment() {
   }
 }
 
+export interface Req1042RoutingState {
+  routing: 'Unassigned' | 'Assigned Human' | 'Requested'
+  activeOwner: string | null
+  supersededOwner: string | null
+  declineRecord: ReturnType<typeof getAdminUnassignedDeclinedQueue>[0] | null
+}
+
+export function getREQ1042RoutingState(): Req1042RoutingState {
+  // 1. Check if returned decline record exists in unassigned queue
+  const unassigned = getAdminUnassignedDeclinedQueue()
+  const declineRecord =
+    unassigned.find(
+      (r) => r.requestId.toUpperCase() === 'REQ-1042' || r.submissionId.toUpperCase() === 'SUB-8821'
+    ) || null
+
+  if (declineRecord) {
+    return {
+      routing: 'Unassigned',
+      activeOwner: null,
+      supersededOwner: 'Farhana Islam',
+      declineRecord,
+    }
+  }
+
+  // 2. Check active Human evaluator owner
+  const he0142State = getHE0142AssignmentState()
+  const activeOwner =
+    he0142State.activeOwner && he0142State.activeOwner !== 'None' ? he0142State.activeOwner : null
+
+  if (activeOwner) {
+    return {
+      routing: 'Assigned Human',
+      activeOwner,
+      supersededOwner: he0142State.supersededOwner,
+      declineRecord: null,
+    }
+  }
+
+  // 3. Fallback: Requested
+  return {
+    routing: 'Requested',
+    activeOwner: null,
+    supersededOwner: he0142State.supersededOwner,
+    declineRecord: null,
+  }
+}
+
 export function getAdminEvaluationRequests(): AdminQueueItem[] {
   const items: AdminQueueItem[] = initialAdminQueueItems.map((item) => ({ ...item }))
 
@@ -685,13 +735,38 @@ export function getAdminEvaluationRequests(): AdminQueueItem[] {
     returnedMap.set(r.requestId.toUpperCase(), r)
   }
 
-  // 2. Read HE-0142 assignment state
-  const he0142State = getHE0142AssignmentState()
+  // 2. Derive single-source-of-truth routing state for REQ-1042 / HE-0142 / SUB-8821
+  const req1042State = getREQ1042RoutingState()
 
-  // 3. Merge returned unassigned requests into the queue
+  // 3. Apply routing state to queue items
   for (let i = 0; i < items.length; i++) {
     const reqId = items[i].id.toUpperCase()
-    if (returnedMap.has(reqId)) {
+    if (reqId === 'REQ-1042') {
+      if (req1042State.routing === 'Unassigned' && req1042State.declineRecord) {
+        items[i] = {
+          ...items[i],
+          track: req1042State.declineRecord.track,
+          requestedMethod: 'Human',
+          routing: 'Unassigned',
+          submissionId: req1042State.declineRecord.submissionId,
+          declineReason: req1042State.declineRecord.reason,
+          returnedAt: req1042State.declineRecord.returnedAt,
+          interactive: true,
+          destinationPath: items[i].destinationPath || `/admin/requests/req-1042`,
+        }
+      } else if (req1042State.routing === 'Assigned Human') {
+        items[i] = {
+          ...items[i],
+          routing: 'Assigned Human',
+        }
+      } else {
+        items[i] = {
+          ...items[i],
+          routing: 'Requested',
+        }
+      }
+      returnedMap.delete(reqId)
+    } else if (returnedMap.has(reqId)) {
       const record = returnedMap.get(reqId)!
       items[i] = {
         ...items[i],
@@ -705,11 +780,6 @@ export function getAdminEvaluationRequests(): AdminQueueItem[] {
         destinationPath: items[i].destinationPath || `/admin/requests/${record.requestId.toLowerCase()}`,
       }
       returnedMap.delete(reqId)
-    } else if (reqId === 'REQ-1042' && he0142State.activeOwner && he0142State.activeOwner !== 'None' && he0142State.activeOwner !== 'Farhana Islam') {
-      items[i] = {
-        ...items[i],
-        routing: 'Assigned Human',
-      }
     }
   }
 
@@ -1166,4 +1236,5 @@ if (typeof window !== 'undefined') {
   ;(window as unknown as { __CANONICAL_REQUEST_SUBMISSION_MAP: typeof CANONICAL_REQUEST_SUBMISSION_MAP }).__CANONICAL_REQUEST_SUBMISSION_MAP = CANONICAL_REQUEST_SUBMISSION_MAP
   ;(window as unknown as { __getMappingBySubmissionId: typeof getMappingBySubmissionId }).__getMappingBySubmissionId = getMappingBySubmissionId
   ;(window as unknown as { __getMappingByRequestId: typeof getMappingByRequestId }).__getMappingByRequestId = getMappingByRequestId
+  ;(window as unknown as { __getREQ1042RoutingState: typeof getREQ1042RoutingState }).__getREQ1042RoutingState = getREQ1042RoutingState
 }

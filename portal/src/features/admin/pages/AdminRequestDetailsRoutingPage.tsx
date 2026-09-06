@@ -1,13 +1,23 @@
 import { useNavigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { AdminLayout } from '../components/AdminLayout'
-import { getAdminUnassignedDeclinedQueue } from '../../volunteer/data/mockVolunteerData'
+import { getREQ1042RoutingState } from '../data/mockAdminData'
 
 export function AdminRequestDetailsRoutingPage() {
   const navigate = useNavigate()
-  const unassignedQueue = getAdminUnassignedDeclinedQueue()
-  const declineRecord = unassignedQueue.find((r) => r.requestId === 'REQ-1042' || r.submissionId === 'SUB-8821')
-  const routingStatus = declineRecord ? 'Unassigned' : 'Requested'
+  const routingState = getREQ1042RoutingState()
+  const declineRecord = routingState.declineRecord
+  const routingStatus = routingState.routing
+
+  const fieldMarginTop = declineRecord ? '11px' : '17px'
+  const firstFieldMarginTop = declineRecord ? '14px' : '20px'
+
+  const subtitleText =
+    routingStatus === 'Unassigned'
+      ? 'Eligible recording returned to Unassigned queue after evaluator decline'
+      : routingStatus === 'Assigned Human'
+      ? 'Eligible recording assigned to Human Evaluation'
+      : 'Eligible recording awaiting routing decision'
 
   return (
     <AdminLayout
@@ -41,9 +51,7 @@ export function AdminRequestDetailsRoutingPage() {
         className="auratio-admin-page-subtitle"
         style={{ top: '72px', fontSize: '12px', lineHeight: '18px', fontWeight: 400 }}
       >
-        {declineRecord
-          ? 'Eligible recording returned to Unassigned queue after evaluator decline'
-          : 'Eligible recording awaiting routing decision'}
+        {subtitleText}
       </p>
 
       {/* Left Panel: Submission */}
@@ -66,7 +74,7 @@ export function AdminRequestDetailsRoutingPage() {
           Submission
         </div>
 
-        <div style={{ marginTop: '22px' }}>
+        <div style={{ marginTop: firstFieldMarginTop }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
             USER
           </div>
@@ -75,7 +83,7 @@ export function AdminRequestDetailsRoutingPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: '21px' }}>
+        <div style={{ marginTop: fieldMarginTop }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
             TRACK
           </div>
@@ -84,7 +92,7 @@ export function AdminRequestDetailsRoutingPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: '21px' }}>
+        <div style={{ marginTop: fieldMarginTop }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
             SUBMISSION ID
           </div>
@@ -93,7 +101,7 @@ export function AdminRequestDetailsRoutingPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: '21px' }}>
+        <div style={{ marginTop: fieldMarginTop }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
             MEASURED DURATION
           </div>
@@ -102,7 +110,7 @@ export function AdminRequestDetailsRoutingPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: '21px' }}>
+        <div style={{ marginTop: fieldMarginTop }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
             REQUESTED METHOD
           </div>
@@ -111,7 +119,7 @@ export function AdminRequestDetailsRoutingPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: '21px' }}>
+        <div style={{ marginTop: fieldMarginTop }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
             ROUTING STATUS
           </div>
@@ -121,7 +129,7 @@ export function AdminRequestDetailsRoutingPage() {
         </div>
 
         {declineRecord && (
-          <div style={{ marginTop: '21px' }}>
+          <div style={{ marginTop: fieldMarginTop }}>
             <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
               DECLINE REASON
             </div>
@@ -131,7 +139,7 @@ export function AdminRequestDetailsRoutingPage() {
           </div>
         )}
 
-        <div style={{ marginTop: '21px' }}>
+        <div style={{ marginTop: fieldMarginTop }}>
           <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
             PUBLICATION STATUS
           </div>

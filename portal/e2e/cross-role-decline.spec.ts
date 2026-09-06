@@ -114,6 +114,20 @@ test.describe('Cross-Role Volunteer Decline -> Admin Unassigned Request Queue Li
     await expect(req1042RowAfterAssign).toHaveAttribute('data-routing', 'Assigned Human')
     await expect(req1042RowAfterAssign).toContainText('Assigned Human')
 
+    // 15b. Verify REQ-1042 detail view also shows Assigned Human (never reverts to Requested)
+    await page.goto('/admin/requests/req-1042')
+    await expect(page.locator('h2.auratio-admin-page-title')).toContainText('REQ-1042')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText(
+      'Eligible recording assigned to Human Evaluation'
+    )
+    await expect(page.locator('body')).toContainText('Assigned Human')
+    await expect(page.locator('body')).toContainText('SUB-8821')
+
+    // 15c. Verify Assignment Picker reflects Rakib Hasan as active owner
+    await page.goto('/admin/requests/req-1042/assign')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Assignment state: Assigned')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Active evaluator owner: Rakib Hasan')
+
     // 16. Volunteer view: session volunteer (Farhana Islam) does NOT own SUB-8821
     await page.goto('/volunteer/assignments')
     await expect(page).toHaveURL('/volunteer/assignments')
@@ -130,10 +144,32 @@ test.describe('Cross-Role Volunteer Decline -> Admin Unassigned Request Queue Li
     const adminStateAfterFarhana = await page.evaluate(() => {
       const win = window as unknown as {
         __getHE0142AssignmentState?: () => { activeOwner: string | null; supersededOwner: string | null }
+        __getREQ1042RoutingState?: () => { routing: string; activeOwner: string | null }
       }
-      return win.__getHE0142AssignmentState?.()
+      return {
+        he0142: win.__getHE0142AssignmentState?.(),
+        routingState: win.__getREQ1042RoutingState?.(),
+      }
     })
-    expect(adminStateAfterFarhana?.activeOwner).toBe('Farhana Islam')
+    expect(adminStateAfterFarhana.he0142?.activeOwner).toBe('Farhana Islam')
+    expect(adminStateAfterFarhana.routingState?.routing).toBe('Assigned Human')
+
+    // 17b. Verify Queue shows Assigned Human when Farhana is owner (NO Farhana special-case)
+    const req1042RowAfterFarhana = page.locator('[data-request-id="REQ-1042"]')
+    await expect(req1042RowAfterFarhana).toHaveAttribute('data-routing', 'Assigned Human')
+    await expect(req1042RowAfterFarhana).toContainText('Assigned Human')
+
+    // 17c. Verify REQ-1042 detail shows Assigned Human when Farhana is owner
+    await page.goto('/admin/requests/req-1042')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText(
+      'Eligible recording assigned to Human Evaluation'
+    )
+    await expect(page.locator('body')).toContainText('Assigned Human')
+
+    // 17d. Verify Picker shows Farhana Islam as active owner
+    await page.goto('/admin/requests/req-1042/assign')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Assignment state: Assigned')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Active evaluator owner: Farhana Islam')
 
     // 18. Volunteer view: SUB-8821 is now legitimately restored for Farhana
     await page.goto('/volunteer/assignments')
@@ -307,5 +343,198 @@ test.describe('Cross-Role Volunteer Decline -> Admin Unassigned Request Queue Li
     // Table should contain the canonical evaluations SUB-8834 and SUB-8798
     await expect(page.locator('body')).toContainText('SUB-8834')
     await expect(page.locator('body')).toContainText('SUB-8798')
+  })
+
+  test('TEST G: Single-source-of-truth routing state consistency across Queue, Detail, and Picker', async ({
+    page,
+  }) => {
+    // 1. Volunteer declines SUB-8821
+    await page.goto('/volunteer/assignments/sub-8821/decline')
+    await page.locator('input.auratio-volunteer-decline-input').fill('Operational conflict')
+    await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+    await expect(page).toHaveURL('/volunteer/assignments/after-decline')
+
+    // Stage 1: Verify all 3 screens agree on Unassigned
+    // Queue:
+    await page.goto('/admin/requests')
+    const queueRow1 = page.locator('[data-request-id="REQ-1042"]')
+    await expect(queueRow1).toHaveAttribute('data-routing', 'Unassigned')
+    await expect(queueRow1).toContainText('Unassigned')
+
+    // Detail:
+    await page.goto('/admin/requests/req-1042')
+    await expect(page.locator('body')).toContainText('Unassigned')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText(
+      'Eligible recording returned to Unassigned queue after evaluator decline'
+    )
+
+    // Picker:
+    await page.goto('/admin/requests/req-1042/assign')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Assignment state: Unassigned')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Active evaluator owner: None')
+
+    // Stage 2: Admin assigns Rakib Hasan -> All 3 screens must agree on Assigned Human
+    await page.locator('button[data-candidate="Rakib Hasan"]').click()
+    await expect(page).toHaveURL('/admin/requests')
+
+    // Queue:
+    const queueRow2 = page.locator('[data-request-id="REQ-1042"]')
+    await expect(queueRow2).toHaveAttribute('data-routing', 'Assigned Human')
+    await expect(queueRow2).toContainText('Assigned Human')
+
+    // Detail:
+    await page.goto('/admin/requests/req-1042')
+    await expect(page.locator('body')).toContainText('Assigned Human')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText(
+      'Eligible recording assigned to Human Evaluation'
+    )
+
+    // Picker:
+    await page.goto('/admin/requests/req-1042/assign')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Assignment state: Assigned')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Active evaluator owner: Rakib Hasan')
+
+    // Stage 3: Admin explicitly assigns Farhana Islam -> All 3 screens must agree on Assigned Human
+    await page.locator('button[data-candidate="Farhana Islam"]').click()
+    await expect(page).toHaveURL('/admin/requests')
+
+    // Queue:
+    const queueRow3 = page.locator('[data-request-id="REQ-1042"]')
+    await expect(queueRow3).toHaveAttribute('data-routing', 'Assigned Human')
+    await expect(queueRow3).toContainText('Assigned Human')
+
+    // Detail:
+    await page.goto('/admin/requests/req-1042')
+    await expect(page.locator('body')).toContainText('Assigned Human')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText(
+      'Eligible recording assigned to Human Evaluation'
+    )
+
+    // Picker:
+    await page.goto('/admin/requests/req-1042/assign')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Assignment state: Assigned')
+    await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Active evaluator owner: Farhana Islam')
+  })
+
+  test('TEST H: Unknown submission mapping returns null and never fabricates entities', async ({ page }) => {
+    await page.goto('/admin/requests')
+
+    const mapperResults = await page.evaluate(() => {
+      const win = window as unknown as {
+        __getMappingBySubmissionId?: (id: string) => unknown
+        __getMappingByRequestId?: (id: string) => unknown
+      }
+      return {
+        unknownSubmission: win.__getMappingBySubmissionId?.('SUB-9999'),
+        alphanumericSubmission: win.__getMappingBySubmissionId?.('UNKNOWN-1234'),
+        removedSub8814: win.__getMappingBySubmissionId?.('SUB-8814'),
+        removedSub8799: win.__getMappingBySubmissionId?.('SUB-8799'),
+        unknownRequest: win.__getMappingByRequestId?.('REQ-9999'),
+        canonical8821: win.__getMappingBySubmissionId?.('SUB-8821'),
+      }
+    })
+
+    // 1. Unknown submissions must return null
+    expect(mapperResults.unknownSubmission).toBeNull()
+    expect(mapperResults.alphanumericSubmission).toBeNull()
+
+    // 2. Ungrounded mappings must be absent (return null)
+    expect(mapperResults.removedSub8814).toBeNull()
+    expect(mapperResults.removedSub8799).toBeNull()
+
+    // 3. Unknown request must return null
+    expect(mapperResults.unknownRequest).toBeNull()
+
+    // 4. Grounded canonical mapping SUB-8821 must resolve correctly
+    expect(mapperResults.canonical8821).toEqual({
+      requestId: 'REQ-1042',
+      submissionId: 'SUB-8821',
+      user: 'Alex Morgan',
+      track: 'Business Pitch / Sales Pitch',
+      trackSlug: 'business-pitch',
+      requestedMethod: 'Human',
+      evaluationId: 'HE-0142',
+      destinationPath: '/admin/requests/req-1042',
+    })
+  })
+
+  test('TEST I: Mapping registry audit — all retained mappings have grounded expected request method', async ({
+    page,
+  }) => {
+    await page.goto('/admin/requests')
+
+    const auditResult = await page.evaluate(() => {
+      const win = window as unknown as {
+        __CANONICAL_REQUEST_SUBMISSION_MAP?: Record<
+          string,
+          {
+            requestId: string
+            submissionId: string
+            user: string
+            track: string
+            requestedMethod: 'Human' | 'AI'
+            evaluationId?: string
+          }
+        >
+      }
+      const map = win.__CANONICAL_REQUEST_SUBMISSION_MAP || {}
+      const entries = Object.values(map)
+      return {
+        count: entries.length,
+        keys: Object.keys(map),
+        hasContradictoryAiHuman: entries.some(
+          (e) => e.requestedMethod === 'AI' && e.evaluationId?.startsWith('HE-')
+        ),
+        hasSub8799MappedToReq1041: entries.some(
+          (e) => e.submissionId === 'SUB-8799' || e.requestId === 'REQ-1041'
+        ),
+        hasSub8814MappedToReq1038: entries.some(
+          (e) => e.submissionId === 'SUB-8814' || e.requestId === 'REQ-1038'
+        ),
+      }
+    })
+
+    // Exactly 1 grounded mapping exists
+    expect(auditResult.count).toBe(1)
+    expect(auditResult.keys).toEqual(['SUB-8821'])
+
+    // No Human Volunteer assignment mapped to an AI request
+    expect(auditResult.hasContradictoryAiHuman).toBe(false)
+    expect(auditResult.hasSub8799MappedToReq1041).toBe(false)
+    expect(auditResult.hasSub8814MappedToReq1038).toBe(false)
+  })
+
+  test('TEST J: Safe decline behavior for unmapped submission preserves Volunteer provenance without creating false Admin entities', async ({
+    page,
+  }) => {
+    await page.goto('/admin/requests')
+
+    const declineResults = await page.evaluate(() => {
+      const win = window as unknown as {
+        __declineVolunteerAssignment?: (id: string, reason: string) => { success: boolean; record?: { returnedToAdminQueue: boolean }; error?: string }
+        __getAdminUnassignedDeclinedQueue?: () => unknown[]
+        __getAdminEvaluationRequests?: () => Array<{ id: string }>
+      }
+      // 1. Decline unknown submission not in volunteer active assignments -> must fail safely
+      const unknownFail = win.__declineVolunteerAssignment?.('SUB-9999', 'Should fail not found')
+
+      // 2. Count admin requests before and after
+      const requestsBefore = win.__getAdminEvaluationRequests?.() || []
+      const unassignedBefore = win.__getAdminUnassignedDeclinedQueue?.() || []
+
+      return {
+        unknownFail,
+        requestsCountBefore: requestsBefore.length,
+        unassignedCountBefore: unassignedBefore.length,
+      }
+    })
+
+    // Unknown assignment fails explicitly
+    expect(declineResults.unknownFail?.success).toBe(false)
+    expect(declineResults.unknownFail?.error).toContain('not found')
+
+    // Admin queue has not been polluted
+    expect(declineResults.requestsCountBefore).toBe(4)
+    expect(declineResults.unassignedCountBefore).toBe(0)
   })
 })

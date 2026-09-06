@@ -352,6 +352,8 @@ export function declineVolunteerAssignment(
     return { success: false, error: `Assignment ${normalizedId} is in status "${assignment.assignmentStatus}" and cannot be declined` }
   }
 
+  const mapping = getMappingBySubmissionId(normalizedId)
+
   const declineRecord: DeclinedAssignmentRecord = {
     submissionId: normalizedId,
     track: assignment.track,
@@ -359,7 +361,7 @@ export function declineVolunteerAssignment(
     declinedAt: new Date().toISOString(),
     reason: trimmedReason,
     previousStatus: assignment.assignmentStatus,
-    returnedToAdminQueue: true,
+    returnedToAdminQueue: Boolean(mapping),
   }
 
   // 1. Record decline provenance for audit
@@ -375,24 +377,25 @@ export function declineVolunteerAssignment(
     window.sessionStorage?.removeItem(`${DRAFT_PREFIX}${normalizedId}`)
   } catch {}
 
-  // 4. Reflect in Admin Unassigned queue state representation (Section 3)
-  const mapping = getMappingBySubmissionId(normalizedId)
-  const existingAdminQueue = getAdminUnassignedDeclinedQueue().filter(
-    (r) => r.submissionId.toUpperCase() !== normalizedId && r.requestId.toUpperCase() !== mapping.requestId.toUpperCase()
-  )
-  const adminRecord: AdminUnassignedRequestRecord = {
-    requestId: mapping.requestId,
-    submissionId: normalizedId,
-    user: mapping.user,
-    track: assignment.track,
-    trackSlug: assignment.trackSlug,
-    requestedMethod: 'Human',
-    reason: trimmedReason,
-    returnedAt: declineRecord.declinedAt,
-    status: 'Unassigned',
-    evaluationId: mapping.evaluationId,
+  // 4. Reflect in Admin Unassigned queue state representation (Section 3) if mapping exists
+  if (mapping) {
+    const existingAdminQueue = getAdminUnassignedDeclinedQueue().filter(
+      (r) => r.submissionId.toUpperCase() !== normalizedId && r.requestId.toUpperCase() !== mapping.requestId.toUpperCase()
+    )
+    const adminRecord: AdminUnassignedRequestRecord = {
+      requestId: mapping.requestId,
+      submissionId: normalizedId,
+      user: mapping.user,
+      track: assignment.track,
+      trackSlug: assignment.trackSlug,
+      requestedMethod: 'Human',
+      reason: trimmedReason,
+      returnedAt: declineRecord.declinedAt,
+      status: 'Unassigned',
+      evaluationId: mapping.evaluationId,
+    }
+    saveAdminUnassignedDeclinedQueue([...existingAdminQueue, adminRecord])
   }
-  saveAdminUnassignedDeclinedQueue([...existingAdminQueue, adminRecord])
 
   return { success: true, record: declineRecord }
 }
