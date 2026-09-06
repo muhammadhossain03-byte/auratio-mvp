@@ -1,13 +1,10 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import { getVolunteerAssignments, type ActiveAssignment } from '../data/mockVolunteerData'
 
 export function VolunteerActiveAssignmentsPage() {
   const navigate = useNavigate()
-  const [assignments] = useState<ActiveAssignment[]>(() =>
-    getVolunteerAssignments().filter((a) => a.assignmentStatus !== 'Submitted')
-  )
+  const assignments = getVolunteerAssignments().filter((a) => a.assignmentStatus !== 'Submitted')
 
   function handleOpen(assignment: ActiveAssignment) {
     if (assignment.assignmentStatus === 'In Evaluation') {
@@ -250,16 +247,18 @@ export function VolunteerActiveAssignmentsPage() {
         )}
 
         {/* Divider 1 */}
-        <div
-          style={{
-            position: 'absolute',
-            left: '18px',
-            top: '118px',
-            width: '1040px',
-            height: '1px',
-            backgroundColor: 'var(--auratio-neutral-200)',
-          }}
-        />
+        {sub8821 && (
+          <div
+            style={{
+              position: 'absolute',
+              left: '18px',
+              top: '118px',
+              width: '1040px',
+              height: '1px',
+              backgroundColor: 'var(--auratio-neutral-200)',
+            }}
+          />
+        )}
 
         {/* Row 2: SUB-8814 */}
         {sub8814 && (

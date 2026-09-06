@@ -1,6 +1,11 @@
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import { getDeclinedAssignments } from '../data/mockVolunteerData'
 
 export function VolunteerActiveAssignmentsAfterDeclinePage() {
+  const declinedRecords = getDeclinedAssignments()
+  const lastDeclined = declinedRecords.length > 0 ? declinedRecords[declinedRecords.length - 1] : null
+  const declinedId = lastDeclined?.submissionId || 'SUB-8821'
+
   return (
     <VolunteerLayout
       ariaLabel="Active Assignments After Decline"
@@ -12,7 +17,7 @@ export function VolunteerActiveAssignmentsAfterDeclinePage() {
         className="auratio-volunteer-page-subtitle"
         style={{ width: '780px' }}
       >
-        SUB-8821 was declined and returned to the Admin Unassigned queue. Remaining active tasks are shown below.
+        {declinedId} was declined and returned to the Admin Unassigned queue. Remaining active tasks are shown below.
       </p>
 
       {/* Notice Banner */}

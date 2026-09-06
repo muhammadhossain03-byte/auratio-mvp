@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
-import { getVolunteerAssignment } from '../data/mockVolunteerData'
+import { getVolunteerAssignment, declineVolunteerAssignment } from '../data/mockVolunteerData'
 
 export function VolunteerDeclineAssignmentPage() {
   const navigate = useNavigate()
@@ -17,7 +17,12 @@ export function VolunteerDeclineAssignmentPage() {
   }
 
   function handleConfirmDecline() {
-    if (!reason.trim()) return
+    const trimmed = reason.trim()
+    if (!trimmed) return
+
+    const result = declineVolunteerAssignment(submissionId, trimmed)
+    if (!result.success) return
+
     navigate(portalRoutePaths.volunteer.activeAssignmentsAfterDecline)
   }
 

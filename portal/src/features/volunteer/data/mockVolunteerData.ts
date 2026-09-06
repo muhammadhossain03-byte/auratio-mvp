@@ -231,17 +231,175 @@ export const CANONICAL_COMPLETED_HISTORY: CompletedAssignmentRecord[] = [
 
 const ASSIGNMENTS_KEY = 'auratio_volunteer_assignments'
 const COMPLETED_HISTORY_KEY = 'auratio_volunteer_completed_history'
+const DECLINED_KEY = 'auratio_volunteer_declined'
+const ADMIN_UNASSIGNED_QUEUE_KEY = 'auratio_admin_unassigned_from_decline'
 const DRAFT_PREFIX = 'auratio_volunteer_draft_'
 const LOCKED_VERSION_PREFIX = 'auratio_volunteer_locked_'
 
-export function getVolunteerAssignments(): ActiveAssignment[] {
+export interface DeclinedAssignmentRecord {
+  submissionId: string
+  track: string
+  trackSlug?: string
+  declinedAt: string
+  reason: string
+  previousStatus: string
+  returnedToAdminQueue: boolean
+}
+
+export interface AdminUnassignedRequestRecord {
+  submissionId: string
+  track: string
+  trackSlug?: string
+  reason: string
+  returnedAt: string
+  status: 'Unassigned'
+}
+
+export function getDeclinedAssignments(): DeclinedAssignmentRecord[] {
   try {
-    const raw = window.sessionStorage?.getItem(ASSIGNMENTS_KEY)
-    if (raw) {
-      return JSON.parse(raw) as ActiveAssignment[]
+    const raw = window.sessionStorage?.getItem(DECLINED_KEY)
+    if (raw !== null && raw !== undefined) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed as DeclinedAssignmentRecord[]
+      }
     }
   } catch {}
-  return CANONICAL_ACTIVE_ASSIGNMENTS
+  return []
+}
+
+export function saveDeclinedAssignments(records: DeclinedAssignmentRecord[]): void {
+  try {
+    window.sessionStorage?.setItem(DECLINED_KEY, JSON.stringify(records))
+  } catch {}
+}
+
+export function getDeclinedAssignment(submissionId: string): DeclinedAssignmentRecord | null {
+  if (!submissionId) return null
+  const normalizedId = submissionId.toUpperCase()
+  const list = getDeclinedAssignments()
+  return list.find((d) => d.submissionId.toUpperCase() === normalizedId) ?? null
+}
+
+export function isAssignmentDeclined(submissionId: string): boolean {
+  return getDeclinedAssignment(submissionId) !== null
+}
+
+export function getAdminUnassignedDeclinedQueue(): AdminUnassignedRequestRecord[] {
+  try {
+    const raw = window.sessionStorage?.getItem(ADMIN_UNASSIGNED_QUEUE_KEY)
+    if (raw !== null && raw !== undefined) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed as AdminUnassignedRequestRecord[]
+      }
+    }
+  } catch {}
+  return []
+}
+
+export function saveAdminUnassignedDeclinedQueue(records: AdminUnassignedRequestRecord[]): void {
+  try {
+    window.sessionStorage?.setItem(ADMIN_UNASSIGNED_QUEUE_KEY, JSON.stringify(records))
+  } catch {}
+}
+
+export function declineVolunteerAssignment(
+  submissionId: string,
+  reason: string
+): { success: boolean; error?: string; record?: DeclinedAssignmentRecord } {
+  if (!submissionId || !submissionId.trim()) {
+    return { success: false, error: 'Submission ID is required' }
+  }
+  const normalizedId = submissionId.toUpperCase()
+
+  const trimmedReason = (reason || '').trim()
+  if (!trimmedReason) {
+    return { success: false, error: 'A valid non-empty decline reason is required' }
+  }
+
+  // Prevent duplicate decline
+  if (isAssignmentDeclined(normalizedId)) {
+    return { success: false, error: `Assignment ${normalizedId} has already been declined` }
+  }
+
+  const assignment = getVolunteerAssignment(normalizedId)
+  if (!assignment) {
+    return { success: false, error: `Assignment ${normalizedId} not found` }
+  }
+
+  // Validate declineability:
+  // Cannot decline submitted evaluation
+  if (assignment.assignmentStatus === 'Submitted' || isEvaluationSubmitted(normalizedId)) {
+    return { success: false, error: `Assignment ${normalizedId} has already been submitted and cannot be declined` }
+  }
+
+  // Auratio lifecycle: only Assigned tasks are legitimately declineable
+  if (assignment.assignmentStatus !== 'Assigned') {
+    return { success: false, error: `Assignment ${normalizedId} is in status "${assignment.assignmentStatus}" and cannot be declined` }
+  }
+
+  const declineRecord: DeclinedAssignmentRecord = {
+    submissionId: normalizedId,
+    track: assignment.track,
+    trackSlug: assignment.trackSlug,
+    declinedAt: new Date().toISOString(),
+    reason: trimmedReason,
+    previousStatus: assignment.assignmentStatus,
+    returnedToAdminQueue: true,
+  }
+
+  // 1. Record decline provenance for audit
+  const existingDeclined = getDeclinedAssignments().filter((d) => d.submissionId.toUpperCase() !== normalizedId)
+  saveDeclinedAssignments([...existingDeclined, declineRecord])
+
+  // 2. Remove / revoke Volunteer active ownership
+  const currentActive = getVolunteerAssignments().filter((a) => a.id.toUpperCase() !== normalizedId)
+  saveVolunteerAssignments(currentActive)
+
+  // 3. Remove any draft for the declined assignment
+  try {
+    window.sessionStorage?.removeItem(`${DRAFT_PREFIX}${normalizedId}`)
+  } catch {}
+
+  // 4. Reflect in Admin Unassigned queue state representation (Section 3)
+  const existingAdminQueue = getAdminUnassignedDeclinedQueue().filter((r) => r.submissionId.toUpperCase() !== normalizedId)
+  const adminRecord: AdminUnassignedRequestRecord = {
+    submissionId: normalizedId,
+    track: assignment.track,
+    trackSlug: assignment.trackSlug,
+    reason: trimmedReason,
+    returnedAt: declineRecord.declinedAt,
+    status: 'Unassigned',
+  }
+  saveAdminUnassignedDeclinedQueue([...existingAdminQueue, adminRecord])
+
+  return { success: true, record: declineRecord }
+}
+
+export function getVolunteerAssignments(): ActiveAssignment[] {
+  let list: ActiveAssignment[] = CANONICAL_ACTIVE_ASSIGNMENTS
+  try {
+    const raw = window.sessionStorage?.getItem(ASSIGNMENTS_KEY)
+    if (raw !== null && raw !== undefined) {
+      try {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) {
+          list = parsed as ActiveAssignment[]
+        }
+      } catch {}
+    }
+  } catch {}
+
+  // Prevent canonical-fallback resurrection:
+  // A declined assignment must never reappear in active assignments under any circumstances
+  const declinedRecords = getDeclinedAssignments()
+  if (declinedRecords.length > 0) {
+    const declinedIds = new Set(declinedRecords.map((d) => d.submissionId.toUpperCase()))
+    return list.filter((a) => !declinedIds.has(a.id.toUpperCase()))
+  }
+
+  return list
 }
 
 export function saveVolunteerAssignments(assignments: ActiveAssignment[]): void {
@@ -260,6 +418,8 @@ export function seedVolunteerAssignment(assignment: ActiveAssignment): void {
   const current = getVolunteerAssignments()
   const filtered = current.filter((a) => a.id.toUpperCase() !== assignment.id.toUpperCase())
   saveVolunteerAssignments([...filtered, assignment])
+  const remainingDeclined = getDeclinedAssignments().filter((d) => d.submissionId.toUpperCase() !== assignment.id.toUpperCase())
+  saveDeclinedAssignments(remainingDeclined)
 }
 
 export function updateAssignmentStatus(submissionId: string, status: ActiveAssignment['assignmentStatus']): void {
@@ -337,6 +497,9 @@ export function createFreshDraft(submissionId: string, trackName: string): Volun
 
 export function getScoringDraft(submissionId: string): VolunteerSubmissionScoringDraft | null {
   const normalizedId = submissionId.toUpperCase()
+  if (isAssignmentDeclined(normalizedId)) {
+    return null
+  }
   const assignment = getVolunteerAssignment(normalizedId)
 
   // Determine track
@@ -373,6 +536,9 @@ export function getScoringDraft(submissionId: string): VolunteerSubmissionScorin
 export function saveScoringDraft(draft: VolunteerSubmissionScoringDraft): void {
   try {
     const normalizedId = draft.submissionId.toUpperCase()
+    if (isAssignmentDeclined(normalizedId)) {
+      return
+    }
     const raw = window.sessionStorage?.getItem(`${DRAFT_PREFIX}${normalizedId}`)
     if (raw) {
       const existing = JSON.parse(raw) as VolunteerSubmissionScoringDraft
@@ -465,13 +631,29 @@ export function calculateDraftTotals(draft: VolunteerSubmissionScoringDraft) {
 }
 
 export function getCompletedHistory(): CompletedAssignmentRecord[] {
+  let list: CompletedAssignmentRecord[] = CANONICAL_COMPLETED_HISTORY
   try {
     const raw = window.sessionStorage?.getItem(COMPLETED_HISTORY_KEY)
-    if (raw) {
-      return JSON.parse(raw) as CompletedAssignmentRecord[]
+    if (raw !== null && raw !== undefined) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        list = parsed as CompletedAssignmentRecord[]
+      }
     }
   } catch {}
-  return CANONICAL_COMPLETED_HISTORY
+
+  // Filter out any declined assignments that were not genuinely submitted
+  const declinedRecords = getDeclinedAssignments()
+  if (declinedRecords.length > 0) {
+    const declinedIds = new Set(declinedRecords.map((d) => d.submissionId.toUpperCase()))
+    return list.filter((c) => {
+      if (!declinedIds.has(c.id.toUpperCase())) return true
+      const locked = getLatestLockedSubmission(c.id)
+      return locked?.isSubmitted === true
+    })
+  }
+
+  return list
 }
 
 export function saveCompletedHistory(items: CompletedAssignmentRecord[]): void {
@@ -642,6 +824,13 @@ export function reopenEvaluation(submissionId: string): VolunteerSubmissionScori
 
 export function isEvaluationSubmitted(submissionId: string): boolean {
   const normalizedId = submissionId.toUpperCase()
+
+  // Declined assignments cannot be considered submitted evaluations unless genuinely submitted
+  if (isAssignmentDeclined(normalizedId)) {
+    const locked = getLatestLockedSubmission(normalizedId)
+    return locked?.isSubmitted === true
+  }
+
   const draft = getScoringDraft(normalizedId)
 
   if (draft?.isSubmitted) {
@@ -688,15 +877,13 @@ export function resetVolunteerState(): void {
   try {
     window.sessionStorage?.removeItem(ASSIGNMENTS_KEY)
     window.sessionStorage?.removeItem(COMPLETED_HISTORY_KEY)
-    const keysToRemove: string[] = []
-    for (let i = 0; i < (window.sessionStorage?.length || 0); i++) {
-      const key = window.sessionStorage.key(i)
-      if (key && (key.startsWith(DRAFT_PREFIX) || key.startsWith(LOCKED_VERSION_PREFIX))) {
-        keysToRemove.push(key)
+    window.sessionStorage?.removeItem(DECLINED_KEY)
+    window.sessionStorage?.removeItem(ADMIN_UNASSIGNED_QUEUE_KEY)
+    const allKeys = Object.keys(window.sessionStorage || {})
+    for (const key of allKeys) {
+      if (key.startsWith(DRAFT_PREFIX) || key.startsWith(LOCKED_VERSION_PREFIX)) {
+        window.sessionStorage.removeItem(key)
       }
-    }
-    for (const k of keysToRemove) {
-      window.sessionStorage.removeItem(k)
     }
   } catch {}
 }
@@ -720,4 +907,9 @@ if (typeof window !== 'undefined') {
   win.__CANONICAL_TRACK_REGISTRY = CANONICAL_TRACK_REGISTRY
   win.__AUTHORITATIVE_MVP_TRACKS = AUTHORITATIVE_MVP_TRACKS
   win.__seedVolunteerAssignment = seedVolunteerAssignment
+  win.__declineVolunteerAssignment = declineVolunteerAssignment
+  win.__getDeclinedAssignments = getDeclinedAssignments
+  win.__getDeclinedAssignment = getDeclinedAssignment
+  win.__isAssignmentDeclined = isAssignmentDeclined
+  win.__getAdminUnassignedDeclinedQueue = getAdminUnassignedDeclinedQueue
 }

@@ -1337,4 +1337,250 @@ test.describe('Volunteer Critical Regression', () => {
       expect(bodyText).not.toContain('Evaluation submitted')
     })
   })
+
+  test.describe('Volunteer Assignment Decline Lifecycle & Human Acceptance Defect Repair', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/volunteer/assignments')
+      await page.evaluate(() => {
+        const win = window as any
+        if (win.__resetVolunteerState) win.__resetVolunteerState()
+      })
+    })
+
+    test('TEST A — exact human defect reproduction: decline, navigate to completed/history, return to active assignments and confirm absent', async ({ page }) => {
+      // 1. Start clean session and open Assigned submission
+      await page.goto('/volunteer/assignments')
+      await expect(page.locator('body')).toContainText('SUB-8821')
+
+      await page.goto('/volunteer/assignments/sub-8821')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toHaveText('SUB-8821')
+
+      // 2. Click Decline
+      await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Decline' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments/sub-8821/decline')
+
+      // 3. Enter required reason
+      await page.locator('input.auratio-volunteer-decline-input').fill('Schedule conflict for this week')
+
+      // 4. Confirm Decline
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+
+      // 5. Assignment disappears from immediate post-decline Active Assignments view
+      await expect(page).toHaveURL('/volunteer/assignments/after-decline')
+      await expect(page.locator('p.auratio-volunteer-page-subtitle')).toContainText('SUB-8821 was declined and returned to the Admin Unassigned queue')
+      const afterDeclineTable = await page.locator('.auratio-volunteer-panel').nth(1).innerText()
+      expect(afterDeclineTable).not.toContain('SUB-8821')
+      expect(afterDeclineTable).toContain('SUB-8814')
+      expect(afterDeclineTable).toContain('SUB-8799')
+
+      // 6. Volunteer navigates to Completed / History
+      await page.locator('button.auratio-volunteer-nav-item', { hasText: 'Completed / History' }).click()
+      await expect(page).toHaveURL('/volunteer/completed')
+
+      // 7. Volunteer navigates back to Active Assignments
+      await page.locator('button.auratio-volunteer-nav-item', { hasText: 'Active Assignments' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toHaveText('My Active Assignments')
+
+      // 8. Confirm declined assignment does NOT reappear (is STILL absent)
+      const activeBody = await page.locator('body').innerText()
+      expect(activeBody).not.toContain('SUB-8821')
+      expect(activeBody).toContain('SUB-8814')
+      expect(activeBody).toContain('SUB-8799')
+    })
+
+    test('TEST B — refresh persistence: declined assignment remains absent after page refresh on active assignments', async ({ page }) => {
+      // 1. Decline assignment
+      await page.goto('/volunteer/assignments/sub-8821')
+      await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Decline' }).click()
+      await page.locator('input.auratio-volunteer-decline-input').fill('Conflict of interest with submitter')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments/after-decline')
+
+      // 2. Navigate to Active Assignments and refresh
+      await page.goto('/volunteer/assignments')
+      expect(await page.locator('body').innerText()).not.toContain('SUB-8821')
+
+      await page.reload()
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      // 3. Confirm declined submission remains absent
+      const refreshedBody = await page.locator('body').innerText()
+      expect(refreshedBody).not.toContain('SUB-8821')
+      expect(refreshedBody).toContain('SUB-8814')
+      expect(refreshedBody).toContain('SUB-8799')
+    })
+
+    test('TEST C — Back/Forward persistence: browser history navigation does not resurrect declined assignment', async ({ page }) => {
+      // 1. Decline assignment
+      await page.goto('/volunteer/assignments/sub-8821')
+      await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Decline' }).click()
+      await page.locator('input.auratio-volunteer-decline-input').fill('Unavailable for evaluation period')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments/after-decline')
+
+      // 2. Navigate between Volunteer pages
+      await page.locator('button.auratio-volunteer-nav-item', { hasText: 'Completed / History' }).click()
+      await expect(page).toHaveURL('/volunteer/completed')
+
+      await page.locator('button.auratio-volunteer-nav-item', { hasText: 'Active Assignments' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments')
+      expect(await page.locator('body').innerText()).not.toContain('SUB-8821')
+
+      // 3. Use browser Back (returns to Completed / History)
+      await page.goBack()
+      await expect(page).toHaveURL('/volunteer/completed')
+
+      // 4. Use browser Forward (returns to Active Assignments)
+      await page.goForward()
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      // 5. Confirm declined assignment does not resurrect
+      const bodyText = await page.locator('body').innerText()
+      expect(bodyText).not.toContain('SUB-8821')
+      expect(bodyText).toContain('SUB-8814')
+      expect(bodyText).toContain('SUB-8799')
+    })
+
+    test('TEST D — reason gate: empty and whitespace-only reasons do not decline and assignment remains active', async ({ page }) => {
+      await page.goto('/volunteer/assignments/sub-8821/decline')
+
+      // Case A: empty reason
+      await page.locator('input.auratio-volunteer-decline-input').fill('')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+      // Blocked: remains on decline page
+      await expect(page).toHaveURL('/volunteer/assignments/sub-8821/decline')
+
+      // Case B: whitespace-only reason
+      await page.locator('input.auratio-volunteer-decline-input').fill('     \t  \n  ')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+      // Blocked: remains on decline page
+      await expect(page).toHaveURL('/volunteer/assignments/sub-8821/decline')
+
+      // Verify assignment was NOT declined and remains active in storage
+      const checkActive = await page.evaluate(() => {
+        const win = window as any
+        return {
+          isDeclined: win.__isAssignmentDeclined ? win.__isAssignmentDeclined('SUB-8821') : false,
+          assignment: win.__getVolunteerAssignment ? win.__getVolunteerAssignment('SUB-8821') : null,
+        }
+      })
+      expect(checkActive.isDeclined).toBe(false)
+      expect(checkActive.assignment).not.toBeNull()
+      expect(checkActive.assignment.assignmentStatus).toBe('Assigned')
+
+      // Cancel returns to task page
+      await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Cancel' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments/sub-8821')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toHaveText('SUB-8821')
+    })
+
+    test('TEST E — no Completed pollution: declined assignment does not appear as completed evaluation', async ({ page }) => {
+      // 1. Decline assignment
+      await page.goto('/volunteer/assignments/sub-8821')
+      await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Decline' }).click()
+      await page.locator('input.auratio-volunteer-decline-input').fill('Cannot evaluate in this track')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments/after-decline')
+
+      // 2. Inspect Completed / History page
+      await page.goto('/volunteer/completed')
+      await expect(page).toHaveURL('/volunteer/completed')
+
+      // Must not appear in table or page
+      const completedText = await page.locator('body').innerText()
+      expect(completedText).not.toContain('SUB-8821')
+
+      // 3. Inspect storage layer: no draft, no score, not submitted
+      const storageState = await page.evaluate(() => {
+        const win = window as any
+        const rawDraft = window.sessionStorage.getItem('auratio_volunteer_draft_SUB-8821')
+        return {
+          completedHistory: win.__getCompletedHistory ? win.__getCompletedHistory() : [],
+          isSubmitted: win.__isEvaluationSubmitted ? win.__isEvaluationSubmitted('SUB-8821') : null,
+          rawDraft,
+          scoringDraft: win.__getVolunteerScoringDraft ? win.__getVolunteerScoringDraft('SUB-8821') : null,
+          declinedRecord: win.__getDeclinedAssignment ? win.__getDeclinedAssignment('SUB-8821') : null,
+        }
+      })
+      expect(storageState.completedHistory.some((c: any) => c.id.toUpperCase() === 'SUB-8821')).toBe(false)
+      expect(storageState.isSubmitted).toBe(false)
+      expect(storageState.rawDraft).toBeNull()
+      expect(storageState.scoringDraft).toBeNull()
+      expect(storageState.declinedRecord).not.toBeNull()
+      expect(storageState.declinedRecord.reason).toBe('Cannot evaluate in this track')
+      expect(storageState.declinedRecord.returnedToAdminQueue).toBe(true)
+    })
+
+    test('TEST F — state isolation: declining submission A does not remove or alter submission B or C', async ({ page }) => {
+      // Clean start has SUB-8821, SUB-8814, SUB-8799
+      await page.goto('/volunteer/assignments')
+      const initialBody = await page.locator('body').innerText()
+      expect(initialBody).toContain('SUB-8821')
+      expect(initialBody).toContain('SUB-8814')
+      expect(initialBody).toContain('SUB-8799')
+
+      // Decline SUB-8821 only
+      await page.goto('/volunteer/assignments/sub-8821')
+      await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Decline' }).click()
+      await page.locator('input.auratio-volunteer-decline-input').fill('Decline submission A only')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments/after-decline')
+
+      // Return to active assignments
+      await page.goto('/volunteer/assignments')
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      // Verify state isolation:
+      // SUB-8821 is gone
+      const activeBody = await page.locator('body').innerText()
+      expect(activeBody).not.toContain('SUB-8821')
+
+      // SUB-8814 is fully intact with track "Extempore" and status "Accepted"
+      expect(activeBody).toContain('SUB-8814')
+      expect(activeBody).toContain('Extempore')
+      expect(activeBody).toContain('Accepted')
+
+      // SUB-8799 is fully intact with track "Informative" and status "In Evaluation"
+      expect(activeBody).toContain('SUB-8799')
+      expect(activeBody).toContain('Informative')
+      expect(activeBody).toContain('In Evaluation')
+
+      // Both B and C can still be opened
+      await page.locator('button[aria-label="Open SUB-8814"]').click()
+      await expect(page).toHaveURL('/volunteer/assignments/sub-8814')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toHaveText('SUB-8814')
+
+      await page.goto('/volunteer/assignments')
+      await page.locator('button[aria-label="Open SUB-8799"]').click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8799')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toContainText('SUB-8799')
+    })
+
+    test('TEST G — re-entry: directly reopening the old Assigned-task route after decline fails safely / redirects', async ({ page }) => {
+      // Decline SUB-8821
+      await page.goto('/volunteer/assignments/sub-8821')
+      await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Decline' }).click()
+      await page.locator('input.auratio-volunteer-decline-input').fill('Legitimate decline reason')
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Confirm Decline' }).click()
+      await expect(page).toHaveURL('/volunteer/assignments/after-decline')
+
+      // Attempt 1: Direct navigation to /volunteer/assignments/sub-8821
+      await page.goto('/volunteer/assignments/sub-8821')
+      // Must safely redirect to /volunteer/assignments rather than restoring ownership
+      await expect(page).toHaveURL('/volunteer/assignments')
+      expect(await page.locator('body').innerText()).not.toContain('SUB-8821')
+
+      // Attempt 2: Direct navigation to /volunteer/assignments/sub-8821/decline
+      await page.goto('/volunteer/assignments/sub-8821/decline')
+      // Must also safely redirect to /volunteer/assignments
+      await expect(page).toHaveURL('/volunteer/assignments')
+      expect(await page.locator('body').innerText()).not.toContain('SUB-8821')
+
+      // Attempt 3: Direct navigation to /volunteer/evaluation/sub-8821
+      await page.goto('/volunteer/evaluation/sub-8821')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      expect(await page.locator('body').innerText()).not.toContain('SUB-8821')
+    })
+  })
 })
