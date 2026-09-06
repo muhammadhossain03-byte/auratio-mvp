@@ -92,7 +92,29 @@ export const TRACK_SPECIFIC_CRITERIA: Record<string, CriterionDefinition[]> = {
     { id: 'inf-neutrality', name: 'Neutrality and factual accuracy', category: 'Track Specialisation', maxPoints: 10 },
     { id: 'inf-breakdown', name: 'Complex concept breakdown', category: 'Track Specialisation', maxPoints: 10 },
   ],
+  'persuasive': [
+    { id: 'per-hook', name: 'Call to action and influence', category: 'Track Specialisation', maxPoints: 10 },
+    { id: 'per-argument', name: 'Argument strength and credibility', category: 'Track Specialisation', maxPoints: 10 },
+    { id: 'per-objection', name: 'Objection anticipation and resistance handling', category: 'Track Specialisation', maxPoints: 10 },
+    { id: 'per-appeal', name: 'Emotional and logical appeal', category: 'Track Specialisation', maxPoints: 10 },
+  ],
 }
+
+export const AUTHORITATIVE_MVP_TRACKS = [
+  'Informative',
+  'Extempore',
+  'Persuasive',
+  'Argumentative / Debate',
+  'Explanatory',
+  'News Delivery',
+  'Business Pitch / Sales Pitch',
+  'General Presentation / Multimedia',
+  'Academic — Poster / Project / Thesis',
+  'Corporate Report',
+  'Infotainment-Oriented',
+  'Academic — Lecture / Course',
+  'Marketing / Promotional',
+] as const
 
 export const CANONICAL_ACTIVE_ASSIGNMENTS: ActiveAssignment[] = [
   {
@@ -143,7 +165,7 @@ export const CANONICAL_COMPLETED_HISTORY: CompletedAssignmentRecord[] = [
   },
   {
     id: 'SUB-8741',
-    track: 'Motivational',
+    track: 'Persuasive',
     assignmentStatus: 'Submitted',
     publicationStatus: 'Processing',
     route: '/volunteer/completed/sub-8741',
@@ -160,6 +182,7 @@ function getTrackSlug(trackName: string): string {
   if (norm.includes('business') || norm.includes('sales')) return 'business-pitch'
   if (norm.includes('extempore')) return 'extempore'
   if (norm.includes('informative')) return 'informative'
+  if (norm.includes('persuasive')) return 'persuasive'
   return 'business-pitch'
 }
 
@@ -273,6 +296,7 @@ export function getScoringDraft(submissionId: string): VolunteerSubmissionScorin
     if (normalizedId === 'SUB-8821') trackName = 'Business Pitch / Sales Pitch'
     else if (normalizedId === 'SUB-8814') trackName = 'Extempore'
     else if (normalizedId === 'SUB-8799') trackName = 'Informative'
+    else if (normalizedId === 'SUB-8741') trackName = 'Persuasive'
     else return null
   }
 

@@ -186,7 +186,7 @@ export const CANONICAL_VOLUNTEERS: AdminVolunteerItem[] = [
     lifecycle: 'Active',
     actionLabel: 'Open',
     destinationPath: '/admin/volunteers/rakib',
-    selectedTracks: ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch', 'Extempore', 'Motivational'],
+    selectedTracks: ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch', 'Extempore', 'Explanatory'],
   },
   {
     id: 'mehnaz',
@@ -739,7 +739,7 @@ const INITIAL_VOLUNTEER_MANAGEMENT_STATE: Record<string, VolunteerManagementStat
     },
   },
   rakib: {
-    tracks: ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch', 'Extempore', 'Motivational'],
+    tracks: ['Informative', 'Persuasive', 'Business Pitch / Sales Pitch', 'Extempore', 'Explanatory'],
     availability: {
       declaredAvailability: 'Available',
       effectiveAvailability: 'Available',

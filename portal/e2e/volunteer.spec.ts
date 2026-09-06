@@ -1049,7 +1049,7 @@ test.describe('Volunteer Critical Regression', () => {
       await expect(sub8792Entity).toHaveAttribute('data-publication-status', 'Approved')
       await expect(page.locator('.auratio-volunteer-pill', { hasText: 'Approved' })).toBeVisible()
 
-      // 5. Opening SUB-8755 must display SUB-8755 data (Rejected)
+      // 5. Opening SUB-8755 must display SUB-8755 data (Rejected) with authoritative Figma copy
       await page.goto('/volunteer/completed/sub-8755')
       await expect(page).toHaveURL('/volunteer/completed/sub-8755')
       const sub8755Title = await page.innerText('h2.auratio-volunteer-page-title')
@@ -1058,16 +1058,30 @@ test.describe('Volunteer Critical Regression', () => {
       await expect(sub8755Entity).toHaveAttribute('data-submission-id', 'SUB-8755')
       await expect(sub8755Entity).toHaveAttribute('data-publication-status', 'Rejected')
       await expect(page.locator('.auratio-volunteer-pill', { hasText: 'Rejected' })).toBeVisible()
+      const sub8755Body = await page.innerText('body')
+      expect(sub8755Body).toContain('Rejected result')
+      expect(sub8755Body).toContain('The submitted evaluator work remains auditable, but the rejected result does not affect progress, rankings, or generate an official report.')
+      expect(sub8755Body).toContain('None — rejected')
+      expect(sub8755Body).toContain('Workspace consequence')
+      expect(sub8755Body).toContain('This record remains locked in Completed / History for audit/history purposes. Rejection does not create an approved score or report.')
 
-      // 6. Opening SUB-8741 must display SUB-8741 data (Processing)
+      // 6. Opening SUB-8741 must display SUB-8741 data (Processing) with track "Persuasive" and authoritative Figma copy
       await page.goto('/volunteer/completed/sub-8741')
       await expect(page).toHaveURL('/volunteer/completed/sub-8741')
       const sub8741Title = await page.innerText('h2.auratio-volunteer-page-title')
       expect(sub8741Title).toContain('SUB-8741')
       const sub8741Entity = page.locator('[data-testid="completed-detail-entity"]')
       await expect(sub8741Entity).toHaveAttribute('data-submission-id', 'SUB-8741')
+      await expect(sub8741Entity).toHaveAttribute('data-track', 'Persuasive')
       await expect(sub8741Entity).toHaveAttribute('data-publication-status', 'Processing')
       await expect(page.locator('.auratio-volunteer-pill', { hasText: 'Processing' })).toBeVisible()
+      const sub8741Body = await page.innerText('body')
+      expect(sub8741Body).not.toContain('Motivational')
+      expect(sub8741Body).toContain('Publication processing')
+      expect(sub8741Body).toContain('Evaluator work is complete, but the publication outcome is not final yet, so no progress or ranking impact is applied.')
+      expect(sub8741Body).toContain('Workspace consequence')
+      expect(sub8741Body).toContain('This record remains in Completed / History while publication processing finishes. Only a formal Re-review / Reopened workflow returns work to Active Assignments.')
+      expect(sub8741Body).toContain('None while processing')
 
       // 7. Unknown IDs must fail and redirect safely to /volunteer/completed
       await page.goto('/volunteer/completed/sub-9999')
@@ -1089,6 +1103,68 @@ test.describe('Volunteer Critical Regression', () => {
       await page.locator('button.auratio-volunteer-btn--secondary', { hasText: 'Open' }).first().click()
       await expect(page).toHaveURL('/volunteer/completed/sub-8814')
       await expect(page.locator('h2.auratio-volunteer-page-title')).toContainText('SUB-8814')
+    })
+
+    test('V-03: Real score integrity, no fabricated fallback, and authoritative track registry', async ({ page }) => {
+      // 1. Legitimate score is rendered when defined (SUB-8821 with real score: 85)
+      await page.goto('/volunteer/completed/sub-8821')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8821')
+      const sub8821Body = await page.innerText('body')
+      expect(sub8821Body).toContain('85 / 100')
+
+      // 2. An entity without score (score === undefined) displays "Pending moderation" and NEVER "85 / 100"
+      await page.evaluate(() => {
+        const win = window as any
+        const existingHistory = (win.__getCompletedHistory ? win.__getCompletedHistory() : [])
+        const unscoredRecord = {
+          id: 'SUB-UNSCORED',
+          track: 'Persuasive',
+          assignmentStatus: 'Submitted',
+          publicationStatus: 'Pending Moderation',
+          route: '/volunteer/completed/sub-unscored',
+          // score intentionally omitted / undefined
+        }
+        window.sessionStorage.setItem('auratio_volunteer_completed_history', JSON.stringify([unscoredRecord, ...existingHistory]))
+      })
+
+      await page.goto('/volunteer/completed/sub-unscored')
+      await expect(page).toHaveURL('/volunteer/completed/sub-unscored')
+      const unscoredBody = await page.innerText('body')
+      expect(unscoredBody).toContain('Pending moderation')
+      expect(unscoredBody).not.toContain('85 / 100')
+
+      // 3. Verify authoritative MVP track registry integrity across all completed history & active assignments
+      const trackIntegrity = await page.evaluate(() => {
+        const win = window as any
+        const validTracks = [
+          'Informative',
+          'Extempore',
+          'Persuasive',
+          'Argumentative / Debate',
+          'Explanatory',
+          'News Delivery',
+          'Business Pitch / Sales Pitch',
+          'General Presentation / Multimedia',
+          'Academic — Poster / Project / Thesis',
+          'Corporate Report',
+          'Infotainment-Oriented',
+          'Academic — Lecture / Course',
+          'Marketing / Promotional',
+        ]
+        const history = win.__getCompletedHistory ? win.__getCompletedHistory() : []
+        const hasMotivational = history.some((h: any) => h.track === 'Motivational')
+        const allValid = history.every((h: any) => validTracks.includes(h.track))
+        return { hasMotivational, allValid, count: history.length }
+      })
+      expect(trackIntegrity.hasMotivational).toBe(false)
+      expect(trackIntegrity.allValid).toBe(true)
+
+      // 4. Completed history list displays "Persuasive" for SUB-8741
+      await page.goto('/volunteer/completed')
+      await expect(page).toHaveURL('/volunteer/completed')
+      const historyTableText = await page.innerText('body')
+      expect(historyTableText).toContain('Persuasive')
+      expect(historyTableText).not.toContain('Motivational')
     })
   })
 })

@@ -28,7 +28,7 @@ export function VolunteerCompletedDetailPage({ defaultId }: VolunteerCompletedDe
   let ariaLabel = 'Completed Detail • Pending Moderation'
   let subtitle = 'Evaluator task complete • publication decision unresolved'
   let docxText = 'Not generated — awaiting approval'
-  let scoreText = record.score !== undefined ? `${record.score} / 100` : '85 / 100'
+  let scoreText = record.score !== undefined ? `${record.score} / 100` : 'Pending moderation'
   let pillBg = 'var(--auratio-amber-50)'
   let pillColor = 'var(--auratio-amber-700)'
   let productImpactText = 'None while pending'
@@ -38,6 +38,7 @@ export function VolunteerCompletedDetailPage({ defaultId }: VolunteerCompletedDe
   let calloutTitle = 'Completed ≠ Approved'
   let calloutDescription =
     'Your evaluator work is complete, but the score has not been approved to affect progress or rankings.'
+  let bottomPanelTitle = 'Workspace consequence'
   let workspaceConsequence =
     'This record stays in Completed / History while moderation resolves. No score-edit controls are exposed. If an Admin later requests Re-review, the relevant work returns to Active Assignments under the formal reopen workflow.'
 
@@ -55,28 +56,30 @@ export function VolunteerCompletedDetailPage({ defaultId }: VolunteerCompletedDe
     calloutTitle = 'Approved result'
     calloutDescription =
       'The approved Human score can now affect private progress and leaderboard eligibility under the normal qualification rules.'
+    bottomPanelTitle = 'Workspace consequence'
     workspaceConsequence =
       'This record remains locked in Completed / History. Its approved evaluator-authored score is preserved; no score-edit controls are exposed.'
   } else if (record.publicationStatus === 'Rejected') {
     ariaLabel = 'Completed Detail • Rejected'
     subtitle = 'Evaluator task complete • publication rejected'
-    docxText = 'Not generated — publication rejected'
+    docxText = 'Not generated — rejected'
     scoreText = record.score !== undefined ? `${record.score} / 100` : 'Stored with rejected record'
     pillBg = 'var(--auratio-red-50)'
     pillColor = 'var(--auratio-red-700)'
-    productImpactText = 'Does not affect progress or rankings'
+    productImpactText = 'None — rejected'
     calloutBg = 'var(--auratio-red-50)'
     calloutTitleColor = 'var(--auratio-red-700)'
     calloutTextColor = 'var(--auratio-red-700)'
-    calloutTitle = 'Rejected evaluation'
+    calloutTitle = 'Rejected result'
     calloutDescription =
-      'This evaluation record was rejected during moderation and does not count toward qualification or leaderboard ranking.'
+      'The submitted evaluator work remains auditable, but the rejected result does not affect progress, rankings, or generate an official report.'
+    bottomPanelTitle = 'Workspace consequence'
     workspaceConsequence =
-      'This record remains locked in Completed / History. The rejected evaluation is preserved for auditability; no score-edit controls are exposed.'
+      'This record remains locked in Completed / History for audit/history purposes. Rejection does not create an approved score or report.'
   } else if (record.publicationStatus === 'Processing') {
     ariaLabel = 'Completed Detail • Processing'
     subtitle = 'Evaluator task complete • publication decision processing'
-    docxText = 'Not generated — awaiting publication decision'
+    docxText = 'Not generated — processing'
     scoreText = record.score !== undefined ? `${record.score} / 100` : 'Not final'
     pillBg = 'var(--auratio-brand-blue-50)'
     pillColor = 'var(--auratio-brand-blue-700)'
@@ -84,11 +87,12 @@ export function VolunteerCompletedDetailPage({ defaultId }: VolunteerCompletedDe
     calloutBg = 'var(--auratio-brand-blue-50)'
     calloutTitleColor = 'var(--auratio-brand-blue-700)'
     calloutTextColor = 'var(--auratio-brand-blue-700)'
-    calloutTitle = 'Processing status'
+    calloutTitle = 'Publication processing'
     calloutDescription =
-      'Evaluation submitted and awaiting publication routing or automated moderation check.'
+      'Evaluator work is complete, but the publication outcome is not final yet, so no progress or ranking impact is applied.'
+    bottomPanelTitle = 'Workspace consequence'
     workspaceConsequence =
-      'This record remains locked in Completed / History while automated routing or initial moderation checks complete. No score-edit controls are exposed.'
+      'This record remains in Completed / History while publication processing finishes. Only a formal Re-review / Reopened workflow returns work to Active Assignments.'
   }
 
   return (
@@ -438,7 +442,7 @@ export function VolunteerCompletedDetailPage({ defaultId }: VolunteerCompletedDe
             height: '190px',
           }}
         >
-          <h3 className="auratio-volunteer-panel-title">Workspace consequence</h3>
+          <h3 className="auratio-volunteer-panel-title">{bottomPanelTitle}</h3>
           <p
             style={{
               position: 'absolute',
