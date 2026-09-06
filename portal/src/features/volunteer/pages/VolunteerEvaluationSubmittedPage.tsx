@@ -9,9 +9,8 @@ export function VolunteerEvaluationSubmittedPage() {
   const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
 
   const isSubmitted = isEvaluationSubmitted(submissionId)
-  const isCanonicalProto = submissionId === 'SUB-8821'
 
-  if (!isSubmitted && !isCanonicalProto) {
+  if (!isSubmitted) {
     return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
   }
 

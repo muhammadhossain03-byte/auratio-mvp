@@ -347,7 +347,7 @@ async function run() {
     })
 
     for (const screen of SCREENS) {
-      if (screen.name === 'volunteer_reopened_evaluation') {
+      if (screen.name === 'volunteer_evaluation_submitted' || screen.name === 'volunteer_reopened_evaluation') {
         await sendCdp(ws, 'Runtime.evaluate', {
           expression: `(() => {
             const draft = {
@@ -363,6 +363,11 @@ async function run() {
             };
             window.sessionStorage.setItem('auratio_volunteer_locked_SUB-8821_v1', JSON.stringify(draft));
             window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft));
+            const assignments = [
+              { id: 'SUB-8814', track: 'Extempore', trackSlug: 'extempore', assignmentStatus: 'Accepted', publicationStatus: 'Processing' },
+              { id: 'SUB-8799', track: 'Informative', trackSlug: 'informative', assignmentStatus: 'In Evaluation', publicationStatus: 'Processing' }
+            ];
+            window.sessionStorage.setItem('auratio_volunteer_assignments', JSON.stringify(assignments));
           })()`,
         })
       }

@@ -125,6 +125,30 @@ async function inspectBatch3Geometry() {
 
     for (const route of routes) {
       console.log(`\n=================== ROUTE: ${route} ===================`)
+      if (route === '/volunteer/evaluation/sub-8821/submitted' || route === '/volunteer/evaluation/sub-8821/reopened') {
+        await sendCdp(ws, 'Runtime.evaluate', {
+          expression: `(() => {
+            const draft = {
+              submissionId: 'SUB-8821',
+              track: 'Business Pitch / Sales Pitch',
+              trackSlug: 'business-pitch',
+              criteria: {},
+              overallSummary: 'Authoritative evaluation summary on record.',
+              isSubmitted: true,
+              submittedAt: new Date().toISOString(),
+              version: 1,
+              score: 85,
+            };
+            window.sessionStorage.setItem('auratio_volunteer_locked_SUB-8821_v1', JSON.stringify(draft));
+            window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft));
+            const assignments = [
+              { id: 'SUB-8814', track: 'Extempore', trackSlug: 'extempore', assignmentStatus: 'Accepted', publicationStatus: 'Processing' },
+              { id: 'SUB-8799', track: 'Informative', trackSlug: 'informative', assignmentStatus: 'In Evaluation', publicationStatus: 'Processing' }
+            ];
+            window.sessionStorage.setItem('auratio_volunteer_assignments', JSON.stringify(assignments));
+          })()`,
+        })
+      }
       await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}${route}` })
       await new Promise((r) => setTimeout(r, 600))
       await sendCdp(ws, 'Runtime.evaluate', {

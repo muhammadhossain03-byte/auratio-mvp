@@ -857,6 +857,64 @@ async function run() {
       console.log(`  ✓ ${r.path} safely rejected in clean session and redirected to ${r.expectedRedirect}.`)
     }
 
+    // A2. Pre-submission SUB-8821 lifecycle checks: Assigned, Accepted, and In Evaluation must NEVER access /submitted
+    console.log('  Testing SUB-8821 pre-submission lifecycle protection on /submitted...')
+
+    // 1. Fresh Assigned SUB-8821
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__resetVolunteerState && window.__resetVolunteerState()',
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821/submitted` })
+    await new Promise((res) => setTimeout(res, 400))
+    let path8821 = await getPathname()
+    if (path8821 !== '/volunteer/assignments') {
+      throw new Error(`Expected fresh Assigned SUB-8821 /submitted to redirect to /volunteer/assignments, got ${path8821}`)
+    }
+    console.log('  ✓ Assigned SUB-8821 direct /submitted rejected and redirected to /volunteer/assignments.')
+
+    // 2. Accepted SUB-8821
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const assignments = [
+          { id: 'SUB-8821', track: 'Business Pitch / Sales Pitch', trackSlug: 'business-pitch', assignmentStatus: 'Accepted', publicationStatus: 'Processing' },
+          { id: 'SUB-8814', track: 'Extempore', trackSlug: 'extempore', assignmentStatus: 'Accepted', publicationStatus: 'Processing' },
+          { id: 'SUB-8799', track: 'Informative', trackSlug: 'informative', assignmentStatus: 'In Evaluation', publicationStatus: 'Processing' }
+        ];
+        window.sessionStorage.setItem('auratio_volunteer_assignments', JSON.stringify(assignments));
+      })()`,
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821/submitted` })
+    await new Promise((res) => setTimeout(res, 400))
+    path8821 = await getPathname()
+    if (path8821 !== '/volunteer/assignments') {
+      throw new Error(`Expected Accepted SUB-8821 /submitted to redirect to /volunteer/assignments, got ${path8821}`)
+    }
+    console.log('  ✓ Accepted SUB-8821 direct /submitted rejected and redirected to /volunteer/assignments.')
+
+    // 3. In Evaluation SUB-8821
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const assignments = [
+          { id: 'SUB-8821', track: 'Business Pitch / Sales Pitch', trackSlug: 'business-pitch', assignmentStatus: 'In Evaluation', publicationStatus: 'Processing' },
+          { id: 'SUB-8814', track: 'Extempore', trackSlug: 'extempore', assignmentStatus: 'Accepted', publicationStatus: 'Processing' },
+          { id: 'SUB-8799', track: 'Informative', trackSlug: 'informative', assignmentStatus: 'In Evaluation', publicationStatus: 'Processing' }
+        ];
+        window.sessionStorage.setItem('auratio_volunteer_assignments', JSON.stringify(assignments));
+      })()`,
+    })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/volunteer/evaluation/sub-8821/submitted` })
+    await new Promise((res) => setTimeout(res, 400))
+    path8821 = await getPathname()
+    if (path8821 !== '/volunteer/assignments') {
+      throw new Error(`Expected In Evaluation SUB-8821 /submitted to redirect to /volunteer/assignments, got ${path8821}`)
+    }
+    console.log('  ✓ In Evaluation SUB-8821 direct /submitted rejected and redirected to /volunteer/assignments.')
+
+    // Reset volunteer state back to clean
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__resetVolunteerState && window.__resetVolunteerState()',
+    })
+
     // B. Real-browser scoring workspace test for representative tracks using explicit test fixture seeding
     const representativeTracks = [
       { id: 'SUB-SYNTH-PER', slug: 'persuasive', label: 'Persuasive', criteria: ['Ethos, Pathos, and Logos balance', 'Audience emotional resonance', 'Urgency and conviction', 'Objection anticipation and resistance handling'] },

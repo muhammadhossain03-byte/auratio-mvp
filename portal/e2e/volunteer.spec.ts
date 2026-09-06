@@ -1167,4 +1167,174 @@ test.describe('Volunteer Critical Regression', () => {
       expect(historyTableText).not.toContain('Motivational')
     })
   })
+
+  test.describe('V-04: Submitted route lifecycle integrity & bypass elimination', () => {
+    test('1. Fresh canonical SUB-8821 starts Assigned and direct navigation to /volunteer/evaluation/sub-8821/submitted does NOT render Evaluation submitted', async ({ page }) => {
+      await page.goto('/volunteer/assignments')
+      await expect(page).toHaveURL('/volunteer/assignments')
+
+      const initialAssignment = await page.evaluate(() => {
+        const win = window as any
+        return win.__getVolunteerAssignment ? win.__getVolunteerAssignment('SUB-8821') : null
+      })
+      expect(initialAssignment?.assignmentStatus).toBe('Assigned')
+
+      await page.goto('/volunteer/evaluation/sub-8821/submitted')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      const bodyText = await page.innerText('body')
+      expect(bodyText).not.toContain('Evaluation submitted')
+      expect(bodyText).toContain('Active Assignments')
+    })
+
+    test('2. Accepted SUB-8821 still cannot access submitted page', async ({ page }) => {
+      await page.goto('/volunteer/assignments')
+      await page.evaluate(() => {
+        const assignments = [
+          { id: 'SUB-8821', track: 'Business Pitch / Sales Pitch', trackSlug: 'business-pitch', assignmentStatus: 'Accepted', publicationStatus: 'Processing' },
+          { id: 'SUB-8814', track: 'Extempore', trackSlug: 'extempore', assignmentStatus: 'Accepted', publicationStatus: 'Processing' },
+          { id: 'SUB-8799', track: 'Informative', trackSlug: 'informative', assignmentStatus: 'In Evaluation', publicationStatus: 'Processing' },
+        ]
+        window.sessionStorage.setItem('auratio_volunteer_assignments', JSON.stringify(assignments))
+      })
+
+      await page.goto('/volunteer/evaluation/sub-8821/submitted')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      const bodyText = await page.innerText('body')
+      expect(bodyText).not.toContain('Evaluation submitted')
+    })
+
+    test('3. In-Evaluation SUB-8821 still cannot access submitted page', async ({ page }) => {
+      await page.goto('/volunteer/assignments')
+      await page.evaluate(() => {
+        const assignments = [
+          { id: 'SUB-8821', track: 'Business Pitch / Sales Pitch', trackSlug: 'business-pitch', assignmentStatus: 'In Evaluation', publicationStatus: 'Processing' },
+          { id: 'SUB-8814', track: 'Extempore', trackSlug: 'extempore', assignmentStatus: 'Accepted', publicationStatus: 'Processing' },
+          { id: 'SUB-8799', track: 'Informative', trackSlug: 'informative', assignmentStatus: 'In Evaluation', publicationStatus: 'Processing' },
+        ]
+        window.sessionStorage.setItem('auratio_volunteer_assignments', JSON.stringify(assignments))
+      })
+
+      await page.goto('/volunteer/evaluation/sub-8821/submitted')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      const bodyText = await page.innerText('body')
+      expect(bodyText).not.toContain('Evaluation submitted')
+    })
+
+    test('4. After a genuine valid completed submission, /volunteer/evaluation/sub-8821/submitted renders correctly', async ({ page }) => {
+      await page.goto('/volunteer/assignments')
+      await page.evaluate(() => {
+        const win = window as any
+        const draft = win.__getVolunteerScoringDraft ? win.__getVolunteerScoringDraft('SUB-8821') : null
+        if (!draft) throw new Error('No draft')
+
+        for (const [_, cData] of Object.entries(draft.criteria as Record<string, any>)) {
+          cData.anchor = 'Competent'
+          cData.exactScore = Math.min(cData.maxPoints, 4)
+          cData.evidenceTimestamp = '01:23'
+          cData.evidence = 'Valid evidence observed in presentation.'
+          cData.strength = 'Clear delivery and confident tone.'
+          cData.weakness = 'Could expand on next steps.'
+          cData.advice = 'Structure the closing ask with tighter milestones.'
+        }
+        draft.overallSummary = 'Thorough evaluation of the business pitch presentation.'
+        window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft))
+
+        win.__submitVolunteerEvaluation('SUB-8821')
+      })
+
+      await page.goto('/volunteer/evaluation/sub-8821/submitted')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821/submitted')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toHaveText('Evaluation submitted')
+      await expect(page.locator('p.auratio-volunteer-page-subtitle')).toContainText('SUB-8821 • evaluator work complete')
+      await expect(page.locator('text=Assignment transition complete')).toBeVisible()
+      await expect(page.locator('text=Publication remains independent')).toBeVisible()
+
+      await page.goto('/volunteer/assignments')
+      const assignmentsText = await page.innerText('body')
+      expect(assignmentsText).not.toContain('SUB-8821')
+
+      await page.goto('/volunteer/completed')
+      const completedText = await page.innerText('body')
+      expect(completedText).toContain('SUB-8821')
+    })
+
+    test('5. Unknown IDs fail safely and redirect to assignments', async ({ page }) => {
+      await page.goto('/volunteer/evaluation/sub-unknown-999/submitted')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      const bodyText = await page.innerText('body')
+      expect(bodyText).not.toContain('Evaluation submitted')
+    })
+
+    test('6. Synthetic unseeded IDs continue failing safely', async ({ page }) => {
+      await page.goto('/volunteer/evaluation/sub-synth-nd/submitted')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      await page.goto('/volunteer/evaluation/sub-synth-mkt/submitted')
+      await expect(page).toHaveURL('/volunteer/assignments')
+    })
+
+    test('7. Submitted locking and duplicate submission blocking pass', async ({ page }) => {
+      await page.goto('/volunteer/assignments')
+      await page.evaluate(() => {
+        const win = window as any
+        const draft = win.__getVolunteerScoringDraft ? win.__getVolunteerScoringDraft('SUB-8821') : null
+        for (const [_, cData] of Object.entries(draft.criteria as Record<string, any>)) {
+          cData.anchor = 'Excellent'
+          cData.exactScore = cData.maxPoints
+          cData.evidenceTimestamp = '02:15'
+          cData.evidence = 'Excellent pitch delivery.'
+          cData.strength = 'Engaging throughout.'
+          cData.weakness = 'None.'
+          cData.advice = 'Keep standard high.'
+        }
+        draft.overallSummary = 'Outstanding performance across all rubrics.'
+        window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft))
+        win.__submitVolunteerEvaluation('SUB-8821')
+      })
+
+      const secondSubmit = await page.evaluate(() => {
+        const win = window as any
+        return win.__submitVolunteerEvaluation ? win.__submitVolunteerEvaluation('SUB-8821') : null
+      })
+      expect(secondSubmit?.success).toBe(false)
+
+      await page.goto('/volunteer/evaluation/sub-8821/review')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8821')
+
+      await page.goto('/volunteer/evaluation/sub-8821')
+      await expect(page).toHaveURL('/volunteer/completed/sub-8821')
+    })
+
+    test('8. Formal reopened workflow still works and blocks submitted route until resubmission', async ({ page }) => {
+      await page.goto('/volunteer/assignments')
+      await page.evaluate(() => {
+        const win = window as any
+        const draft = win.__getVolunteerScoringDraft ? win.__getVolunteerScoringDraft('SUB-8821') : null
+        for (const [_, cData] of Object.entries(draft.criteria as Record<string, any>)) {
+          cData.anchor = 'Competent'
+          cData.exactScore = 3
+          cData.evidenceTimestamp = '01:00'
+          cData.evidence = 'Good evidence.'
+          cData.strength = 'Solid.'
+          cData.weakness = 'Pacing.'
+          cData.advice = 'Adjust pace.'
+        }
+        draft.overallSummary = 'Initial submission summary.'
+        window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft))
+        win.__submitVolunteerEvaluation('SUB-8821')
+      })
+
+      await page.goto('/volunteer/evaluation/sub-8821/reopened')
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821/reopened')
+      await expect(page.locator('h2.auratio-volunteer-page-title')).toContainText('SUB-8821 — Reopened Evaluation')
+
+      await page.locator('button.auratio-volunteer-btn--primary', { hasText: 'Continue Correction' }).click()
+      await expect(page).toHaveURL('/volunteer/evaluation/sub-8821')
+
+      // Reopened SUB-8821 is now in editable In Evaluation state; direct access to /submitted must be rejected!
+      await page.goto('/volunteer/evaluation/sub-8821/submitted')
+      await expect(page).toHaveURL('/volunteer/assignments')
+      const bodyText = await page.innerText('body')
+      expect(bodyText).not.toContain('Evaluation submitted')
+    })
+  })
 })
