@@ -99,6 +99,10 @@ export const CANONICAL_ACTIVE_ASSIGNMENTS: ActiveAssignment[] = [
   },
 ]
 
+/**
+ * Test fixture utility catalogue.
+ * This catalogue must NEVER participate in product runtime entity resolution.
+ */
 export const SYNTHETIC_ALL_TRACK_ASSIGNMENTS: ActiveAssignment[] = [
   {
     id: 'SUB-SYNTH-INF',
@@ -249,9 +253,13 @@ export function saveVolunteerAssignments(assignments: ActiveAssignment[]): void 
 export function getVolunteerAssignment(submissionId: string): ActiveAssignment | null {
   const normalizedId = submissionId.toUpperCase()
   const assignments = getVolunteerAssignments()
-  const found = assignments.find((a) => a.id.toUpperCase() === normalizedId)
-  if (found) return found
-  return SYNTHETIC_ALL_TRACK_ASSIGNMENTS.find((a) => a.id.toUpperCase() === normalizedId) ?? null
+  return assignments.find((a) => a.id.toUpperCase() === normalizedId) ?? null
+}
+
+export function seedVolunteerAssignment(assignment: ActiveAssignment): void {
+  const current = getVolunteerAssignments()
+  const filtered = current.filter((a) => a.id.toUpperCase() !== assignment.id.toUpperCase())
+  saveVolunteerAssignments([...filtered, assignment])
 }
 
 export function updateAssignmentStatus(submissionId: string, status: ActiveAssignment['assignmentStatus']): void {
@@ -711,5 +719,5 @@ if (typeof window !== 'undefined') {
   win.__getCriteriaForTrack = getCriteriaForTrack
   win.__CANONICAL_TRACK_REGISTRY = CANONICAL_TRACK_REGISTRY
   win.__AUTHORITATIVE_MVP_TRACKS = AUTHORITATIVE_MVP_TRACKS
-  win.__SYNTHETIC_ALL_TRACK_ASSIGNMENTS = SYNTHETIC_ALL_TRACK_ASSIGNMENTS
+  win.__seedVolunteerAssignment = seedVolunteerAssignment
 }

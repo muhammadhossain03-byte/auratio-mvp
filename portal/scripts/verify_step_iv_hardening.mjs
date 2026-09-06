@@ -828,18 +828,61 @@ async function run() {
     console.log('  ✓ Generic Business Pitch fallback eradication confirmed.')
     console.log('  ✓ Persuasive rubric CTA overlap removal confirmed.')
 
-    // Real-browser scoring workspace test for representative tracks
+    // 8. SYNTHETIC FIXTURE ISOLATION & EXPLICIT TEST SEEDING
+    console.log('\n[8/8] Testing Synthetic Fixture Isolation & Dynamic Test Seeding...')
+
+    // A. Ordinary clean runtime session: direct navigation to synthetic IDs must NOT resolve and must fail safely
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: 'window.__resetVolunteerState && window.__resetVolunteerState()',
+    })
+
+    const unseededSyntheticRoutes = [
+      { path: '/volunteer/evaluation/sub-synth-nd', expectedRedirect: '/volunteer/assignments' },
+      { path: '/volunteer/evaluation/sub-synth-mkt', expectedRedirect: '/volunteer/assignments' },
+      { path: '/volunteer/evaluation/sub-9999', expectedRedirect: '/volunteer/assignments' },
+      { path: '/volunteer/evaluation/sub-synth-nd/criterion', expectedRedirect: '/volunteer/assignments' },
+      { path: '/volunteer/evaluation/sub-synth-nd/review', expectedRedirect: '/volunteer/assignments' },
+      { path: '/volunteer/evaluation/sub-synth-nd/submitted', expectedRedirect: '/volunteer/assignments' },
+      { path: '/volunteer/evaluation/sub-synth-nd/reopened', expectedRedirect: '/volunteer/assignments' },
+      { path: '/volunteer/completed/sub-synth-nd', expectedRedirect: '/volunteer/completed' },
+    ]
+
+    for (const r of unseededSyntheticRoutes) {
+      await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}${r.path}` })
+      await new Promise((res) => setTimeout(res, 400))
+      const currentPath = await getPathname()
+      if (currentPath !== r.expectedRedirect) {
+        throw new Error(`Expected unseeded synthetic route ${r.path} to redirect to ${r.expectedRedirect}, got ${currentPath}`)
+      }
+      console.log(`  ✓ ${r.path} safely rejected in clean session and redirected to ${r.expectedRedirect}.`)
+    }
+
+    // B. Real-browser scoring workspace test for representative tracks using explicit test fixture seeding
     const representativeTracks = [
-      { id: 'SUB-SYNTH-PER', label: 'Persuasive', criteria: ['Ethos, Pathos, and Logos balance', 'Audience emotional resonance', 'Urgency and conviction', 'Objection anticipation and resistance handling'] },
-      { id: 'SUB-SYNTH-ARG', label: 'Argumentative / Debate', criteria: ['Premise-claim alignment', 'Evidence rigour', 'Logical validity and signposting', 'Counterarguments and rebuttals'] },
-      { id: 'SUB-SYNTH-ND', label: 'News Delivery', criteria: ['Teleprompter-style cadence', 'Objective authoritative tone', 'Headline-shift signposting', 'Accuracy and composure'] },
-      { id: 'SUB-SYNTH-AP', label: 'Academic — Poster / Project / Thesis', criteria: ['Specialised terminology precision', 'Methodology defensibility', 'Citation and evidence rigour', 'Findings and claim support'] },
-      { id: 'SUB-SYNTH-CR', label: 'Corporate Report', criteria: ['Bottom-Line Up Front orientation', 'Complex data translation', 'Actionable business insight', 'Decision-oriented recommendation'] },
-      { id: 'SUB-SYNTH-INFO', label: 'Infotainment-Oriented', criteria: ['Information-entertainment balance', 'Fast-paced narrative progression', 'Engagement triggers', 'Personality and visual energy'] },
-      { id: 'SUB-SYNTH-MKT', label: 'Marketing / Promotional', criteria: ['Audience pain-point positioning', 'Product or service payoff clarity', 'Conversion drivers', 'Brand-message alignment'] },
+      { id: 'SUB-SYNTH-PER', slug: 'persuasive', label: 'Persuasive', criteria: ['Ethos, Pathos, and Logos balance', 'Audience emotional resonance', 'Urgency and conviction', 'Objection anticipation and resistance handling'] },
+      { id: 'SUB-SYNTH-ARG', slug: 'argumentative-debate', label: 'Argumentative / Debate', criteria: ['Premise-claim alignment', 'Evidence rigour', 'Logical validity and signposting', 'Counterarguments and rebuttals'] },
+      { id: 'SUB-SYNTH-ND', slug: 'news-delivery', label: 'News Delivery', criteria: ['Teleprompter-style cadence', 'Objective authoritative tone', 'Headline-shift signposting', 'Accuracy and composure'] },
+      { id: 'SUB-SYNTH-AP', slug: 'academic-poster-project-thesis', label: 'Academic — Poster / Project / Thesis', criteria: ['Specialised terminology precision', 'Methodology defensibility', 'Citation and evidence rigour', 'Findings and claim support'] },
+      { id: 'SUB-SYNTH-CR', slug: 'corporate-report', label: 'Corporate Report', criteria: ['Bottom-Line Up Front orientation', 'Complex data translation', 'Actionable business insight', 'Decision-oriented recommendation'] },
+      { id: 'SUB-SYNTH-INFO', slug: 'infotainment-oriented', label: 'Infotainment-Oriented', criteria: ['Information-entertainment balance', 'Fast-paced narrative progression', 'Engagement triggers', 'Personality and visual energy'] },
+      { id: 'SUB-SYNTH-MKT', slug: 'marketing-promotional', label: 'Marketing / Promotional', criteria: ['Audience pain-point positioning', 'Product or service payoff clarity', 'Conversion drivers', 'Brand-message alignment'] },
     ]
 
     for (const t of representativeTracks) {
+      // Explicitly seed assignment fixture into session state
+      await sendCdp(ws, 'Runtime.evaluate', {
+        expression: `(() => {
+          const item = {
+            id: '${t.id}',
+            track: '${t.label}',
+            trackSlug: '${t.slug}',
+            assignmentStatus: 'In Evaluation',
+            publicationStatus: 'Processing',
+          };
+          window.sessionStorage.setItem('auratio_volunteer_assignments', JSON.stringify([item]));
+        })()`,
+      })
+
       const url = `http://127.0.0.1:${PORT}/volunteer/evaluation/${t.id.toLowerCase()}`
       await sendCdp(ws, 'Page.navigate', { url })
       await new Promise((res) => setTimeout(res, 400))
@@ -859,7 +902,12 @@ async function run() {
           throw new Error(`Expected workspace for ${t.id} to display criterion "${criterion}"`)
         }
       }
-      console.log(`  ✓ Workspace for ${t.id} correctly rendered 4 criteria for "${t.label}".`)
+      console.log(`  ✓ Workspace for ${t.id} correctly rendered 4 criteria for "${t.label}" after explicit test seeding.`)
+
+      // Clean up session fixture
+      await sendCdp(ws, 'Runtime.evaluate', {
+        expression: 'window.__resetVolunteerState && window.__resetVolunteerState()',
+      })
     }
 
     console.log('\n==================================================')

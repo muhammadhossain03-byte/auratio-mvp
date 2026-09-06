@@ -372,8 +372,23 @@ test.describe('Auratio 13 Human-Evaluation Track Rubrics & Canonical Registry', 
     expect(motivationalCheck.registryHasMotivational).toBe(false)
   })
 
-  test('Volunteer scoring workspace resolves the correct rubric and renders 4 track-specific criteria for all 13 tracks', async ({ page }) => {
+  test('Volunteer scoring workspace resolves the correct rubric and renders 4 track-specific criteria for all 13 tracks via explicit test seeding', async ({ page }) => {
     for (const item of AUTHORITATIVE_13_TRACKS) {
+      // 1. Explicitly seed assignment fixture into local session state
+      await page.goto('/volunteer/assignments')
+      await page.evaluate((fixture) => {
+        const key = 'auratio_volunteer_assignments'
+        const testAssignment = {
+          id: fixture.synthId,
+          track: fixture.label,
+          trackSlug: fixture.slug,
+          assignmentStatus: 'In Evaluation',
+          publicationStatus: 'Processing',
+        }
+        window.sessionStorage.setItem(key, JSON.stringify([testAssignment]))
+      }, item)
+
+      // 2. Open scoring route
       await page.goto(`/volunteer/evaluation/${item.synthId.toLowerCase()}`)
       await expect(page).toHaveURL(`/volunteer/evaluation/${item.synthId.toLowerCase()}`)
 
@@ -393,6 +408,144 @@ test.describe('Auratio 13 Human-Evaluation Track Rubrics & Canonical Registry', 
 
       // Assert completeness shows 0 / 16 criteria scores
       expect(bodyText).toContain('0 / 16')
+
+      // 3. Clean up session fixture
+      await page.evaluate(() => {
+        window.sessionStorage.clear()
+        const win = window as any
+        if (typeof win.__resetVolunteerState === 'function') {
+          win.__resetVolunteerState()
+        }
+      })
     }
+  })
+})
+
+test.describe('Synthetic Fixture Isolation & Safe Fallback Rejection', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/volunteer/assignments')
+    await page.evaluate(() => {
+      window.sessionStorage.clear()
+      const win = window as any
+      if (typeof win.__resetVolunteerState === 'function') {
+        win.__resetVolunteerState()
+      }
+    })
+  })
+
+  test('1. /volunteer/evaluation/SUB-SYNTH-ND does NOT resolve as a legitimate assignment during an ordinary clean runtime session', async ({ page }) => {
+    await page.goto('/volunteer/evaluation/sub-synth-nd')
+    await expect(page).toHaveURL('/volunteer/assignments')
+    const bodyText = await page.innerText('body')
+    expect(bodyText).not.toContain('News Delivery')
+    expect(bodyText).not.toContain('SUB-SYNTH-ND')
+    expect(bodyText).not.toContain('Track Specialisation (News Delivery)')
+  })
+
+  test('2. /volunteer/evaluation/SUB-SYNTH-MKT does NOT resolve as a legitimate assignment during an ordinary clean runtime session', async ({ page }) => {
+    await page.goto('/volunteer/evaluation/sub-synth-mkt')
+    await expect(page).toHaveURL('/volunteer/assignments')
+    const bodyText = await page.innerText('body')
+    expect(bodyText).not.toContain('Marketing / Promotional')
+    expect(bodyText).not.toContain('SUB-SYNTH-MKT')
+    expect(bodyText).not.toContain('Track Specialisation (Marketing / Promotional)')
+  })
+
+  test('3. a completely unknown ID behaves identically safely', async ({ page }) => {
+    await page.goto('/volunteer/evaluation/sub-unknown-9999')
+    await expect(page).toHaveURL('/volunteer/assignments')
+    const bodyText = await page.innerText('body')
+    expect(bodyText).not.toContain('SUB-UNKNOWN-9999')
+  })
+
+  test('4. after a test explicitly seeds a News Delivery assignment into local session state, that assignment legitimately resolves and shows the News Delivery rubric', async ({ page }) => {
+    // Explicitly seed News Delivery assignment into sessionStorage
+    await page.evaluate(() => {
+      const key = 'auratio_volunteer_assignments'
+      const item = {
+        id: 'SUB-SYNTH-ND',
+        track: 'News Delivery',
+        trackSlug: 'news-delivery',
+        assignmentStatus: 'In Evaluation',
+        publicationStatus: 'Processing',
+      }
+      window.sessionStorage.setItem(key, JSON.stringify([item]))
+    })
+
+    await page.goto('/volunteer/evaluation/sub-synth-nd')
+    await expect(page).toHaveURL('/volunteer/evaluation/sub-synth-nd')
+
+    const bodyText = await page.innerText('body')
+    expect(bodyText).toContain('SUB-SYNTH-ND')
+    expect(bodyText).toContain('News Delivery')
+    expect(bodyText).toContain('Track Specialisation (News Delivery) — 0 / 40 points')
+    expect(bodyText).toContain('Teleprompter-style cadence')
+    expect(bodyText).toContain('Objective authoritative tone')
+    expect(bodyText).toContain('Headline-shift signposting')
+    expect(bodyText).toContain('Accuracy and composure')
+    expect(bodyText).toContain('0 / 16')
+  })
+
+  test('5. after a test explicitly seeds Marketing / Promotional, it legitimately resolves with its correct rubric', async ({ page }) => {
+    // Explicitly seed Marketing / Promotional assignment into sessionStorage
+    await page.evaluate(() => {
+      const key = 'auratio_volunteer_assignments'
+      const item = {
+        id: 'SUB-SYNTH-MKT',
+        track: 'Marketing / Promotional',
+        trackSlug: 'marketing-promotional',
+        assignmentStatus: 'In Evaluation',
+        publicationStatus: 'Processing',
+      }
+      window.sessionStorage.setItem(key, JSON.stringify([item]))
+    })
+
+    await page.goto('/volunteer/evaluation/sub-synth-mkt')
+    await expect(page).toHaveURL('/volunteer/evaluation/sub-synth-mkt')
+
+    const bodyText = await page.innerText('body')
+    expect(bodyText).toContain('SUB-SYNTH-MKT')
+    expect(bodyText).toContain('Marketing / Promotional')
+    expect(bodyText).toContain('Track Specialisation (Marketing / Promotional) — 0 / 40 points')
+    expect(bodyText).toContain('Audience pain-point positioning')
+    expect(bodyText).toContain('Product or service payoff clarity')
+    expect(bodyText).toContain('Conversion drivers')
+    expect(bodyText).toContain('Brand-message alignment')
+    expect(bodyText).toContain('0 / 16')
+  })
+
+  test('synthetic test records never appear in ordinary runtime product flows (assignments, completed, criterion, review, submitted, reopened)', async ({ page }) => {
+    // A. Active assignments list
+    await page.goto('/volunteer/assignments')
+    let text = await page.innerText('body')
+    expect(text).not.toContain('SUB-SYNTH')
+
+    // B. Completed / History list
+    await page.goto('/volunteer/completed')
+    text = await page.innerText('body')
+    expect(text).not.toContain('SUB-SYNTH')
+
+    // C. Deep routes redirect safely to assignments or completed
+    await page.goto('/volunteer/assignments/sub-synth-nd')
+    await expect(page).toHaveURL('/volunteer/assignments')
+
+    await page.goto('/volunteer/evaluation/sub-synth-nd/criterion')
+    await expect(page).toHaveURL('/volunteer/assignments')
+
+    await page.goto('/volunteer/evaluation/sub-synth-nd/review')
+    await expect(page).toHaveURL('/volunteer/assignments')
+
+    await page.goto('/volunteer/evaluation/sub-synth-nd/submitted')
+    await expect(page).toHaveURL('/volunteer/assignments')
+
+    await page.goto('/volunteer/evaluation/sub-synth-nd/reopened')
+    await expect(page).toHaveURL('/volunteer/assignments')
+
+    await page.goto('/volunteer/completed/sub-synth-nd')
+    await expect(page).toHaveURL('/volunteer/completed')
+
+    // D. __SYNTHETIC_ALL_TRACK_ASSIGNMENTS global is not exposed on window
+    const hasGlobal = await page.evaluate(() => '__SYNTHETIC_ALL_TRACK_ASSIGNMENTS' in window)
+    expect(hasGlobal).toBe(false)
   })
 })

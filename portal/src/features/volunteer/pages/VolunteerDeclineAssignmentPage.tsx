@@ -1,11 +1,20 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import { getVolunteerAssignment } from '../data/mockVolunteerData'
 
 export function VolunteerDeclineAssignmentPage() {
   const navigate = useNavigate()
+  const { submissionId: routeSubmissionId } = useParams<{ submissionId?: string }>()
+  const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
+  const assignment = getVolunteerAssignment(submissionId)
+
   const [reason, setReason] = useState('')
+
+  if (!assignment) {
+    return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
+  }
 
   function handleConfirmDecline() {
     if (!reason.trim()) return
@@ -13,7 +22,7 @@ export function VolunteerDeclineAssignmentPage() {
   }
 
   function handleCancel() {
-    navigate(portalRoutePaths.volunteer.assignedTask)
+    navigate(`/volunteer/assignments/${submissionId.toLowerCase()}`)
   }
 
   return (
@@ -32,7 +41,7 @@ export function VolunteerDeclineAssignmentPage() {
         className="auratio-volunteer-page-subtitle"
         style={{ width: '650px' }}
       >
-        SUB-8821 • short reason required
+        {assignment.id} • short reason required
       </p>
 
       {/* Header Status Pill */}
@@ -91,7 +100,7 @@ export function VolunteerDeclineAssignmentPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          SUB-8821
+          {assignment.id}
         </span>
 
         <span
@@ -123,7 +132,7 @@ export function VolunteerDeclineAssignmentPage() {
             color: 'var(--auratio-neutral-900)',
           }}
         >
-          Business Pitch / Sales Pitch
+          {assignment.track}
         </span>
 
         {/* Row 2 */}

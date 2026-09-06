@@ -82,6 +82,19 @@ async function run() {
 
   try {
     for (const track of REPRESENTATIVE_TRACKS) {
+      if (track.id !== 'sub-8821') {
+        await page.goto(`http://127.0.0.1:${PORT}/volunteer/assignments`)
+        await page.evaluate((t) => {
+          const item = {
+            id: t.id.toUpperCase(),
+            track: t.label,
+            trackSlug: t.slug,
+            assignmentStatus: 'In Evaluation',
+            publicationStatus: 'Processing',
+          }
+          window.sessionStorage.setItem('auratio_volunteer_assignments', JSON.stringify([item]))
+        }, track)
+      }
       const url = `http://127.0.0.1:${PORT}/volunteer/evaluation/${track.id}`
       console.log(`Navigating to ${url} (${track.label})...`)
       await page.goto(url, { waitUntil: 'networkidle' })

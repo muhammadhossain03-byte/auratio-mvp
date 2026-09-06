@@ -1,11 +1,19 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import { isEvaluationSubmitted } from '../data/mockVolunteerData'
 
 export function VolunteerEvaluationSubmittedPage() {
   const navigate = useNavigate()
   const { submissionId: routeSubmissionId } = useParams<{ submissionId?: string }>()
   const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()
+
+  const isSubmitted = isEvaluationSubmitted(submissionId)
+  const isCanonicalProto = submissionId === 'SUB-8821'
+
+  if (!isSubmitted && !isCanonicalProto) {
+    return <Navigate to={portalRoutePaths.volunteer.assignments} replace />
+  }
 
   return (
     <VolunteerLayout
