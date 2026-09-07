@@ -1,3 +1,5 @@
+export type PortalSupabaseRuntimeMode = 'configured' | 'prototype' | 'unavailable'
+
 export interface SupabasePublicConfig {
   url: string
   publishableKey: string
@@ -36,4 +38,19 @@ export function readSupabasePublicConfig(): SupabasePublicConfig | null {
   }
 
   return { url: parsedUrl.origin, publishableKey }
+}
+
+function isLoopbackRuntime(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+}
+
+export function portalSupabaseRuntimeMode(): PortalSupabaseRuntimeMode {
+  try {
+    if (readSupabasePublicConfig()) return 'configured'
+
+    return import.meta.env.DEV || isLoopbackRuntime() ? 'prototype' : 'unavailable'
+  } catch {
+    return 'unavailable'
+  }
 }

@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { portalLandingPath } from '../../../foundation/integration/auth/portalAccess'
+import {
+  PortalAuthenticationError,
+  signInPortal,
+} from '../../../foundation/integration/auth/portalAuthService'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
 import { AuthButton } from '../components/AuthButton'
 import { AuthInfoCard } from '../components/AuthInfoCard'
 import { AuthInput } from '../components/AuthInput'
@@ -8,12 +14,15 @@ import { AuthLayout } from '../components/AuthLayout'
 
 export function PortalSignInPage() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('name@example.com')
-  const [password, setPassword] = useState('••••••••')
+  const runtimeMode = portalSupabaseRuntimeMode()
+  const prototypeMode = runtimeMode === 'prototype'
+  const [email, setEmail] = useState(prototypeMode ? 'name@example.com' : '')
+  const [password, setPassword] = useState(prototypeMode ? '••••••••' : '')
   const [emailError, setEmailError] = useState('')
   const [passwordError, setPasswordError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  function handleSignIn(e?: FormEvent) {
+  async function handleSignIn(e?: FormEvent) {
     if (e) e.preventDefault()
     let hasError = false
 
@@ -37,7 +46,37 @@ export function PortalSignInPage() {
     }
 
     if (hasError) return
-    navigate(portalRoutePaths.authentication.roleAuthorization)
+
+    if (runtimeMode === 'prototype') {
+      navigate(portalRoutePaths.authentication.roleAuthorization)
+      return
+    }
+
+    if (runtimeMode === 'unavailable') {
+      setPasswordError('Portal authentication configuration is unavailable.')
+      return
+    }
+
+    if (isSubmitting) return
+    setIsSubmitting(true)
+
+    try {
+      const authenticated = await signInPortal(trimmedEmail, password)
+      const landing = portalLandingPath(authenticated.profile)
+
+      navigate(
+        landing ?? portalRoutePaths.authentication.accessUnavailable,
+        { replace: true },
+      )
+    } catch (error) {
+      setPasswordError(
+        error instanceof PortalAuthenticationError
+          ? error.message
+          : 'Unable to sign in to the Auratio Portal.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   function handlePreviewEmailVerification() {
@@ -97,7 +136,7 @@ export function PortalSignInPage() {
           type="submit"
           style={{ marginTop: '16px' }}
         >
-          Sign In
+          {isSubmitting ? 'Signing In…' : 'Sign In'}
         </AuthButton>
       </form>
 
@@ -107,16 +146,18 @@ export function PortalSignInPage() {
         style={{ marginTop: '24px', height: '82px' }}
       />
 
-      <div style={{ marginTop: '6px', marginLeft: '16px' }}>
-        <button
-          type="button"
-          onClick={handlePreviewEmailVerification}
-          className="auratio-auth-link"
-          style={{ fontSize: '12px' }}
-        >
-          Prototype: preview email-verification requirement
-        </button>
-      </div>
+      {prototypeMode ? (
+        <div style={{ marginTop: '6px', marginLeft: '16px' }}>
+          <button
+            type="button"
+            onClick={handlePreviewEmailVerification}
+            className="auratio-auth-link"
+            style={{ fontSize: '12px' }}
+          >
+            Prototype: preview email-verification requirement
+          </button>
+        </div>
+      ) : null}
     </AuthLayout>
   )
 }

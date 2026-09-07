@@ -8,13 +8,17 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../application/auth_repository_provider.dart';
 import '../../application/mock_registration_state.dart';
+import '../../data/auth_repository.dart';
 import '../widgets/authentication_widgets.dart';
 
 class VerifyEmailScreen extends ConsumerStatefulWidget {
-  const VerifyEmailScreen({super.key});
+  const VerifyEmailScreen({this.email, super.key});
 
   static const transitionDelay = Duration(milliseconds: 1800);
+
+  final String? email;
 
   static const screenKey = Key('authentication-verify-email');
   static const emailCopyKey = Key('verify-email-address-copy');
@@ -32,11 +36,13 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   @override
   void initState() {
     super.initState();
-    _verificationTimer = Timer(VerifyEmailScreen.transitionDelay, () {
-      if (mounted) {
-        context.go(AppRoutePaths.emailVerified);
-      }
-    });
+    if (!ref.read(authRepositoryProvider).isConfigured) {
+      _verificationTimer = Timer(VerifyEmailScreen.transitionDelay, () {
+        if (mounted) {
+          context.go(AppRoutePaths.emailVerified);
+        }
+      });
+    }
   }
 
   @override
@@ -45,11 +51,36 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     super.dispose();
   }
 
+  Future<void> _handleResend(String email) async {
+    final repository = ref.read(authRepositoryProvider);
+    if (!repository.isConfigured) {
+      ref.read(mockRegistrationProvider.notifier).resendVerificationEmail();
+      return;
+    }
+
+    if (email.trim().isEmpty) return;
+
+    try {
+      await repository.resendSignUpVerification(email: email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Verification email sent.')));
+    } on AuratioAuthenticationException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final email = ref.watch(
+    final mockEmail = ref.watch(
       mockRegistrationProvider.select((registration) => registration.email),
     );
+    final email = widget.email?.trim().isNotEmpty == true
+        ? widget.email!.trim()
+        : mockEmail;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: authenticationLightOverlayStyle,
@@ -116,9 +147,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 label: 'Resend Verification Email',
                 variant: AuratioButtonVariant.secondary,
                 expand: true,
-                onPressed: () => ref
-                    .read(mockRegistrationProvider.notifier)
-                    .resendVerificationEmail(),
+                onPressed: () => _handleResend(email),
               ),
             ),
             Positioned(

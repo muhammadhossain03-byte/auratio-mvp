@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_brand_lockup.dart';
+import '../../application/auth_repository_provider.dart';
+import '../../data/auth_repository.dart';
 import '../widgets/authentication_widgets.dart';
 
 enum SignInFlow { returning, newAccount }
 
-class SignInScreen extends StatefulWidget {
+class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({this.flow = SignInFlow.returning, super.key});
 
   const SignInScreen.newAccount({super.key}) : flow = SignInFlow.newAccount;
@@ -25,12 +28,13 @@ class SignInScreen extends StatefulWidget {
   final SignInFlow flow;
 
   @override
-  State<SignInScreen> createState() => _SignInScreenState();
+  ConsumerState<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -39,13 +43,58 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  void _handleSignIn() {
-    if (widget.flow == SignInFlow.newAccount) {
-      context.go(AppRoutePaths.onboardingIntro);
+  Future<void> _handleSignIn() async {
+    if (_isSubmitting) return;
+
+    final repository = ref.read(authRepositoryProvider);
+    if (!repository.isConfigured) {
+      if (widget.flow == SignInFlow.newAccount) {
+        context.go(AppRoutePaths.onboardingIntro);
+        return;
+      }
+
+      context.go(AppRoutePaths.home);
       return;
     }
 
-    context.go(AppRoutePaths.home);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      _showAuthenticationError('Enter your email address and password.');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await repository.signIn(email: email, password: password);
+      if (!mounted) return;
+
+      context.go(
+        widget.flow == SignInFlow.newAccount
+            ? AppRoutePaths.onboardingIntro
+            : AppRoutePaths.home,
+      );
+    } on AuratioAuthenticationException catch (error) {
+      if (mounted) _showAuthenticationError(error.message);
+    } catch (_) {
+      if (mounted) {
+        _showAuthenticationError('Unable to sign in right now.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  void _showAuthenticationError(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _handleForgotPassword() {

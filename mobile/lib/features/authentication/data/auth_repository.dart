@@ -50,6 +50,8 @@ abstract interface class AuratioAuthRepository {
     required String password,
   });
 
+  Future<void> resendSignUpVerification({required String email});
+
   Future<AuratioAuthSession?> currentSession();
 
   Future<void> signOut();
@@ -82,6 +84,7 @@ class SupabaseAuratioAuthRepository implements AuratioAuthRepository {
       }
 
       final profile = await _loadProfile(user.id);
+      await _enforceMobileEndUser(profile);
       return AuratioAuthSession(
         userId: user.id,
         email: user.email ?? email.trim(),
@@ -120,11 +123,24 @@ class SupabaseAuratioAuthRepository implements AuratioAuthRepository {
   }
 
   @override
+  Future<void> resendSignUpVerification({required String email}) async {
+    try {
+      await _client.auth.resend(type: OtpType.signup, email: email.trim());
+    } on AuthException catch (error) {
+      throw AuratioAuthenticationException(
+        'verification_resend_failed',
+        error.message,
+      );
+    }
+  }
+
+  @override
   Future<AuratioAuthSession?> currentSession() async {
     final user = _client.auth.currentUser;
     if (user == null) return null;
 
     final profile = await _loadProfile(user.id);
+    await _enforceMobileEndUser(profile);
     return AuratioAuthSession(
       userId: user.id,
       email: user.email ?? '',
@@ -139,6 +155,16 @@ class SupabaseAuratioAuthRepository implements AuratioAuthRepository {
     } on AuthException catch (error) {
       throw AuratioAuthenticationException('sign_out_failed', error.message);
     }
+  }
+
+  Future<void> _enforceMobileEndUser(AuratioAuthProfile profile) async {
+    if (profile.isActiveEndUser) return;
+
+    await _client.auth.signOut();
+    throw const AuratioAuthenticationException(
+      'mobile_access_denied',
+      'This account cannot access the Auratio mobile app.',
+    );
   }
 
   Future<AuratioAuthProfile> _loadProfile(String userId) async {
@@ -191,6 +217,11 @@ class UnconfiguredAuratioAuthRepository implements AuratioAuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> resendSignUpVerification({required String email}) async {
+    throw _error;
+  }
 
   @override
   Future<AuratioAuthSession> signIn({

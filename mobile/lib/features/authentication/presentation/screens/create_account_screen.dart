@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
+import '../../application/auth_repository_provider.dart';
 import '../../application/mock_registration_state.dart';
+import '../../data/auth_repository.dart';
 import '../widgets/authentication_widgets.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
@@ -34,6 +36,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _reserveConfirmationErrorSpace = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -86,7 +89,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     return null;
   }
 
-  void _createAccount() {
+  Future<void> _createAccount() async {
+    if (_isSubmitting) return;
     final isValid = _formKey.currentState?.validate() ?? false;
     final needsConfirmationErrorSpace =
         _validateConfirmation(_confirmPasswordController.text) != null;
@@ -100,14 +104,53 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       return;
     }
 
-    ref
-        .read(mockRegistrationProvider.notifier)
-        .capture(
-          fullName: _fullNameController.text,
-          email: _emailController.text,
-          password: _passwordController.text,
+    final repository = ref.read(authRepositoryProvider);
+    if (!repository.isConfigured) {
+      ref
+          .read(mockRegistrationProvider.notifier)
+          .capture(
+            fullName: _fullNameController.text,
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
+      context.go(AppRoutePaths.verifyEmail);
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final result = await repository.signUp(
+        displayName: _fullNameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+
+      if (result.emailConfirmationRequired) {
+        context.go(
+          Uri(
+            path: AppRoutePaths.verifyEmail,
+            queryParameters: {'email': result.email},
+          ).toString(),
         );
-    context.go(AppRoutePaths.verifyEmail);
+      } else {
+        context.go(AppRoutePaths.emailVerified);
+      }
+    } on AuratioAuthenticationException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override

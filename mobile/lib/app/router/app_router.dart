@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/authentication/application/auth_repository_provider.dart';
+import '../../features/authentication/application/mobile_auth_routing.dart';
 import '../../features/authentication/presentation/screens/create_account_screen.dart';
 import '../../features/authentication/presentation/screens/email_verified_screen.dart';
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
@@ -61,6 +63,8 @@ Page<dynamic> _dissolvePage({required LocalKey key, required Widget child}) {
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
+    redirect: (context, state) =>
+        mobileAuthRedirect(ref.read(authRepositoryProvider), state.uri.path),
     routes: [
       GoRoute(
         path: AppRoutePaths.foundation,
@@ -80,7 +84,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.verifyEmail,
-        builder: (context, state) => const VerifyEmailScreen(),
+        builder: (context, state) =>
+            VerifyEmailScreen(email: state.uri.queryParameters['email']),
       ),
       GoRoute(
         path: AppRoutePaths.emailVerified,

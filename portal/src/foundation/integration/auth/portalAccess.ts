@@ -18,6 +18,18 @@ export function isActivePortalProfile(profile: PortalProfile): boolean {
   return profile.account_status === 'active' && isPortalRole(profile.role)
 }
 
+function pathMatchesRoot(pathname: string, root: string): boolean {
+  return pathname === root || pathname.startsWith(`${root}/`)
+}
+
+export function isProtectedPortalPath(pathname: string): boolean {
+  return (
+    pathMatchesRoot(pathname, '/volunteer') ||
+    pathMatchesRoot(pathname, '/admin') ||
+    pathMatchesRoot(pathname, '/super-admin')
+  )
+}
+
 export function portalLandingPath(profile: PortalProfile): string | null {
   if (!isActivePortalProfile(profile)) return null
 
@@ -39,13 +51,13 @@ export function canProfileAccessPortalPath(
 ): boolean {
   if (!isActivePortalProfile(profile)) return false
 
-  if (pathname.startsWith('/super-admin')) {
+  if (pathMatchesRoot(pathname, '/super-admin')) {
     return profile.role === 'super_admin'
   }
-  if (pathname.startsWith('/admin')) {
+  if (pathMatchesRoot(pathname, '/admin')) {
     return profile.role === 'admin' || profile.role === 'super_admin'
   }
-  if (pathname.startsWith('/volunteer')) {
+  if (pathMatchesRoot(pathname, '/volunteer')) {
     return profile.role === 'volunteer'
   }
 

@@ -67,11 +67,15 @@ import {
   SuperAdminInviteAdminPage,
   SuperAdminProtectedRootPage,
 } from '../../features/superAdmin'
+import { PortalRouteAccessBoundary } from '../../foundation/integration/auth/PortalRouteAccessBoundary'
 import { portalRoutePaths } from './routePaths'
 
 // Journey route groups are reserved in routePaths and are registered here only
 // as their corresponding Step IV screens are implemented.
 export const router = createBrowserRouter([
+  {
+    element: <PortalRouteAccessBoundary />,
+    children: [
   {
     path: portalRoutePaths.foundation,
     element: <Navigate to={portalRoutePaths.authentication.signIn} replace />,
@@ -407,6 +411,8 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.superAdmin.protectedRootAccount,
     element: <SuperAdminProtectedRootPage />,
+  },
+    ],
   },
 ])
 

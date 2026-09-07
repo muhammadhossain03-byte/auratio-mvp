@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'supabase_config.dart';
@@ -16,6 +17,12 @@ abstract final class AuratioSupabase {
     _config = config;
 
     if (!config.isConfigured) {
+      if (kReleaseMode) {
+        throw const AuratioSupabaseConfigurationException(
+          'SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are required for release builds.',
+        );
+      }
+
       return;
     }
 
