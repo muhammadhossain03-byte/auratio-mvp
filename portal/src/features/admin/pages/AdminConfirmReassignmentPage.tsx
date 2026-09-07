@@ -1,205 +1,93 @@
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { confirmHE0142Reassignment } from '../data/mockAdminData'
+import {
+  clearHE0142PendingReassignment,
+  confirmHE0142Reassignment,
+  getHE0142AssignmentState,
+  getHE0142PendingReassignment,
+  requestReReviewModerationEntity,
+} from '../data/mockAdminData'
 import { AdminLayout } from '../components/AdminLayout'
 
 export function AdminConfirmReassignmentPage() {
   const navigate = useNavigate()
+  const current = getHE0142AssignmentState()
+  const pending = getHE0142PendingReassignment()
+  const [reason, setReason] = useState('')
+
+  if (!pending || !current.activeOwner) {
+    return <Navigate to={portalRoutePaths.admin.requestDetailsRouting} replace />
+  }
+
+  const returnPath = pending.source === 'moderation'
+    ? portalRoutePaths.admin.moderationReview
+    : portalRoutePaths.admin.requestDetailsRouting
 
   function handleConfirm() {
-    confirmHE0142Reassignment()
-    navigate(portalRoutePaths.admin.requests)
+    if (!pending || reason.trim().length === 0) return
+    confirmHE0142Reassignment(reason.trim())
+    if (pending.source === 'moderation') {
+      requestReReviewModerationEntity('SUB-8821')
+      navigate(portalRoutePaths.admin.evaluations)
+    } else {
+      navigate(portalRoutePaths.admin.requestDetailsRouting)
+    }
   }
 
   function handleCancel() {
-    navigate(portalRoutePaths.admin.requests)
+    clearHE0142PendingReassignment()
+    navigate(returnPath)
   }
 
   return (
-    <AdminLayout
-      ariaLabel="Confirm Reassignment"
-      topbarTitle="Reassign Human Evaluation"
-      activeNav="requests"
-      topbarRightVariant="pill"
-    >
-      <h2
-        className="auratio-admin-page-title"
-        style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
-      >
-        Confirm Reassignment
-      </h2>
-      <p
-        className="auratio-admin-page-subtitle"
-        style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
-      >
-        HE-0142 • this confirmation performs supersession and ownership transfer
+    <AdminLayout ariaLabel="Confirm Reassignment" topbarTitle="Reassign Human Evaluation" activeNav={pending.source === 'moderation' ? 'moderation' : 'requests'} topbarRightVariant="pill">
+      <h2 className="auratio-admin-page-title" style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}>Confirm Reassignment</h2>
+      <p className="auratio-admin-page-subtitle" style={{ top: '78px', fontSize: '16px', lineHeight: '24px' }}>
+        HE-0142 • staged replacement • ownership has not changed yet
       </p>
 
-      {/* Previous Assignment Card */}
-      <div
-        className="auratio-admin-panel"
-        style={{
-          position: 'absolute',
-          left: '30px',
-          top: '122px',
-          width: '510px',
-          height: '260px',
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #DCE3ED',
-          borderRadius: '16px',
-          boxSizing: 'border-box',
-          padding: '18px',
-        }}
-      >
-        <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#111827' }}>
-          Previous assignment
-        </div>
-        <div style={{ fontSize: '20px', fontWeight: 600, lineHeight: '28px', color: '#111827', marginTop: '18px' }}>
-          Farhana Islam
-        </div>
-        <div style={{ fontSize: '14px', fontWeight: 400, lineHeight: '20px', color: '#4E5968', marginTop: '16px' }}>
-          Assignment Status: In Evaluation
-        </div>
-        <div style={{ fontSize: '14px', fontWeight: 600, lineHeight: '20px', color: '#111827', marginTop: '24px' }}>
-          Will become: Reassigned / Superseded
-        </div>
-        <div style={{ fontSize: '14px', fontWeight: 600, lineHeight: '20px', color: '#111827', marginTop: '24px' }}>
-          Active ownership/access will be revoked.
-        </div>
+      <div className="auratio-admin-panel" data-testid="previous-assignment-card" style={{ position: 'absolute', left: '30px', top: '122px', width: '510px', height: '248px', padding: '18px', boxSizing: 'border-box' }}>
+        <div style={{ fontSize: '18px', fontWeight: 600 }}>Current assignment</div>
+        <div style={{ marginTop: '18px', fontSize: '20px', fontWeight: 700 }}>{current.activeOwner}</div>
+        <div style={{ marginTop: '18px', fontSize: '14px', color: '#4E5968' }}>Active ownership remains unchanged until confirmation.</div>
+        <div style={{ marginTop: '24px', fontSize: '14px', fontWeight: 600 }}>On confirmation: Reassigned / Superseded</div>
       </div>
 
-      {/* New Assignment Card */}
-      <div
-        className="auratio-admin-panel"
-        style={{
-          position: 'absolute',
-          left: '570px',
-          top: '122px',
-          width: '536px',
-          height: '260px',
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #DCE3ED',
-          borderRadius: '16px',
-          boxSizing: 'border-box',
-          padding: '18px',
-        }}
-      >
-        <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#111827' }}>
-          New assignment
-        </div>
-        <div style={{ fontSize: '20px', fontWeight: 600, lineHeight: '28px', color: '#111827', marginTop: '18px' }}>
-          Nadia Rahman
-        </div>
-        <div style={{ fontSize: '14px', fontWeight: 400, lineHeight: '20px', color: '#4E5968', marginTop: '16px' }}>
-          Track eligible: Yes
-        </div>
-        <div style={{ fontSize: '14px', fontWeight: 400, lineHeight: '20px', color: '#4E5968', marginTop: '24px' }}>
-          Effective availability: Available
-        </div>
-        <div style={{ fontSize: '14px', fontWeight: 600, lineHeight: '20px', color: '#111827', marginTop: '24px' }}>
-          Will become sole active assignee.
-        </div>
+      <div className="auratio-admin-panel" data-testid="new-assignment-card" style={{ position: 'absolute', left: '570px', top: '122px', width: '536px', height: '248px', padding: '18px', boxSizing: 'border-box' }}>
+        <div style={{ fontSize: '18px', fontWeight: 600 }}>Proposed new assignment</div>
+        <div style={{ marginTop: '18px', fontSize: '20px', fontWeight: 700 }}>{pending.candidate}</div>
+        <div style={{ marginTop: '18px', fontSize: '14px', color: '#4E5968' }}>Track eligible: Yes • Effective availability: Available</div>
+        <div style={{ marginTop: '24px', fontSize: '14px', fontWeight: 600 }}>On confirmation: sole active assignee</div>
       </div>
 
-      {/* Reassignment Consequence Card */}
-      <div
-        className="auratio-admin-panel"
-        style={{
-          position: 'absolute',
-          left: '30px',
-          top: '412px',
-          width: '1076px',
-          height: '170px',
-          backgroundColor: '#FFF7E8',
-          border: '1px solid #DCE3ED',
-          borderRadius: '16px',
-          boxSizing: 'border-box',
-          padding: '18px',
-        }}
-      >
-        <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#925F12' }}>
-          Reassignment consequence
+      <div className="auratio-admin-panel" style={{ position: 'absolute', left: '30px', top: '400px', width: '1076px', height: '208px', padding: '18px', boxSizing: 'border-box', backgroundColor: '#FFF7E8' }}>
+        <div style={{ fontSize: '18px', fontWeight: 600, color: '#925F12' }}>Reassignment consequence</div>
+        <div style={{ marginTop: '12px', fontSize: '13px', lineHeight: '19px', color: '#925F12' }}>
+          The old owner loses active access and any old draft becomes non-actionable. Audit provenance remains retained.
+          {pending.source === 'moderation' ? ' The previously submitted evaluator version remains immutable and the reassignment opens a new editable re-review version.' : ''}
         </div>
-        <div
-          style={{
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '20px',
-            color: '#925F12',
-            marginTop: '14px',
-            width: '1010px',
-          }}
-        >
-          Confirming does not create two assignments. It closes the prior active assignment as Reassigned / Superseded, revokes Farhana’s access, and creates Nadia as the one active assignee.
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', marginTop: '22px' }}>
-          <div style={{ width: '222px', fontSize: '12px', fontWeight: 600, color: '#925F12' }}>
-            Reason where applicable
-          </div>
-          <div
-            style={{
-              width: '690px',
-              height: '42px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #C8D2E0',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '0 16px',
-              boxSizing: 'border-box',
-              fontSize: '12px',
-              color: '#6B788A',
-            }}
-          >
-            Scheduling / operational reassignment
-          </div>
-        </div>
+        <label htmlFor="reassignment-reason" style={{ display: 'block', marginTop: '16px', fontSize: '12px', fontWeight: 700, color: '#925F12' }}>
+          Internal reassignment reason (required)
+        </label>
+        <input
+          id="reassignment-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Operational coverage / scheduling reason"
+          className="auratio-admin-input"
+          style={{ marginTop: '8px', width: '760px', height: '40px' }}
+        />
       </div>
 
-      {/* Action Buttons */}
-      <div style={{ position: 'absolute', left: '30px', top: '618px', display: 'flex', gap: '16px' }}>
-        <button
-          type="button"
-          onClick={handleConfirm}
-          className="auratio-admin-btn auratio-admin-btn--primary"
-          style={{
-            width: '230px',
-            height: '44px',
-            fontSize: '14px',
-            fontWeight: 600,
-          }}
-        >
+      <div style={{ position: 'absolute', left: '30px', top: '634px', display: 'flex', gap: '16px' }}>
+        <button type="button" onClick={handleConfirm} disabled={reason.trim().length === 0} className="auratio-admin-btn auratio-admin-btn--primary" style={{ width: '230px', height: '44px' }}>
           Confirm Reassignment
         </button>
-
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="auratio-admin-btn auratio-admin-btn--secondary"
-          style={{
-            width: '150px',
-            height: '44px',
-            fontSize: '14px',
-            fontWeight: 600,
-          }}
-        >
-          Cancel
-        </button>
+        <button type="button" onClick={handleCancel} className="auratio-admin-btn auratio-admin-btn--secondary" style={{ width: '150px', height: '44px' }}>Cancel</button>
       </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          left: '30px',
-          top: '676px',
-          fontSize: '12px',
-          fontWeight: 400,
-          lineHeight: '18px',
-          color: '#6B788A',
-        }}
-      >
-        Cancel preserves the current Farhana assignment unchanged.
+      <div style={{ position: 'absolute', left: '30px', top: '692px', fontSize: '12px', color: '#6B788A' }}>
+        Cancel clears the staged candidate and preserves {current.activeOwner} as the sole active owner.
       </div>
     </AdminLayout>
   )

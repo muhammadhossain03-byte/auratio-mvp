@@ -37,7 +37,11 @@ import {
   AdminConfirmModerationApprovalPage,
   AdminConfirmModerationRejectionPage,
   AdminConfirmReassignmentPage,
+  AdminCancelRequestPage,
   AdminEvaluationApprovedAiPage,
+  AdminEvaluationReassignmentPickerPage,
+  AdminConfirmEvaluationReassignmentPage,
+  AdminCancelEvaluationRequestPage,
   AdminEvaluationProcessingHumanPage,
   AdminEvaluationRecordsPage,
   AdminEvaluationRequestQueuePage,
@@ -241,6 +245,10 @@ export const router = createBrowserRouter([
     element: <AdminConfirmReassignmentPage />,
   },
   {
+    path: portalRoutePaths.admin.cancelRequest,
+    element: <AdminCancelRequestPage />,
+  },
+  {
     path: portalRoutePaths.admin.requestAssignedAi,
     element: <AdminRequestAssignedAiPage />,
   },
@@ -267,6 +275,18 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.admin.evaluationProcessingHuman,
     element: <AdminEvaluationProcessingHumanPage />,
+  },
+  {
+    path: portalRoutePaths.admin.evaluationReassignmentPicker,
+    element: <AdminEvaluationReassignmentPickerPage />,
+  },
+  {
+    path: portalRoutePaths.admin.confirmEvaluationReassignment,
+    element: <AdminConfirmEvaluationReassignmentPage />,
+  },
+  {
+    path: portalRoutePaths.admin.cancelEvaluationRequest,
+    element: <AdminCancelEvaluationRequestPage />,
   },
   {
     path: portalRoutePaths.admin.evaluationApprovedAi,

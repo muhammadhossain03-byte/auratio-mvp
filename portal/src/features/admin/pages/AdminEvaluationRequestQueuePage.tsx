@@ -115,7 +115,13 @@ export function AdminEvaluationRequestQueuePage() {
             <div
               data-request-id={item.id}
               data-routing={item.routing}
-              title={item.declineReason ? `Declined: ${item.declineReason}` : undefined}
+              title={
+                item.declineReason
+                  ? `Declined: ${item.declineReason}`
+                  : item.terminationReason
+                    ? `Cancelled: ${item.terminationReason}`
+                    : undefined
+              }
               style={{
                 display: 'flex',
                 alignItems: 'center',

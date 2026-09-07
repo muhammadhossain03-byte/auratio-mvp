@@ -64,6 +64,7 @@ export async function resetMockState(page: Page): Promise<void> {
 
     if (typeof win.__resetVolunteerState === 'function') win.__resetVolunteerState()
     if (typeof win.__resetHE0142Reassignment === 'function') win.__resetHE0142Reassignment()
+    if (typeof win.__resetSUB8834Lifecycle === 'function') win.__resetSUB8834Lifecycle()
     if (typeof win.__resetSub8821Moderation === 'function') win.__resetSub8821Moderation()
     if (typeof win.__resetFarhanaAvailabilityOverride === 'function') win.__resetFarhanaAvailabilityOverride()
     if (typeof win.__resetFarhanaTrackEligibility === 'function') win.__resetFarhanaTrackEligibility()

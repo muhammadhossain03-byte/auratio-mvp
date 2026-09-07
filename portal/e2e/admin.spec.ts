@@ -55,30 +55,50 @@ test.describe('Admin Request, Moderation, Volunteer, Event, and Audit Regression
     await expect(page).toHaveURL('/admin/requests/req-1034')
     await expect(page.locator('h2.auratio-admin-page-title')).toContainText('REQ-1034')
 
-    // 5. Reassignment flow on REQ-1042
-    await page.goto('/admin/requests/req-1042/reassign')
+    // 5. Reassignment flow on REQ-1042: choose candidate first, then confirm
+    await page.goto('/admin/requests/req-1042')
+    await page.getByRole('button', { name: 'Reassign Human' }).click()
+    await expect(page).toHaveURL('/admin/requests/req-1042/assign')
+    await page.locator('button[data-candidate="Rakib Hasan"]').click()
     await expect(page).toHaveURL('/admin/requests/req-1042/reassign')
+
+    // Candidate selection alone must NOT mutate ownership
+    const stagedOwnership = await page.evaluate(() => {
+      const win = window as any
+      return {
+        owner: win.__getHE0142AssignmentState?.(),
+        pending: win.__getHE0142PendingReassignment?.(),
+      }
+    })
+    expect(stagedOwnership.owner?.activeOwner).toBe('Farhana Islam')
+    expect(stagedOwnership.pending?.candidate).toBe('Rakib Hasan')
 
     // Cancel reassignment - ownership must NOT mutate
     await page.locator('button.auratio-admin-btn--secondary', { hasText: 'Cancel' }).click()
-    await expect(page).toHaveURL('/admin/requests')
+    await expect(page).toHaveURL('/admin/requests/req-1042')
     const cancelOwnership = await page.evaluate(() => {
-      const win = window as unknown as { __getHE0142AssignmentState?: () => { activeOwner: string; supersededOwner: string | null } }
-      return win.__getHE0142AssignmentState?.()
+      const win = window as any
+      return {
+        owner: win.__getHE0142AssignmentState?.(),
+        pending: win.__getHE0142PendingReassignment?.(),
+      }
     })
-    expect(cancelOwnership?.activeOwner).toBe('Farhana Islam')
-    expect(cancelOwnership?.supersededOwner).toBeNull()
+    expect(cancelOwnership.owner?.activeOwner).toBe('Farhana Islam')
+    expect(cancelOwnership.owner?.supersededOwner).toBeNull()
+    expect(cancelOwnership.pending).toBeNull()
 
-    // Confirm reassignment
-    await page.goto('/admin/requests/req-1042/reassign')
+    // Confirm dynamic reassignment to Rakib Hasan
+    await page.getByRole('button', { name: 'Reassign Human' }).click()
+    await page.locator('button[data-candidate="Rakib Hasan"]').click()
+    await page.locator('#reassignment-reason').fill('Regression test reassignment')
     await page.locator('button.auratio-admin-btn--primary', { hasText: 'Confirm Reassignment' }).click()
-    await expect(page).toHaveURL('/admin/requests')
+    await expect(page).toHaveURL('/admin/requests/req-1042')
 
     const confirmOwnership = await page.evaluate(() => {
       const win = window as unknown as { __getHE0142AssignmentState?: () => { activeOwner: string; supersededOwner: string | null } }
       return win.__getHE0142AssignmentState?.()
     })
-    expect(confirmOwnership?.activeOwner).toBe('Nadia Rahman')
+    expect(confirmOwnership?.activeOwner).toBe('Rakib Hasan')
     expect(confirmOwnership?.supersededOwner).toBe('Farhana Islam')
 
     // 6. Invalid request route fallback & malformed nested routes (DEFECT P2-01)

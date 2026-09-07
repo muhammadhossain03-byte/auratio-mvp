@@ -1,244 +1,74 @@
 import { useNavigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { AdminLayout } from '../components/AdminLayout'
+import { getSUB8834LifecycleState } from '../data/mockAdminData'
 
 export function AdminEvaluationProcessingHumanPage() {
   const navigate = useNavigate()
+  const lifecycle = getSUB8834LifecycleState()
+  const cancelled = lifecycle.status === 'Cancelled'
 
   return (
-    <AdminLayout
-      ariaLabel="Evaluation Record Processing Human"
-      topbarTitle="Evaluation Record"
-      activeNav="evaluations"
-      topbarRightVariant="pill"
-    >
-      <h2
-        className="auratio-admin-page-title"
-        style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}
-      >
-        SUB-8834 — Evaluation Record
-      </h2>
-
-      {/* Processing Status Pill */}
+    <AdminLayout ariaLabel="Evaluation Record Processing Human" topbarTitle="Evaluation Record" activeNav="evaluations" topbarRightVariant="pill">
+      <h2 className="auratio-admin-page-title" style={{ top: '34px', fontSize: '32px', lineHeight: '40px', fontWeight: 700 }}>SUB-8834 — Evaluation Record</h2>
       <div
-        className="auratio-admin-status-pill auratio-admin-status-pill--processing"
-        style={{
-          position: 'absolute',
-          left: '900px',
-          top: '36px',
-          width: '190px',
-          height: '34px',
-        }}
+        className={cancelled ? 'auratio-admin-status-pill' : 'auratio-admin-status-pill auratio-admin-status-pill--processing'}
+        style={{ position: 'absolute', left: '900px', top: '36px', width: '190px', height: '34px', ...(cancelled ? { backgroundColor: '#FEE2E2', color: '#991B1B' } : {}) }}
       >
-        Processing
+        {cancelled ? 'Cancelled' : 'Processing'}
       </div>
-
-      <p
-        className="auratio-admin-page-subtitle"
-        style={{ top: '78px', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}
-      >
-        Human Evaluation • evaluator work in progress
+      <p className="auratio-admin-page-subtitle" style={{ top: '78px', fontSize: '16px', lineHeight: '24px' }}>
+        Human Evaluation • {cancelled ? 'terminal request history' : 'evaluator work in progress'}
       </p>
 
-      {/* Left Panel: In-progress Human evaluation */}
-      <div
-        className="auratio-admin-panel"
-        style={{
-          position: 'absolute',
-          left: '30px',
-          top: '124px',
-          width: '520px',
-          height: '430px',
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #DCE3ED',
-          borderRadius: '16px',
-          boxSizing: 'border-box',
-          padding: '18px',
-        }}
-      >
-        <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#111827' }}>
-          In-progress Human evaluation
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '26px' }}>
-          <div style={{ width: '206px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Assigned evaluator
+      <div className="auratio-admin-panel" style={{ position: 'absolute', left: '30px', top: '124px', width: '520px', height: '430px', padding: '18px', boxSizing: 'border-box' }}>
+        <div style={{ fontSize: '18px', fontWeight: 600 }}>{cancelled ? 'Cancelled Human evaluation' : 'In-progress Human evaluation'}</div>
+        {[
+          ['Assigned evaluator', lifecycle.activeOwner || 'None — request cancelled'],
+          ['Prior superseded evaluator', lifecycle.supersededOwner || 'None'],
+          ['Assignment Status', lifecycle.status],
+          ['Evaluator version', `v${lifecycle.version}`],
+          ['Submission Score', '—'],
+          ['Official .docx report', cancelled ? 'Not generated for Cancelled request' : 'Not generated while processing'],
+        ].map(([label, value], index) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', minHeight: '24px', marginTop: index === 0 ? '26px' : '24px' }}>
+            <div style={{ width: '206px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>{label}</div>
+            <div style={{ width: '270px', fontSize: '14px', fontWeight: label === 'Assigned evaluator' ? 700 : 400, color: '#111827' }}>{value}</div>
           </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            Assigned volunteer
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '24px' }}>
-          <div style={{ width: '206px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Assignment Status
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            In Evaluation
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '24px' }}>
-          <div style={{ width: '206px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Submission Score
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
-            —
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '24px' }}>
-          <div style={{ width: '206px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Universal Delivery
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            —
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '24px' }}>
-          <div style={{ width: '206px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Structural Flow
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            —
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '24px' }}>
-          <div style={{ width: '206px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Track Specialisation
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            —
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '24px' }}>
-          <div style={{ width: '206px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Official .docx report
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            Not generated while processing
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Right Panel: Evaluation context */}
-      <div
-        className="auratio-admin-panel"
-        style={{
-          position: 'absolute',
-          left: '580px',
-          top: '124px',
-          width: '526px',
-          height: '430px',
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #DCE3ED',
-          borderRadius: '16px',
-          boxSizing: 'border-box',
-          padding: '18px',
-        }}
-      >
-        <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#111827' }}>
-          Evaluation context
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '34px', marginTop: '22px' }}>
-          <div style={{ width: '202px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Publication Status
+      <div className="auratio-admin-panel" style={{ position: 'absolute', left: '580px', top: '124px', width: '526px', height: '430px', padding: '18px', boxSizing: 'border-box' }}>
+        <div style={{ fontSize: '18px', fontWeight: 600 }}>Evaluation lifecycle</div>
+        <div style={{ marginTop: '24px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>PUBLICATION STATUS</div>
+        <div style={{ marginTop: '6px', fontSize: '14px', fontWeight: 700 }}>{cancelled ? 'Cancelled' : 'Processing'}</div>
+        <div style={{ marginTop: '28px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>CURRENT STATE</div>
+        <div style={{ marginTop: '6px', fontSize: '14px', fontWeight: 600 }}>{cancelled ? 'Terminal — no evaluation result' : 'Evaluation in progress'}</div>
+        {cancelled ? (
+          <div data-testid="sub8834-cancelled-state" style={{ marginTop: '28px', padding: '16px', borderRadius: '12px', backgroundColor: '#FEE2E2', color: '#991B1B' }}>
+            <div style={{ fontSize: '14px', fontWeight: 700 }}>Internal cancellation reason</div>
+            <div style={{ marginTop: '8px', fontSize: '12px', lineHeight: '18px' }}>{lifecycle.terminationReason}</div>
+            <div style={{ marginTop: '8px', fontSize: '12px', lineHeight: '18px' }}>No score or DOCX is produced. The record remains in Admin history.</div>
           </div>
-          <div
-            className="auratio-admin-status-pill auratio-admin-status-pill--processing"
-            style={{ width: '220px', height: '34px' }}
-          >
-            Processing
+        ) : (
+          <div style={{ marginTop: '28px', padding: '16px', borderRadius: '12px', backgroundColor: '#FFF7E8', color: '#925F12' }}>
+            <div style={{ fontSize: '14px', fontWeight: 700 }}>One active evaluator owner</div>
+            <div style={{ marginTop: '8px', fontSize: '12px', lineHeight: '18px' }}>Reassignment is permitted before approval. It requires candidate selection plus confirmation and preserves superseded-owner audit history.</div>
           </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '24px' }}>
-          <div style={{ width: '202px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Current state
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
-            Evaluation in progress
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', height: '24px', marginTop: '28px' }}>
-          <div style={{ width: '202px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Final score
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 400, color: '#111827' }}>
-            Not available yet
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: '28px' }}>
-          <div style={{ width: '202px', fontSize: '12px', fontWeight: 600, color: '#6B788A' }}>
-            Temporary video
-          </div>
-          <div style={{ width: '270px', fontSize: '14px', fontWeight: 400, lineHeight: '20px', color: '#111827' }}>
-            Available to the assigned evaluator and authorized Admin
-          </div>
-        </div>
-
-        {/* Read-only record boundary warning */}
-        <div
-          style={{
-            marginTop: '24px',
-            width: '470px',
-            height: '88px',
-            backgroundColor: '#FFF7E8',
-            border: '1px solid #DCE3ED',
-            borderRadius: '16px',
-            padding: '12px 18px',
-            boxSizing: 'border-box',
-          }}
-        >
-          <div style={{ fontSize: '14px', fontWeight: 600, lineHeight: '20px', color: '#925F12' }}>
-            Read-only record boundary
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 400, lineHeight: '18px', color: '#925F12', marginTop: '6px' }}>
-            This is an operational read-only view. No score editor is exposed while the Human evaluation is in progress.
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Bottom Panel: Navigation */}
-      <div
-        className="auratio-admin-panel"
-        style={{
-          position: 'absolute',
-          left: '30px',
-          top: '584px',
-          width: '1076px',
-          height: '164px',
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #DCE3ED',
-          borderRadius: '16px',
-          boxSizing: 'border-box',
-          padding: '16px 18px',
-        }}
-      >
-        <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#111827' }}>
-          Navigation
+      <div className="auratio-admin-panel" data-testid="sub8834-lifecycle-actions" style={{ position: 'absolute', left: '30px', top: '584px', width: '1076px', height: '164px', padding: '16px 18px', boxSizing: 'border-box' }}>
+        <div style={{ fontSize: '18px', fontWeight: 600 }}>{cancelled ? 'Navigation' : 'Lifecycle actions'}</div>
+        <div style={{ display: 'flex', gap: '16px', marginTop: '18px' }}>
+          {!cancelled && (
+            <>
+              <button type="button" onClick={() => navigate(portalRoutePaths.admin.evaluationReassignmentPicker)} className="auratio-admin-btn auratio-admin-btn--primary" style={{ width: '180px', height: '44px' }}>Reassign Human</button>
+              <button type="button" onClick={() => navigate(portalRoutePaths.admin.cancelEvaluationRequest)} className="auratio-admin-btn auratio-admin-btn--secondary" style={{ width: '170px', height: '44px' }}>Cancel Request</button>
+            </>
+          )}
+          <button type="button" onClick={() => navigate(portalRoutePaths.admin.evaluations)} className="auratio-admin-btn auratio-admin-btn--secondary" style={{ width: '180px', height: '44px' }}>Back to Evaluations</button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => navigate(portalRoutePaths.admin.evaluations)}
-          className="auratio-admin-btn auratio-admin-btn--primary"
-          style={{
-            width: '180px',
-            height: '44px',
-            fontSize: '14px',
-            fontWeight: 600,
-            marginTop: '18px',
-          }}
-        >
-          Back to Evaluations
-        </button>
       </div>
     </AdminLayout>
   )

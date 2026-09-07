@@ -8,16 +8,17 @@ export function AdminRequestDetailsRoutingPage() {
   const routingState = getREQ1042RoutingState()
   const declineRecord = routingState.declineRecord
   const routingStatus = routingState.routing
-
-  const fieldMarginTop = declineRecord ? '11px' : '17px'
-  const firstFieldMarginTop = declineRecord ? '14px' : '20px'
+  const isAssigned = routingStatus === 'Assigned Human'
+  const isCancelled = routingStatus === 'Cancelled'
 
   const subtitleText =
     routingStatus === 'Unassigned'
       ? 'Eligible recording returned to Unassigned queue after evaluator decline'
-      : routingStatus === 'Assigned Human'
-      ? 'Eligible recording assigned to Human Evaluation'
-      : 'Eligible recording awaiting routing decision'
+      : isAssigned
+        ? 'Eligible recording assigned to Human Evaluation'
+        : isCancelled
+          ? 'Human Evaluation request cancelled by Admin'
+          : 'Eligible recording awaiting routing decision'
 
   return (
     <AdminLayout
@@ -26,221 +27,113 @@ export function AdminRequestDetailsRoutingPage() {
       activeNav="requests"
       topbarRightVariant="avatar"
     >
-      <h2
-        className="auratio-admin-page-title"
-        style={{ top: '32px', fontSize: '26px', lineHeight: '34px', fontWeight: 700 }}
-      >
+      <h2 className="auratio-admin-page-title" style={{ top: '32px', fontSize: '26px', lineHeight: '34px', fontWeight: 700 }}>
         REQ-1042
       </h2>
-
-      {/* Eligible Status Pill */}
       <div
         className="auratio-admin-status-pill auratio-admin-status-pill--eligible"
-        style={{
-          position: 'absolute',
-          left: '938px',
-          top: '36px',
-          width: '88px',
-          height: '28px',
-        }}
+        style={{ position: 'absolute', left: '938px', top: '36px', width: '88px', height: '28px' }}
       >
         Eligible
       </div>
-
-      <p
-        className="auratio-admin-page-subtitle"
-        style={{ top: '72px', fontSize: '12px', lineHeight: '18px', fontWeight: 400 }}
-      >
+      <p className="auratio-admin-page-subtitle" style={{ top: '72px', fontSize: '12px', lineHeight: '18px', fontWeight: 400 }}>
         {subtitleText}
       </p>
 
-      {/* Left Panel: Submission */}
       <div
         className="auratio-admin-panel"
-        style={{
-          position: 'absolute',
-          left: '30px',
-          top: '112px',
-          width: '500px',
-          height: '472px',
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #DCE3ED',
-          borderRadius: '16px',
-          boxSizing: 'border-box',
-          padding: '20px',
-        }}
+        style={{ position: 'absolute', left: '30px', top: '112px', width: '500px', height: '472px', padding: '20px', boxSizing: 'border-box' }}
       >
-        <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#111827' }}>
-          Submission
-        </div>
-
-        <div style={{ marginTop: firstFieldMarginTop }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            USER
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Submission</h3>
+        {[
+          ['USER', 'Alex Morgan'],
+          ['TRACK', 'Business Pitch / Sales Pitch'],
+          ['SUBMISSION ID', 'SUB-8821'],
+          ['MEASURED DURATION', '4:12 • Accepted 2:30–5:30'],
+          ['REQUESTED METHOD', 'Human Evaluation'],
+          ['ROUTING STATUS', routingStatus],
+          ['PUBLICATION STATUS', isCancelled ? 'Cancelled' : 'Not started'],
+        ].map(([label, value], index) => (
+          <div key={label} style={{ marginTop: index === 0 ? '20px' : '15px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 500, color: '#6B788A' }}>{label}</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#111827', marginTop: '3px' }}>{value}</div>
           </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
-            Alex Morgan
-          </div>
-        </div>
-
-        <div style={{ marginTop: fieldMarginTop }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            TRACK
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
-            Business Pitch / Sales Pitch
-          </div>
-        </div>
-
-        <div style={{ marginTop: fieldMarginTop }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            SUBMISSION ID
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
-            SUB-8821
-          </div>
-        </div>
-
-        <div style={{ marginTop: fieldMarginTop }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            MEASURED DURATION
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
-            4:12 • Accepted 2:30–5:30
-          </div>
-        </div>
-
-        <div style={{ marginTop: fieldMarginTop }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            REQUESTED METHOD
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
-            Human Evaluation
-          </div>
-        </div>
-
-        <div style={{ marginTop: fieldMarginTop }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            ROUTING STATUS
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
-            {routingStatus}
-          </div>
-        </div>
-
+        ))}
         {declineRecord && (
-          <div style={{ marginTop: fieldMarginTop }}>
-            <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-              DECLINE REASON
-            </div>
-            <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#B42318', marginTop: '3px' }}>
-              {declineRecord.reason}
-            </div>
+          <div style={{ marginTop: '15px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 500, color: '#6B788A' }}>DECLINE REASON</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#B42318', marginTop: '3px' }}>{declineRecord.reason}</div>
           </div>
         )}
-
-        <div style={{ marginTop: fieldMarginTop }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            PUBLICATION STATUS
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: '18px', color: '#111827', marginTop: '3px' }}>
-            Not started
-          </div>
-        </div>
       </div>
 
-      {/* Right Panel: Routing Decision */}
       <div
         className="auratio-admin-panel"
-        style={{
-          position: 'absolute',
-          left: '560px',
-          top: '112px',
-          width: '546px',
-          height: '472px',
-          backgroundColor: '#F3F8FE',
-          border: '1px solid #DCE3ED',
-          borderRadius: '16px',
-          boxSizing: 'border-box',
-          padding: '20px',
-        }}
+        data-testid="req1042-lifecycle-actions"
+        style={{ position: 'absolute', left: '560px', top: '112px', width: '546px', height: '472px', padding: '20px', boxSizing: 'border-box', backgroundColor: '#F3F8FE' }}
       >
-        <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#041B3B' }}>
-          Routing decision
-        </div>
-
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#041B3B' }}>Human Evaluation lifecycle</h3>
         <div style={{ marginTop: '24px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            REQUESTED METHOD
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 600, lineHeight: '20px', color: '#111827', marginTop: '4px' }}>
-            Human Evaluation
+          <div style={{ fontSize: '11px', fontWeight: 500, color: '#6B788A' }}>ACTIVE EVALUATOR OWNER</div>
+          <div style={{ marginTop: '4px', fontSize: '14px', fontWeight: 700, color: '#111827' }}>
+            {routingState.activeOwner || 'None'}
           </div>
         </div>
-
-        <div style={{ marginTop: '26px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            IF AVAILABLE
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate(portalRoutePaths.admin.assignmentPicker)}
-            className="auratio-admin-btn auratio-admin-btn--primary"
-            style={{
-              width: '200px',
-              height: '42px',
-              fontSize: '13px',
-              fontWeight: 600,
-              marginTop: '6px',
-            }}
-          >
-            Assign Human
-          </button>
+        <div style={{ marginTop: '24px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 500, color: '#6B788A' }}>ROUTING STATE</div>
+          <div style={{ marginTop: '4px', fontSize: '14px', fontWeight: 600, color: '#111827' }}>{routingStatus}</div>
         </div>
 
-        <div style={{ marginTop: '28px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A' }}>
-            IF UNAVAILABLE
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 400, lineHeight: '18px', color: '#4E5968', marginTop: '6px', width: '488px' }}>
-            An alternate AI Evaluation may be proposed, but it cannot take effect without explicit end-user consent.
-          </div>
-
+        {isCancelled ? (
           <div
-            role="presentation"
-            aria-hidden="true"
-            className="auratio-admin-btn auratio-admin-btn--secondary auratio-admin-btn--presentation"
-            style={{
-              width: '220px',
-              height: '42px',
-              fontSize: '13px',
-              fontWeight: 600,
-              marginTop: '16px',
-            }}
+            data-testid="req1042-cancelled-state"
+            style={{ marginTop: '28px', padding: '18px', backgroundColor: '#FEE2E2', borderRadius: '12px', border: '1px solid #FECACA' }}
           >
-            Propose AI Redirect
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#991B1B' }}>Request cancelled</div>
+            <div style={{ marginTop: '10px', fontSize: '12px', lineHeight: '18px', color: '#991B1B' }}>
+              Internal reason: {routingState.terminationReason || 'Recorded by Admin'}
+            </div>
+            <div style={{ marginTop: '10px', fontSize: '12px', lineHeight: '18px', color: '#991B1B' }}>
+              No score or DOCX report is produced. The terminal record remains in Admin history.
+            </div>
           </div>
-
-          <div style={{ fontSize: '11px', fontWeight: 500, lineHeight: '16px', color: '#6B788A', marginTop: '22px', width: '488px' }}>
-            Declining the alternate method cancels the request/session. No evaluation or score is created.
-          </div>
-        </div>
+        ) : (
+          <>
+            <div style={{ marginTop: '30px', display: 'flex', gap: '14px' }}>
+              <button
+                type="button"
+                onClick={() => navigate(portalRoutePaths.admin.assignmentPicker)}
+                className="auratio-admin-btn auratio-admin-btn--primary"
+                style={{ width: '200px', height: '42px', fontSize: '13px', fontWeight: 600 }}
+              >
+                {isAssigned ? 'Reassign Human' : 'Assign Human'}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(portalRoutePaths.admin.cancelRequest)}
+                className="auratio-admin-btn auratio-admin-btn--secondary"
+                style={{ width: '170px', height: '42px', fontSize: '13px', fontWeight: 600 }}
+              >
+                Cancel Request
+              </button>
+            </div>
+            <div style={{ marginTop: '24px', fontSize: '12px', lineHeight: '18px', color: '#4E5968', width: '488px' }}>
+              {isAssigned
+                ? 'Reassignment requires candidate selection and a separate confirmation. The existing owner remains active until confirmation.'
+                : 'Initial assignment selects one active Human evaluator. If the current evaluator has declined, the request remains Unassigned until this action succeeds.'}
+            </div>
+            <div style={{ marginTop: '22px', fontSize: '11px', lineHeight: '16px', color: '#6B788A' }}>
+              Cancel Request requires an internal Admin reason and terminates this request before approval.
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Back to Queue Button */}
       <button
         type="button"
         onClick={() => navigate(portalRoutePaths.admin.requests)}
         className="auratio-admin-btn auratio-admin-btn--secondary"
-        style={{
-          position: 'absolute',
-          left: '30px',
-          top: '628px',
-          width: '170px',
-          height: '42px',
-          fontSize: '13px',
-          fontWeight: 600,
-        }}
+        style={{ position: 'absolute', left: '30px', top: '628px', width: '170px', height: '42px', fontSize: '13px', fontWeight: 600 }}
       >
         Back to Queue
       </button>

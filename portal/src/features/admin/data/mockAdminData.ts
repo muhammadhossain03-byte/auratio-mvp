@@ -2,7 +2,9 @@
 
 import {
   getAdminUnassignedDeclinedQueue,
+  getVolunteerAssignments,
   removeAdminUnassignedDeclinedQueue,
+  saveVolunteerAssignments,
   seedVolunteerAssignment,
 } from '../../volunteer/data/mockVolunteerData'
 import {
@@ -24,13 +26,14 @@ export interface AdminQueueItem {
   user: string
   track: string
   requestedMethod: 'Human' | 'AI'
-  routing: 'Requested' | 'Assigned AI' | 'Assigned Human' | 'Redirected Human' | 'Unassigned'
+  routing: 'Requested' | 'Assigned AI' | 'Assigned Human' | 'Redirected Human' | 'Unassigned' | 'Cancelled'
   eligibility: 'Eligible'
   interactive: boolean
   destinationPath?: string
   submissionId?: string
   declineReason?: string
   returnedAt?: string
+  terminationReason?: string
 }
 
 export interface AdminEvaluatorCandidate {
@@ -44,7 +47,7 @@ export interface AdminEvaluationRecordItem {
   submissionId: string
   finalMethod: 'Human' | 'AI'
   humanAssignmentStatus: string
-  publicationStatus: 'Pending Moderation' | 'Processing' | 'Approved'
+  publicationStatus: 'Pending Moderation' | 'Processing' | 'Approved' | 'Cancelled'
   score: string
   interactive: boolean
   destinationPath?: string
@@ -582,79 +585,26 @@ export const adminAuditLogsList: AdminAuditLogItem[] = [
 
 // In-memory & session assignment state for HE-0142
 const ADMIN_HE0142_STORAGE_KEY = 'auratio_admin_he0142_state'
+const ADMIN_HE0142_PENDING_KEY = 'auratio_admin_he0142_pending_reassignment'
+const ADMIN_REQ1042_TERMINATION_KEY = 'auratio_admin_req1042_termination'
+
+export interface HE0142PendingReassignment {
+  candidate: string
+  source: 'request' | 'moderation'
+}
+
+export interface Req1042TerminationState {
+  status: 'Cancelled'
+  reason: string
+  cancelledAt: string
+}
 
 let he0142ActiveOwner: string | null = 'Farhana Islam'
 let he0142SupersededOwner: string | null = null
 
-function loadHE0142State(): { activeOwner: string | null; supersededOwner: string | null } {
-  // If REQ-1042 / SUB-8821 is currently in returned unassigned queue from volunteer decline, activeOwner is null (None)
-  const unassigned = getAdminUnassignedDeclinedQueue()
-  const isDeclined = unassigned.some(
-    (r) => r.requestId.toUpperCase() === 'REQ-1042' || r.submissionId.toUpperCase() === 'SUB-8821'
-  )
-  if (isDeclined) {
-    return {
-      activeOwner: null,
-      supersededOwner: 'Farhana Islam',
-    }
-  }
-
-  if (typeof window !== 'undefined') {
-    try {
-      const raw = window.sessionStorage?.getItem(ADMIN_HE0142_STORAGE_KEY)
-      if (raw) {
-        return JSON.parse(raw)
-      }
-    } catch {}
-  }
-  return {
-    activeOwner: he0142ActiveOwner,
-    supersededOwner: he0142SupersededOwner,
-  }
-}
-
-export function getHE0142AssignmentState() {
-  const loaded = loadHE0142State()
-  he0142ActiveOwner = loaded.activeOwner
-  he0142SupersededOwner = loaded.supersededOwner
-  return {
-    activeOwner: he0142ActiveOwner,
-    supersededOwner: he0142SupersededOwner,
-  }
-}
-
-export function confirmHE0142Reassignment() {
-  const prev = getHE0142AssignmentState()
-  he0142SupersededOwner = prev.activeOwner
-  he0142ActiveOwner = 'Nadia Rahman'
-  const state = { activeOwner: he0142ActiveOwner, supersededOwner: he0142SupersededOwner }
-  if (typeof window !== 'undefined') {
-    try {
-      window.sessionStorage?.setItem(ADMIN_HE0142_STORAGE_KEY, JSON.stringify(state))
-    } catch {}
-  }
-  // Remove REQ-1042 / SUB-8821 from unassigned declined queue
-  removeAdminUnassignedDeclinedQueue('REQ-1042')
-  removeAdminUnassignedDeclinedQueue('SUB-8821')
-  return state
-}
-
-export function assignHE0142Candidate(name: string) {
-  const prev = getHE0142AssignmentState()
-  he0142ActiveOwner = name
-  he0142SupersededOwner = prev.activeOwner && prev.activeOwner !== name ? prev.activeOwner : (prev.supersededOwner || 'Farhana Islam')
-  const state = { activeOwner: he0142ActiveOwner, supersededOwner: he0142SupersededOwner }
-  if (typeof window !== 'undefined') {
-    try {
-      window.sessionStorage?.setItem(ADMIN_HE0142_STORAGE_KEY, JSON.stringify(state))
-    } catch {}
-  }
-
-  // Remove REQ-1042 / SUB-8821 from unassigned declined queue
-  removeAdminUnassignedDeclinedQueue('REQ-1042')
-  removeAdminUnassignedDeclinedQueue('SUB-8821')
-
-  // Coordinate with Volunteer active ownership
+function syncSUB8821VolunteerOwner(name: string | null): void {
+  const remaining = getVolunteerAssignments().filter((a) => a.id.toUpperCase() !== 'SUB-8821')
+  saveVolunteerAssignments(remaining)
   if (name === 'Farhana Islam') {
     seedVolunteerAssignment({
       id: 'SUB-8821',
@@ -664,8 +614,131 @@ export function assignHE0142Candidate(name: string) {
       publicationStatus: 'Processing',
     })
   }
+}
 
+function saveHE0142State(state: { activeOwner: string | null; supersededOwner: string | null }): void {
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.setItem(ADMIN_HE0142_STORAGE_KEY, JSON.stringify(state))
+    } catch {}
+  }
+}
+
+function loadHE0142State(): { activeOwner: string | null; supersededOwner: string | null } {
+  const unassigned = getAdminUnassignedDeclinedQueue()
+  const isDeclined = unassigned.some(
+    (r) => r.requestId.toUpperCase() === 'REQ-1042' || r.submissionId.toUpperCase() === 'SUB-8821'
+  )
+  if (isDeclined) {
+    return { activeOwner: null, supersededOwner: 'Farhana Islam' }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.sessionStorage?.getItem(ADMIN_HE0142_STORAGE_KEY)
+      if (raw) return JSON.parse(raw)
+    } catch {}
+  }
+  return { activeOwner: he0142ActiveOwner, supersededOwner: he0142SupersededOwner }
+}
+
+export function getHE0142AssignmentState() {
+  const loaded = loadHE0142State()
+  he0142ActiveOwner = loaded.activeOwner
+  he0142SupersededOwner = loaded.supersededOwner
+  return { activeOwner: he0142ActiveOwner, supersededOwner: he0142SupersededOwner }
+}
+
+export function getHE0142PendingReassignment(): HE0142PendingReassignment | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.sessionStorage?.getItem(ADMIN_HE0142_PENDING_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+export function stageHE0142Reassignment(
+  candidate: string,
+  source: 'request' | 'moderation' = 'request'
+): HE0142PendingReassignment | null {
+  const current = getHE0142AssignmentState()
+  if (!current.activeOwner || candidate === current.activeOwner || getREQ1042TerminationState()) return null
+  const pending = { candidate, source }
+  try {
+    window.sessionStorage?.setItem(ADMIN_HE0142_PENDING_KEY, JSON.stringify(pending))
+  } catch {}
+  return pending
+}
+
+export function clearHE0142PendingReassignment(): void {
+  try {
+    window.sessionStorage?.removeItem(ADMIN_HE0142_PENDING_KEY)
+  } catch {}
+}
+
+export function confirmHE0142Reassignment(reason = 'Operational reassignment') {
+  const prev = getHE0142AssignmentState()
+  const pending = getHE0142PendingReassignment()
+  if (!prev.activeOwner || !pending || pending.candidate === prev.activeOwner || reason.trim().length === 0) {
+    return prev
+  }
+  he0142SupersededOwner = prev.activeOwner
+  he0142ActiveOwner = pending.candidate
+  const state = { activeOwner: he0142ActiveOwner, supersededOwner: he0142SupersededOwner }
+  saveHE0142State(state)
+  clearHE0142PendingReassignment()
+  removeAdminUnassignedDeclinedQueue('REQ-1042')
+  removeAdminUnassignedDeclinedQueue('SUB-8821')
+  syncSUB8821VolunteerOwner(he0142ActiveOwner)
   return state
+}
+
+export function assignHE0142Candidate(name: string) {
+  if (getREQ1042TerminationState()) return getHE0142AssignmentState()
+  const prev = getHE0142AssignmentState()
+  he0142ActiveOwner = name
+  he0142SupersededOwner =
+    prev.activeOwner && prev.activeOwner !== name ? prev.activeOwner : prev.supersededOwner
+  const state = { activeOwner: he0142ActiveOwner, supersededOwner: he0142SupersededOwner }
+  saveHE0142State(state)
+  clearHE0142PendingReassignment()
+  removeAdminUnassignedDeclinedQueue('REQ-1042')
+  removeAdminUnassignedDeclinedQueue('SUB-8821')
+  syncSUB8821VolunteerOwner(name)
+  return state
+}
+
+export function getREQ1042TerminationState(): Req1042TerminationState | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.sessionStorage?.getItem(ADMIN_REQ1042_TERMINATION_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+export function cancelREQ1042HumanRequest(reason: string): Req1042TerminationState | null {
+  const trimmed = reason.trim()
+  if (!trimmed) return null
+  const record: Req1042TerminationState = {
+    status: 'Cancelled',
+    reason: trimmed,
+    cancelledAt: new Date().toISOString(),
+  }
+  try {
+    window.sessionStorage?.setItem(ADMIN_REQ1042_TERMINATION_KEY, JSON.stringify(record))
+  } catch {}
+  he0142SupersededOwner = getHE0142AssignmentState().activeOwner
+  he0142ActiveOwner = null
+  saveHE0142State({ activeOwner: null, supersededOwner: he0142SupersededOwner })
+  clearHE0142PendingReassignment()
+  removeAdminUnassignedDeclinedQueue('REQ-1042')
+  removeAdminUnassignedDeclinedQueue('SUB-8821')
+  syncSUB8821VolunteerOwner(null)
+  return record
 }
 
 export function resetHE0142Reassignment() {
@@ -674,19 +747,33 @@ export function resetHE0142Reassignment() {
   if (typeof window !== 'undefined') {
     try {
       window.sessionStorage?.removeItem(ADMIN_HE0142_STORAGE_KEY)
+      window.sessionStorage?.removeItem(ADMIN_HE0142_PENDING_KEY)
+      window.sessionStorage?.removeItem(ADMIN_REQ1042_TERMINATION_KEY)
     } catch {}
   }
 }
 
 export interface Req1042RoutingState {
-  routing: 'Unassigned' | 'Assigned Human' | 'Requested'
+  routing: 'Unassigned' | 'Assigned Human' | 'Requested' | 'Cancelled'
   activeOwner: string | null
   supersededOwner: string | null
   declineRecord: ReturnType<typeof getAdminUnassignedDeclinedQueue>[0] | null
+  terminationReason: string | null
 }
 
 export function getREQ1042RoutingState(): Req1042RoutingState {
-  // 1. Check if returned decline record exists in unassigned queue
+  const termination = getREQ1042TerminationState()
+  if (termination) {
+    const heState = getHE0142AssignmentState()
+    return {
+      routing: 'Cancelled',
+      activeOwner: null,
+      supersededOwner: heState.supersededOwner,
+      declineRecord: null,
+      terminationReason: termination.reason,
+    }
+  }
+
   const unassigned = getAdminUnassignedDeclinedQueue()
   const declineRecord =
     unassigned.find(
@@ -699,10 +786,10 @@ export function getREQ1042RoutingState(): Req1042RoutingState {
       activeOwner: null,
       supersededOwner: 'Farhana Islam',
       declineRecord,
+      terminationReason: null,
     }
   }
 
-  // 2. Check active Human evaluator owner
   const he0142State = getHE0142AssignmentState()
   const activeOwner =
     he0142State.activeOwner && he0142State.activeOwner !== 'None' ? he0142State.activeOwner : null
@@ -713,15 +800,16 @@ export function getREQ1042RoutingState(): Req1042RoutingState {
       activeOwner,
       supersededOwner: he0142State.supersededOwner,
       declineRecord: null,
+      terminationReason: null,
     }
   }
 
-  // 3. Fallback: Requested
   return {
     routing: 'Requested',
     activeOwner: null,
     supersededOwner: he0142State.supersededOwner,
     declineRecord: null,
+    terminationReason: null,
   }
 }
 
@@ -742,7 +830,15 @@ export function getAdminEvaluationRequests(): AdminQueueItem[] {
   for (let i = 0; i < items.length; i++) {
     const reqId = items[i].id.toUpperCase()
     if (reqId === 'REQ-1042') {
-      if (req1042State.routing === 'Unassigned' && req1042State.declineRecord) {
+      if (req1042State.routing === 'Cancelled') {
+        items[i] = {
+          ...items[i],
+          routing: 'Cancelled',
+          terminationReason: req1042State.terminationReason || undefined,
+          interactive: true,
+          destinationPath: items[i].destinationPath || `/admin/requests/req-1042`,
+        }
+      } else if (req1042State.routing === 'Unassigned' && req1042State.declineRecord) {
         items[i] = {
           ...items[i],
           track: req1042State.declineRecord.track,
@@ -801,6 +897,108 @@ export function getAdminEvaluationRequests(): AdminQueueItem[] {
   }
 
   return items
+}
+
+
+// Session-backed Human lifecycle state for SUB-8834 processing demo
+const ADMIN_SUB8834_LIFECYCLE_KEY = 'auratio_admin_sub8834_lifecycle'
+
+export interface SUB8834LifecycleState {
+  activeOwner: string | null
+  supersededOwner: string | null
+  pendingCandidate: string | null
+  version: number
+  status: 'In Evaluation' | 'Cancelled'
+  terminationReason: string
+  lastReassignmentReason: string
+}
+
+const INITIAL_SUB8834_LIFECYCLE: SUB8834LifecycleState = {
+  activeOwner: 'Rakib Hasan',
+  supersededOwner: null,
+  pendingCandidate: null,
+  version: 1,
+  status: 'In Evaluation',
+  terminationReason: '',
+  lastReassignmentReason: '',
+}
+
+let sub8834LifecycleState: SUB8834LifecycleState = { ...INITIAL_SUB8834_LIFECYCLE }
+
+function saveSUB8834LifecycleState(state: SUB8834LifecycleState): SUB8834LifecycleState {
+  sub8834LifecycleState = { ...state }
+  try {
+    window.sessionStorage?.setItem(ADMIN_SUB8834_LIFECYCLE_KEY, JSON.stringify(sub8834LifecycleState))
+  } catch {}
+  return { ...sub8834LifecycleState }
+}
+
+export function getSUB8834LifecycleState(): SUB8834LifecycleState {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.sessionStorage?.getItem(ADMIN_SUB8834_LIFECYCLE_KEY)
+      if (raw) {
+        sub8834LifecycleState = JSON.parse(raw)
+      }
+    } catch {}
+  }
+  return { ...sub8834LifecycleState }
+}
+
+export function stageSUB8834Reassignment(candidate: string): SUB8834LifecycleState {
+  const current = getSUB8834LifecycleState()
+  if (current.status === 'Cancelled' || !current.activeOwner || candidate === current.activeOwner) return current
+  return saveSUB8834LifecycleState({ ...current, pendingCandidate: candidate })
+}
+
+export function clearSUB8834PendingReassignment(): SUB8834LifecycleState {
+  const current = getSUB8834LifecycleState()
+  return saveSUB8834LifecycleState({ ...current, pendingCandidate: null })
+}
+
+export function confirmSUB8834Reassignment(reason: string): SUB8834LifecycleState {
+  const current = getSUB8834LifecycleState()
+  const trimmed = reason.trim()
+  if (
+    current.status === 'Cancelled' ||
+    !current.activeOwner ||
+    !current.pendingCandidate ||
+    current.pendingCandidate === current.activeOwner ||
+    !trimmed
+  ) {
+    return current
+  }
+  return saveSUB8834LifecycleState({
+    ...current,
+    supersededOwner: current.activeOwner,
+    activeOwner: current.pendingCandidate,
+    pendingCandidate: null,
+    version: current.version + 1,
+    lastReassignmentReason: trimmed,
+  })
+}
+
+export function cancelSUB8834Request(reason: string): SUB8834LifecycleState {
+  const current = getSUB8834LifecycleState()
+  const trimmed = reason.trim()
+  if (!trimmed || current.status === 'Cancelled') return current
+  return saveSUB8834LifecycleState({
+    ...current,
+    supersededOwner: current.activeOwner || current.supersededOwner,
+    activeOwner: null,
+    pendingCandidate: null,
+    status: 'Cancelled',
+    terminationReason: trimmed,
+  })
+}
+
+export function resetSUB8834Lifecycle(): void {
+  sub8834LifecycleState = { ...INITIAL_SUB8834_LIFECYCLE }
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage?.removeItem(ADMIN_SUB8834_LIFECYCLE_KEY)
+    } catch {}
+  }
 }
 
 // In-memory multi-entity moderation state
@@ -1203,6 +1401,16 @@ export function resetInviteVolunteerTrackDraft() {
 if (typeof window !== 'undefined') {
   ;(window as unknown as { __getHE0142AssignmentState: typeof getHE0142AssignmentState }).__getHE0142AssignmentState = getHE0142AssignmentState
   ;(window as unknown as { __resetHE0142Reassignment: typeof resetHE0142Reassignment }).__resetHE0142Reassignment = resetHE0142Reassignment
+  ;(window as unknown as { __getHE0142PendingReassignment: typeof getHE0142PendingReassignment }).__getHE0142PendingReassignment = getHE0142PendingReassignment
+  ;(window as unknown as { __stageHE0142Reassignment: typeof stageHE0142Reassignment }).__stageHE0142Reassignment = stageHE0142Reassignment
+  ;(window as unknown as { __clearHE0142PendingReassignment: typeof clearHE0142PendingReassignment }).__clearHE0142PendingReassignment = clearHE0142PendingReassignment
+  ;(window as unknown as { __cancelREQ1042HumanRequest: typeof cancelREQ1042HumanRequest }).__cancelREQ1042HumanRequest = cancelREQ1042HumanRequest
+  ;(window as unknown as { __getREQ1042TerminationState: typeof getREQ1042TerminationState }).__getREQ1042TerminationState = getREQ1042TerminationState
+  ;(window as unknown as { __getSUB8834LifecycleState: typeof getSUB8834LifecycleState }).__getSUB8834LifecycleState = getSUB8834LifecycleState
+  ;(window as unknown as { __stageSUB8834Reassignment: typeof stageSUB8834Reassignment }).__stageSUB8834Reassignment = stageSUB8834Reassignment
+  ;(window as unknown as { __confirmSUB8834Reassignment: typeof confirmSUB8834Reassignment }).__confirmSUB8834Reassignment = confirmSUB8834Reassignment
+  ;(window as unknown as { __cancelSUB8834Request: typeof cancelSUB8834Request }).__cancelSUB8834Request = cancelSUB8834Request
+  ;(window as unknown as { __resetSUB8834Lifecycle: typeof resetSUB8834Lifecycle }).__resetSUB8834Lifecycle = resetSUB8834Lifecycle
   ;(window as unknown as { __getSub8821ModerationState: typeof getSub8821ModerationState }).__getSub8821ModerationState = getSub8821ModerationState
   ;(window as unknown as { __resetSub8821Moderation: typeof resetSub8821Moderation }).__resetSub8821Moderation = resetSub8821Moderation
   ;(window as unknown as { __getFarhanaAvailabilityState: typeof getFarhanaAvailabilityState }).__getFarhanaAvailabilityState = getFarhanaAvailabilityState

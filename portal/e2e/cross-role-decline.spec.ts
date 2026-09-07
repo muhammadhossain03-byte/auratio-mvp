@@ -133,13 +133,27 @@ test.describe('Cross-Role Volunteer Decline -> Admin Unassigned Request Queue Li
     await expect(page).toHaveURL('/volunteer/assignments')
     await expect(page.locator('button[aria-label="Open SUB-8821"]')).toHaveCount(0)
 
-    // 17. Admin explicitly assigns Farhana Islam
+    // 17. Admin explicitly stages and confirms reassignment to Farhana Islam
     await page.goto('/admin/requests/req-1042/assign')
     await expect(page).toHaveURL('/admin/requests/req-1042/assign')
     const selectFarhanaBtn = page.locator('button[data-candidate="Farhana Islam"]')
     await expect(selectFarhanaBtn).toBeVisible()
     await selectFarhanaBtn.click()
-    await expect(page).toHaveURL('/admin/requests')
+    await expect(page).toHaveURL('/admin/requests/req-1042/reassign')
+
+    const stagedFarhana = await page.evaluate(() => {
+      const win = window as any
+      return {
+        owner: win.__getHE0142AssignmentState?.(),
+        pending: win.__getHE0142PendingReassignment?.(),
+      }
+    })
+    expect(stagedFarhana.owner?.activeOwner).toBe('Rakib Hasan')
+    expect(stagedFarhana.pending?.candidate).toBe('Farhana Islam')
+
+    await page.locator('#reassignment-reason').fill('Return ownership to original evaluator')
+    await page.getByRole('button', { name: 'Confirm Reassignment' }).click()
+    await expect(page).toHaveURL('/admin/requests/req-1042')
 
     const adminStateAfterFarhana = await page.evaluate(() => {
       const win = window as unknown as {
@@ -153,6 +167,11 @@ test.describe('Cross-Role Volunteer Decline -> Admin Unassigned Request Queue Li
     })
     expect(adminStateAfterFarhana.he0142?.activeOwner).toBe('Farhana Islam')
     expect(adminStateAfterFarhana.routingState?.routing).toBe('Assigned Human')
+
+    // Reassignment confirmation returns to the request detail. Move to the
+    // queue before asserting queue-row rendering.
+    await page.goto('/admin/requests')
+    await expect(page).toHaveURL('/admin/requests')
 
     // 17b. Verify Queue shows Assigned Human when Farhana is owner (NO Farhana special-case)
     const req1042RowAfterFarhana = page.locator('[data-request-id="REQ-1042"]')
@@ -394,8 +413,37 @@ test.describe('Cross-Role Volunteer Decline -> Admin Unassigned Request Queue Li
     await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Assignment state: Assigned')
     await expect(page.locator('.auratio-admin-page-subtitle')).toContainText('Active evaluator owner: Rakib Hasan')
 
-    // Stage 3: Admin explicitly assigns Farhana Islam -> All 3 screens must agree on Assigned Human
+    // Stage 3: Admin explicitly reassigns to Farhana Islam -> selection stages,
+    // confirmation mutates ownership, then all 3 screens must agree.
     await page.locator('button[data-candidate="Farhana Islam"]').click()
+    await expect(page).toHaveURL('/admin/requests/req-1042/reassign')
+
+    const stagedFarhana = await page.evaluate(() => {
+      const win = window as any
+      return {
+        owner: win.__getHE0142AssignmentState?.(),
+        pending: win.__getHE0142PendingReassignment?.(),
+      }
+    })
+    expect(stagedFarhana.owner?.activeOwner).toBe('Rakib Hasan')
+    expect(stagedFarhana.pending?.candidate).toBe('Farhana Islam')
+
+    await page.locator('#reassignment-reason').fill('Single-source routing consistency reassignment')
+    await page.getByRole('button', { name: 'Confirm Reassignment' }).click()
+    await expect(page).toHaveURL('/admin/requests/req-1042')
+
+    const confirmedFarhana = await page.evaluate(() => {
+      const win = window as any
+      return {
+        owner: win.__getHE0142AssignmentState?.(),
+        pending: win.__getHE0142PendingReassignment?.(),
+      }
+    })
+    expect(confirmedFarhana.owner?.activeOwner).toBe('Farhana Islam')
+    expect(confirmedFarhana.owner?.supersededOwner).toBe('Rakib Hasan')
+    expect(confirmedFarhana.pending).toBeNull()
+
+    await page.goto('/admin/requests')
     await expect(page).toHaveURL('/admin/requests')
 
     // Queue:

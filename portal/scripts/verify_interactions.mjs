@@ -823,48 +823,78 @@ async function run() {
       await new Promise((r) => setTimeout(r, 300))
     }
 
-    // 14. NORMAL ASSIGNMENT: Request Queue -> REQ-1042 -> Assign Human -> Assignment Picker
-    console.log('\n--- Testing Normal Assignment Flow ---')
+    // 14. ASSIGNED HUMAN LIFECYCLE: REQ-1042 must expose Reassign Human, not Assign Human
+    console.log('\n--- Testing Assigned Human Reassignment Entry Flow ---')
+    await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `window.__resetHE0142Reassignment && window.__resetHE0142Reassignment()`,
+    })
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests` })
     await new Promise((r) => setTimeout(r, 500))
 
-    // Open REQ-1042
     await clickQueueOpen('REQ-1042')
     console.log('Path after opening REQ-1042:', await getPathname())
     if (await getPathname() !== '/admin/requests/req-1042') {
       throw new Error('Expected /admin/requests/req-1042')
     }
 
-    // Click Assign Human
-    await clickByText('button.auratio-admin-btn--primary', 'Assign Human')
-    console.log('Path after Assign Human:', await getPathname())
+    const req1042AssignedActions = await getBodyText()
+    if (!req1042AssignedActions.includes('Reassign Human') || req1042AssignedActions.includes('Assign Human\n')) {
+      throw new Error('Assigned REQ-1042 must expose Reassign Human rather than initial Assign Human')
+    }
+
+    await clickByText('button.auratio-admin-btn--primary', 'Reassign Human')
+    console.log('Path after Reassign Human:', await getPathname())
     if (await getPathname() !== '/admin/requests/req-1042/assign') {
       throw new Error('Expected /admin/requests/req-1042/assign')
     }
 
-    // Test Select Farhana Islam -> must navigate to /admin/requests
-    await clickCandidateSelect('Farhana Islam')
-    console.log('Path after selecting Farhana Islam:', await getPathname())
-    if (await getPathname() !== '/admin/requests') {
-      throw new Error('Expected /admin/requests after selecting Farhana Islam')
+    // Current owner cannot be selected as a replacement.
+    const currentOwnerDisabled = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `(() => {
+        const btn = document.querySelector('button[data-candidate="Farhana Islam"]');
+        return !!btn && btn.disabled === true;
+      })()`,
+    })
+    if (currentOwnerDisabled.result.value !== true) {
+      throw new Error('Expected current owner Farhana Islam to be disabled in reassignment picker')
     }
 
-    // Test Select Rakib Hasan -> must navigate to /admin/requests
-    await clickQueueOpen('REQ-1042')
-    await clickByText('button.auratio-admin-btn--primary', 'Assign Human')
+    // Selecting Rakib only stages replacement and opens confirmation.
     await clickCandidateSelect('Rakib Hasan')
-    console.log('Path after selecting Rakib Hasan:', await getPathname())
-    if (await getPathname() !== '/admin/requests') {
-      throw new Error('Expected /admin/requests after selecting Rakib Hasan')
+    if (await getPathname() !== '/admin/requests/req-1042/reassign') {
+      throw new Error('Expected staged candidate to open /admin/requests/req-1042/reassign')
     }
 
-    // Test Select Tasnim Noor -> must navigate to /admin/requests
-    await clickQueueOpen('REQ-1042')
-    await clickByText('button.auratio-admin-btn--primary', 'Assign Human')
-    await clickCandidateSelect('Tasnim Noor')
-    console.log('Path after selecting Tasnim Noor:', await getPathname())
+    const stagedState = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify({
+        owner: window.__getHE0142AssignmentState(),
+        pending: window.__getHE0142PendingReassignment()
+      })`,
+    })
+    const stagedObj = JSON.parse(stagedState.result.value)
+    if (stagedObj.owner.activeOwner !== 'Farhana Islam' || stagedObj.pending?.candidate !== 'Rakib Hasan') {
+      throw new Error(`Candidate selection mutated ownership or failed to stage Rakib: ${JSON.stringify(stagedObj)}`)
+    }
+
+    await setInputValue('#reassignment-reason', 'Interaction verification workload reassignment')
+    await clickByText('button.auratio-admin-btn--primary', 'Confirm Reassignment')
+    if (await getPathname() !== '/admin/requests/req-1042') {
+      throw new Error('Expected /admin/requests/req-1042 after confirmed reassignment')
+    }
+
+    const confirmedState = await sendCdp(ws, 'Runtime.evaluate', {
+      expression: `JSON.stringify(window.__getHE0142AssignmentState())`,
+    })
+    const confirmedObj = JSON.parse(confirmedState.result.value)
+    if (confirmedObj.activeOwner !== 'Rakib Hasan' || confirmedObj.supersededOwner !== 'Farhana Islam') {
+      throw new Error(`Expected active Rakib / superseded Farhana, got ${JSON.stringify(confirmedObj)}`)
+    }
+
+    // Reassignment confirmation intentionally returns to REQ-1042 details.
+    // Return to the Request Queue before testing sibling request rows.
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Queue')
     if (await getPathname() !== '/admin/requests') {
-      throw new Error('Expected /admin/requests after selecting Tasnim Noor')
+      throw new Error('Expected /admin/requests before opening sibling request rows')
     }
 
     // 15. AI ROUTING: REQ-1041 (Assigned AI) & REQ-1034 (Redirected Human)
@@ -905,51 +935,48 @@ async function run() {
       throw new Error('Expected /admin/requests after Back to Queue from REQ-1038')
     }
 
-    console.log('\n--- Testing Reassignment Flow ---')
-    // Reset mock assignment state in browser
+    console.log('\n--- Testing Staged Reassignment Cancel Integrity ---')
     await sendCdp(ws, 'Runtime.evaluate', {
       expression: `window.__resetHE0142Reassignment && window.__resetHE0142Reassignment()`,
     })
-
-    // Navigate to /admin/requests/req-1042/reassign
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042/reassign` })
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042` })
     await new Promise((r) => setTimeout(r, 400))
-    console.log('Path after navigating to reassignment:', await getPathname())
+    await clickByText('button.auratio-admin-btn--primary', 'Reassign Human')
+    await clickCandidateSelect('Tasnim Noor')
     if (await getPathname() !== '/admin/requests/req-1042/reassign') {
-      throw new Error('Expected /admin/requests/req-1042/reassign')
+      throw new Error('Expected staged Tasnim reassignment confirmation route')
     }
 
-    // Cancel: returns to /admin/requests, ownership unmutated
+    // Cancel clears the staged candidate and leaves Farhana as sole owner.
     await clickByText('button.auratio-admin-btn--secondary', 'Cancel')
-    console.log('Path after Cancel:', await getPathname())
-    if (await getPathname() !== '/admin/requests') {
-      throw new Error('Expected /admin/requests after Cancel')
+    if (await getPathname() !== '/admin/requests/req-1042') {
+      throw new Error('Expected /admin/requests/req-1042 after cancelling staged reassignment')
     }
     const stateAfterCancel = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `JSON.stringify(window.__getHE0142AssignmentState())`,
+      expression: `JSON.stringify({
+        owner: window.__getHE0142AssignmentState(),
+        pending: window.__getHE0142PendingReassignment()
+      })`,
     })
     const cancelObj = JSON.parse(stateAfterCancel.result.value)
-    console.log('State after Cancel:', cancelObj)
-    if (cancelObj.activeOwner !== 'Farhana Islam' || cancelObj.supersededOwner !== null) {
-      throw new Error(`Expected unmutated ownership after Cancel, got ${JSON.stringify(cancelObj)}`)
+    if (cancelObj.owner.activeOwner !== 'Farhana Islam' || cancelObj.owner.supersededOwner !== null || cancelObj.pending !== null) {
+      throw new Error(`Expected unmutated Farhana ownership and cleared pending state, got ${JSON.stringify(cancelObj)}`)
     }
 
-    // Re-enter and confirm reassignment
-    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/requests/req-1042/reassign` })
-    await new Promise((r) => setTimeout(r, 400))
-
+    // Re-enter through the picker, stage Tasnim, require a reason, then confirm.
+    await clickByText('button.auratio-admin-btn--primary', 'Reassign Human')
+    await clickCandidateSelect('Tasnim Noor')
+    await setInputValue('#reassignment-reason', 'Interaction verification replacement')
     await clickByText('button.auratio-admin-btn--primary', 'Confirm Reassignment')
-    console.log('Path after Confirm Reassignment:', await getPathname())
-    if (await getPathname() !== '/admin/requests') {
-      throw new Error('Expected /admin/requests after Confirm Reassignment')
+    if (await getPathname() !== '/admin/requests/req-1042') {
+      throw new Error('Expected /admin/requests/req-1042 after Confirm Reassignment')
     }
     const stateAfterConfirm = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `JSON.stringify(window.__getHE0142AssignmentState())`,
     })
     const confirmObj = JSON.parse(stateAfterConfirm.result.value)
-    console.log('State after Confirm:', confirmObj)
-    if (confirmObj.supersededOwner !== 'Farhana Islam' || confirmObj.activeOwner !== 'Nadia Rahman') {
-      throw new Error(`Expected superseded Farhana and active Nadia, got ${JSON.stringify(confirmObj)}`)
+    if (confirmObj.supersededOwner !== 'Farhana Islam' || confirmObj.activeOwner !== 'Tasnim Noor') {
+      throw new Error(`Expected superseded Farhana and active Tasnim, got ${JSON.stringify(confirmObj)}`)
     }
 
     // 17. EVALUATION RECORDS -> MODERATION REVIEW, PROCESSING HUMAN & APPROVED AI
@@ -981,7 +1008,7 @@ async function run() {
       throw new Error('Expected /admin/evaluations/sub-8834')
     }
 
-    await clickByText('button.auratio-admin-btn--primary', 'Back to Evaluations')
+    await clickByText('button.auratio-admin-btn--secondary', 'Back to Evaluations')
     if (await getPathname() !== '/admin/evaluations') {
       throw new Error('Expected /admin/evaluations after Back to Evaluations')
     }
@@ -1059,7 +1086,7 @@ async function run() {
     // Review -> Reject -> Cancel -> Review
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/moderation/sub-8821` })
     await new Promise((r) => setTimeout(r, 500))
-    await clickByText('button.auratio-admin-btn--secondary', 'Reject')
+    await clickByText('button.auratio-admin-btn--secondary', 'Reject Evaluation')
     if (await getPathname() !== '/admin/moderation/sub-8821/reject') {
       throw new Error('Expected /admin/moderation/sub-8821/reject')
     }
@@ -1069,9 +1096,9 @@ async function run() {
     }
 
     // Review -> Reject -> Reason validation
-    await clickByText('button.auratio-admin-btn--secondary', 'Reject')
-    // 1) Empty reason: click Confirm Rejection must NOT navigate
-    await clickByText('button.auratio-admin-btn--primary', 'Confirm Rejection')
+    await clickByText('button.auratio-admin-btn--secondary', 'Reject Evaluation')
+    // 1) Empty reason: click disabled Reject Evaluation must NOT navigate
+    await clickByText('button.auratio-admin-btn--primary', 'Reject Evaluation')
     if (await getPathname() !== '/admin/moderation/sub-8821/reject') {
       throw new Error('Expected empty reason to stay on /admin/moderation/sub-8821/reject')
     }
@@ -1086,7 +1113,7 @@ async function run() {
       })()`,
     })
     await new Promise((r) => setTimeout(r, 200))
-    await clickByText('button.auratio-admin-btn--primary', 'Confirm Rejection')
+    await clickByText('button.auratio-admin-btn--primary', 'Reject Evaluation')
     if (await getPathname() !== '/admin/moderation/sub-8821/reject') {
       throw new Error('Expected whitespace-only reason to stay on /admin/moderation/sub-8821/reject')
     }
@@ -1101,9 +1128,9 @@ async function run() {
       })()`,
     })
     await new Promise((r) => setTimeout(r, 200))
-    await clickByText('button.auratio-admin-btn--primary', 'Confirm Rejection')
+    await clickByText('button.auratio-admin-btn--primary', 'Reject Evaluation')
     if (await getPathname() !== '/admin/evaluations') {
-      throw new Error('Expected /admin/evaluations after valid Confirm Rejection')
+      throw new Error('Expected /admin/evaluations after valid Reject Evaluation')
     }
 
     // Review -> Request Re-review -> Cancel -> Review
@@ -1831,7 +1858,7 @@ async function run() {
     }
 
     // Test SUB-8730 reject cancel
-    await clickByText('button.auratio-admin-btn--secondary', 'Reject')
+    await clickByText('button.auratio-admin-btn--secondary', 'Reject Evaluation')
     if (await getPathname() !== '/admin/moderation/sub-8730/reject') {
       throw new Error('Expected /admin/moderation/sub-8730/reject')
     }

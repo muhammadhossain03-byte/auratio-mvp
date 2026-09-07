@@ -120,11 +120,16 @@ test.describe('Browser Regression & Accessibility Smoke', () => {
     await expect(informativeBox).toHaveAttribute('role', 'checkbox')
     await expect(informativeBox).toHaveAttribute('aria-checked', 'true')
 
-    // 6. Destructive confirmation actions have clear accessible names
-    await page.goto('/admin/requests/req-1042/reassign')
+    // 6. Destructive confirmation actions have clear accessible names.
+    // Reassignment confirmation is guarded: a replacement candidate must be
+    // staged through the picker before the confirmation screen exists.
+    await page.goto('/admin/requests/req-1042/assign')
+    await page.locator('button[data-candidate="Rakib Hasan"]').click()
+    await expect(page).toHaveURL('/admin/requests/req-1042/reassign')
     const confirmReassignBtn = page.locator('button.auratio-admin-btn--primary', { hasText: 'Confirm Reassignment' })
     await expect(confirmReassignBtn).toBeVisible()
     await expect(confirmReassignBtn).toHaveText('Confirm Reassignment')
+    await expect(confirmReassignBtn).toBeDisabled()
 
     await page.goto('/super-admin/admin-accounts/nadia/deactivate')
     const confirmDeactBtn = page.locator('button.auratio-admin-btn--primary', { hasText: 'Confirm Deactivation' })
