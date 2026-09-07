@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import { VolunteerEvaluationVideoPlayer } from '../components/VolunteerEvaluationVideoPlayer'
+import {
+  formatAnchorScoreRange,
+  getAnchorScoreRange,
+  getAnchorScoreValidationMessage,
+  getCriterionAnchorDescriptions,
+  isAnchorScoreCompatible,
+} from '../data/generatedRubricAnchors'
 import {
   getVolunteerAssignment,
   getScoringDraft,
@@ -108,13 +116,16 @@ export function VolunteerCriterionFeedbackEditorPage() {
   }
 
   const parsedScore = exactScore === '' ? null : Number(exactScore)
+  const selectedScoreRange = anchor
+    ? getAnchorScoreRange(activeCriterion.maxPoints, anchor)
+    : null
+  const anchorDescriptions = getCriterionAnchorDescriptions(activeCriterion.id)
   const isScoreValid =
     anchor !== null &&
     parsedScore !== null &&
     !isNaN(parsedScore) &&
     Number.isInteger(parsedScore) &&
-    parsedScore >= 0 &&
-    parsedScore <= activeCriterion.maxPoints
+    isAnchorScoreCompatible(activeCriterion.maxPoints, anchor, parsedScore)
 
   const isTimestampValid = isValidTimestamp(evidenceTimestamp)
   const isEvidenceTextValid = evidence.trim().length > 0
@@ -124,7 +135,15 @@ export function VolunteerCriterionFeedbackEditorPage() {
   const adviceComplete = advice.trim().length > 0
 
   const handleAnchorChange = (newAnchor: QualitativeAnchor) => {
+    const currentScore = exactScore === '' ? null : Number(exactScore)
     setAnchor(newAnchor)
+    if (
+      currentScore !== null &&
+      (!Number.isInteger(currentScore) ||
+        !isAnchorScoreCompatible(activeCriterion.maxPoints, newAnchor, currentScore))
+    ) {
+      setExactScore('')
+    }
     setErrorMessage('')
   }
 
@@ -143,10 +162,22 @@ export function VolunteerCriterionFeedbackEditorPage() {
 
     if (!Number.isInteger(num)) {
       setErrorMessage('Score must be a whole number (integer).')
-    } else if (num < 0 || num > activeCriterion.maxPoints) {
+    } else if (num > activeCriterion.maxPoints) {
       setErrorMessage(
-        `Score cannot exceed ${activeCriterion.maxPoints} pts.`
+        `Score cannot exceed ${activeCriterion.maxPoints} pts. ${getAnchorScoreValidationMessage(
+          activeCriterion.maxPoints,
+          anchor
+        )}`
       )
+    } else if (num < 0) {
+      setErrorMessage(
+        `Score cannot be below 0 pts. ${getAnchorScoreValidationMessage(
+          activeCriterion.maxPoints,
+          anchor
+        )}`
+      )
+    } else if (!isAnchorScoreCompatible(activeCriterion.maxPoints, anchor, num)) {
+      setErrorMessage(getAnchorScoreValidationMessage(activeCriterion.maxPoints, anchor))
     } else {
       setErrorMessage('')
     }
@@ -165,10 +196,24 @@ export function VolunteerCriterionFeedbackEditorPage() {
     }
 
     if (!isScoreValid || parsedScore === null) {
-      if (parsedScore !== null && (parsedScore < 0 || parsedScore > activeCriterion.maxPoints || !Number.isInteger(parsedScore))) {
+      if (parsedScore !== null && !Number.isInteger(parsedScore)) {
+        setErrorMessage('Score must be a whole number (integer).')
+      } else if (parsedScore !== null && parsedScore > activeCriterion.maxPoints) {
         setErrorMessage(
-          `Score must be a whole number between 0 and ${activeCriterion.maxPoints} pts.`
+          `Score cannot exceed ${activeCriterion.maxPoints} pts. ${getAnchorScoreValidationMessage(
+            activeCriterion.maxPoints,
+            anchor
+          )}`
         )
+      } else if (parsedScore !== null && parsedScore < 0) {
+        setErrorMessage(
+          `Score cannot be below 0 pts. ${getAnchorScoreValidationMessage(
+            activeCriterion.maxPoints,
+            anchor
+          )}`
+        )
+      } else if (parsedScore !== null) {
+        setErrorMessage(getAnchorScoreValidationMessage(activeCriterion.maxPoints, anchor))
       } else {
         setErrorMessage('Please enter a valid numeric score.')
       }
@@ -411,9 +456,10 @@ export function VolunteerCriterionFeedbackEditorPage() {
           disabled={!anchor}
           value={exactScore}
           onChange={handleScoreChange}
-          placeholder={anchor ? `0–${activeCriterion.maxPoints}` : 'Select anchor'}
-          min={0}
-          max={activeCriterion.maxPoints}
+          placeholder={anchor ? formatAnchorScoreRange(activeCriterion.maxPoints, anchor) : 'Select anchor'}
+          min={selectedScoreRange?.min}
+          max={selectedScoreRange?.max}
+          step={1}
           style={{
             position: 'absolute',
             left: '640px',
@@ -501,12 +547,108 @@ export function VolunteerCriterionFeedbackEditorPage() {
         </p>
       </div>
 
+      {/* Canonical criterion-specific anchor calibration */}
+      <div
+        className="auratio-volunteer-panel"
+        data-testid="canonical-anchor-calibration"
+        style={{
+          left: '30px',
+          top: '268px',
+          width: '1076px',
+          height: '240px',
+          borderRadius: '14px',
+        }}
+      >
+        <h3 className="auratio-volunteer-panel-title">Canonical anchor calibration</h3>
+        <span
+          style={{
+            position: 'absolute',
+            right: '18px',
+            top: '20px',
+            fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+            fontSize: '12px',
+            fontWeight: 500,
+            color: 'var(--auratio-neutral-500)',
+          }}
+        >
+          Same criterion-specific anchors used by AI Evaluation
+        </span>
+
+        {anchorDescriptions ? (
+          (['Low', 'Competent', 'Excellent'] as QualitativeAnchor[]).map((anchorName, index) => (
+            <div
+              key={anchorName}
+              data-anchor={anchorName}
+              style={{
+                position: 'absolute',
+                left: `${18 + index * 346}px`,
+                top: '58px',
+                width: '328px',
+                height: '156px',
+                padding: '14px',
+                boxSizing: 'border-box',
+                border: '1px solid var(--auratio-neutral-200)',
+                borderRadius: '10px',
+                backgroundColor:
+                  anchor === anchorName
+                    ? 'var(--auratio-accent-50, #eef6ff)'
+                    : 'var(--auratio-surface-default)',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: 'var(--auratio-neutral-900)',
+                }}
+              >
+                {anchorName} — {formatAnchorScoreRange(activeCriterion.maxPoints, anchorName)}
+              </div>
+              <p
+                style={{
+                  margin: '10px 0 0',
+                  fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+                  fontSize: '12px',
+                  fontWeight: 400,
+                  lineHeight: '18px',
+                  color: 'var(--auratio-neutral-700)',
+                }}
+              >
+                {anchorDescriptions[anchorName]}
+              </p>
+            </div>
+          ))
+        ) : (
+          <p
+            role="alert"
+            style={{
+              position: 'absolute',
+              left: '18px',
+              top: '64px',
+              margin: 0,
+              color: '#b91c1c',
+              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+              fontSize: '13px',
+            }}
+          >
+            Canonical anchor descriptions are unavailable for this criterion.
+          </p>
+        )}
+      </div>
+
+      <VolunteerEvaluationVideoPlayer
+        submissionId={submissionId}
+        title="Submitted video"
+        style={{ top: '528px', height: '330px' }}
+      />
+
       {/* Required Structured Feedback Section Title */}
       <h3
         style={{
           position: 'absolute',
           left: '30px',
-          top: '262px',
+          top: '872px',
           margin: 0,
           fontFamily: 'var(--auratio-font-family-inter), sans-serif',
           fontSize: '24px',
@@ -522,7 +664,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         style={{
           position: 'absolute',
           left: '30px',
-          top: '300px',
+          top: '910px',
           margin: 0,
           fontFamily: 'var(--auratio-font-family-inter), sans-serif',
           fontSize: '14px',
@@ -540,7 +682,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '338px',
+          top: '948px',
           width: '520px',
           height: '154px',
           borderRadius: '14px',
@@ -611,7 +753,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         className="auratio-volunteer-panel"
         style={{
           left: '586px',
-          top: '338px',
+          top: '948px',
           width: '520px',
           height: '154px',
           borderRadius: '14px',
@@ -682,7 +824,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '512px',
+          top: '1122px',
           width: '520px',
           height: '154px',
           borderRadius: '14px',
@@ -753,7 +895,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         className="auratio-volunteer-panel"
         style={{
           left: '586px',
-          top: '512px',
+          top: '1122px',
           width: '520px',
           height: '154px',
           borderRadius: '14px',
@@ -824,7 +966,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '696px',
+          top: '1306px',
           width: '1076px',
           height: '64px',
           backgroundColor: 'var(--auratio-amber-50)',
@@ -875,7 +1017,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         style={{
           position: 'absolute',
           left: '30px',
-          top: '774px',
+          top: '1384px',
           width: '160px',
           height: '40px',
           borderRadius: '8px',
@@ -891,7 +1033,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         style={{
           position: 'absolute',
           left: '208px',
-          top: '774px',
+          top: '1384px',
           width: '220px',
           height: '40px',
           borderRadius: '8px',
@@ -906,7 +1048,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
           style={{
             position: 'absolute',
             left: '450px',
-            top: '784px',
+            top: '1394px',
             fontFamily: 'var(--auratio-font-family-inter), sans-serif',
             fontSize: '13px',
             fontWeight: 500,

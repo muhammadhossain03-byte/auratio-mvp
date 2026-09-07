@@ -180,29 +180,35 @@ test.describe('Volunteer Critical Regression', () => {
     // Screenshot 6: 06_criterion_editor_score_disabled.png
     await captureHumanFixH1Screenshot(page, '06_criterion_editor_score_disabled.png')
 
-    // TC 18: Selecting "Low" enables exact score input with full 0-5 placeholder
+    // TC 18: Low constrains this 5-point criterion to 0–2
     await page.locator('input[name="anchor"][value="Low"]').click()
     await expect(exactScoreInput).toBeEnabled()
-    await expect(exactScoreInput).toHaveAttribute('placeholder', '0–5')
+    await expect(exactScoreInput).toHaveAttribute('placeholder', '0–2')
+    await expect(exactScoreInput).toHaveAttribute('min', '0')
+    await expect(exactScoreInput).toHaveAttribute('max', '2')
 
-    // TC 19: Selecting "Competent" retains full range placeholder 0-5
+    // TC 19: Competent constrains this 5-point criterion to 3–4
     await page.locator('input[name="anchor"][value="Competent"]').click()
-    await expect(exactScoreInput).toHaveAttribute('placeholder', '0–5')
+    await expect(exactScoreInput).toHaveAttribute('placeholder', '3–4')
+    await expect(exactScoreInput).toHaveAttribute('min', '3')
+    await expect(exactScoreInput).toHaveAttribute('max', '4')
 
-    // TC 20: Selecting "Excellent" retains full range placeholder 0-5
+    // TC 20: Excellent constrains this 5-point criterion to exactly 5
     await page.locator('input[name="anchor"][value="Excellent"]').click()
-    await expect(exactScoreInput).toHaveAttribute('placeholder', '0–5')
+    await expect(exactScoreInput).toHaveAttribute('placeholder', '5')
+    await expect(exactScoreInput).toHaveAttribute('min', '5')
+    await expect(exactScoreInput).toHaveAttribute('max', '5')
 
     // Screenshot 7: 07_criterion_editor_anchor_selected.png
     await captureHumanFixH1Screenshot(page, '07_criterion_editor_anchor_selected.png')
 
-    // TC 21: Score above criterion maximum is rejected with error
-    await exactScoreInput.fill('15')
-    const overflowText = await page.innerText('body')
-    expect(overflowText).toMatch(/Score cannot exceed|exceed/)
-
-    // Set valid score for Excellent: 4
+    // TC 21: Anchor-incompatible score is rejected
     await exactScoreInput.fill('4')
+    const overflowText = await page.innerText('body')
+    expect(overflowText).toContain('Excellent requires a score of 5')
+
+    // Set valid score for Excellent
+    await exactScoreInput.fill('5')
 
     // Selectors for 4 feedback textareas and timestamp input
     const timestampInput = page.locator('input[aria-label="Evidence timestamp"]')
@@ -263,8 +269,8 @@ test.describe('Volunteer Critical Regression', () => {
 
     // TC 27: Reactive score calculation update
     const reactiveText = await page.innerText('body')
-    expect(reactiveText).toContain('4 / 40')
-    expect(reactiveText).toContain('4 / 100')
+    expect(reactiveText).toContain('5 / 40')
+    expect(reactiveText).toContain('5 / 100')
     expect(reactiveText).toContain('1 / 16')
 
     // Screenshot 10: 10_workspace_reactive_totals_updated.png
@@ -447,7 +453,7 @@ test.describe('Volunteer Critical Regression', () => {
       expect(inEvalText).not.toContain('Respond to assignment')
     })
 
-    test('H1.1 Issue 2 & Issue 4: Deterministic mm:ss timestamp requirement and full score range after anchor selection', async ({ page }) => {
+    test('H1.1 Issue 2 & Issue 4: Deterministic mm:ss timestamp requirement and anchor-compatible score bands', async ({ page }) => {
       await page.goto('/volunteer/evaluation/sub-8821/criterion?criterionId=ud-pacing')
       await expect(page).toHaveURL(/\/volunteer\/evaluation\/sub-8821\/criterion/)
 
@@ -468,39 +474,38 @@ test.describe('Volunteer Critical Regression', () => {
       expect(radioLabelsText).not.toContain('(2–3 pts)')
       expect(radioLabelsText).not.toContain('(4–5 pts)')
 
-      // Select "Low" anchor: enables score with full 0-5 placeholder
+      // Low on a 5-point criterion is 0–2
       await page.locator('input[name="anchor"][value="Low"]').click()
       await expect(exactScoreInput).toBeEnabled()
-      await expect(exactScoreInput).toHaveAttribute('placeholder', '0–5')
+      await expect(exactScoreInput).toHaveAttribute('placeholder', '0–2')
 
-      // Any integer in full range 0-5 accepted under Low anchor (no 0-1 restriction)
+      // Incompatible score is rejected under Low
       await exactScoreInput.fill('5')
       let bodyText = await page.innerText('body')
-      expect(bodyText).not.toContain('Score must be between')
+      expect(bodyText).toContain('Low requires a score between 0 and 2')
 
-      // Out of range (6) rejected with error
-      await exactScoreInput.fill('6')
-      bodyText = await page.innerText('body')
-      expect(bodyText).toMatch(/Score cannot exceed|exceed/)
+      // Valid Low score
+      await exactScoreInput.fill('2')
 
-      // Fill valid score 4 under Low
+      // Capture Evidence 05: band-constrained anchor state
+      await captureHumanFixH11Screenshot(page, '05_anchor_selected_band_constrained.png')
+
+      // Switching to Competent clears the now-incompatible Low score
+      await page.locator('input[name="anchor"][value="Competent"]').click()
+      await expect(exactScoreInput).toHaveValue('')
+      await expect(exactScoreInput).toHaveAttribute('placeholder', '3–4')
       await exactScoreInput.fill('4')
 
-      // Capture Evidence 05: 05_anchor_selected_full_score_range.png
-      await captureHumanFixH11Screenshot(page, '05_anchor_selected_full_score_range.png')
-
-      // Switch to Competent: score remains 4, placeholder 0-5
-      await page.locator('input[name="anchor"][value="Competent"]').click()
-      await expect(exactScoreInput).toHaveValue('4')
-
-      // Switch to Excellent: score 0 is valid
+      // Switching to Excellent clears 4 because Excellent requires exactly 5
       await page.locator('input[name="anchor"][value="Excellent"]').click()
+      await expect(exactScoreInput).toHaveValue('')
+      await expect(exactScoreInput).toHaveAttribute('placeholder', '5')
       await exactScoreInput.fill('0')
       bodyText = await page.innerText('body')
-      expect(bodyText).not.toContain('Score must be between')
+      expect(bodyText).toContain('Excellent requires a score of 5')
 
-      // Re-set score to 4
-      await exactScoreInput.fill('4')
+      // Set the compatible Excellent score
+      await exactScoreInput.fill('5')
 
       // Fill feedback narratives
       await evidenceTextarea.fill('At 01:24, speaker paced the opening problem effectively.')
@@ -863,22 +868,22 @@ test.describe('Volunteer Critical Regression', () => {
           track: 'Extempore',
           trackSlug: 'extempore',
           criteria: {
-            'ud-pacing': { id: 'ud-pacing', name: 'Pacing', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:10', evidence: 'Good pacing', strength: 'Steady', weakness: 'Minor rush', advice: 'Keep steady' },
-            'ud-tone': { id: 'ud-tone', name: 'Tone', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:20', evidence: 'Good tone', strength: 'Clear', weakness: 'Flat at end', advice: 'Modulate' },
-            'ud-variety': { id: 'ud-variety', name: 'Variety', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:30', evidence: 'Varied pitch', strength: 'Dynamic', weakness: 'None', advice: 'Continue' },
-            'ud-filler': { id: 'ud-filler', name: 'Filler', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:40', evidence: 'Low filler', strength: 'Clean', weakness: 'Occasional um', advice: 'Pause instead' },
-            'ud-eye-contact': { id: 'ud-eye-contact', name: 'Eye contact', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:50', evidence: 'Good gaze', strength: 'Direct', weakness: 'None', advice: 'Maintain' },
-            'ud-posture': { id: 'ud-posture', name: 'Posture', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:00', evidence: 'Upright', strength: 'Confident', weakness: 'None', advice: 'Maintain' },
-            'ud-gestures': { id: 'ud-gestures', name: 'Gestures', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:10', evidence: 'Natural', strength: 'Supportive', weakness: 'Slight repetitive', advice: 'Vary' },
-            'ud-time': { id: 'ud-time', name: 'Time', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:20', evidence: 'On target', strength: 'Precise', weakness: 'None', advice: 'Keep it up' },
-            'sf-hook': { id: 'sf-hook', name: 'Hook', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '00:15', evidence: 'Strong start', strength: 'Engaging', weakness: 'None', advice: 'Great' },
-            'sf-clarity': { id: 'sf-clarity', name: 'Clarity', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '00:45', evidence: 'Clear outline', strength: 'Cohesive', weakness: 'None', advice: 'Continue' },
-            'sf-transitions': { id: 'sf-transitions', name: 'Transitions', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:15', evidence: 'Smooth shifts', strength: 'Logical', weakness: 'None', advice: 'Good' },
-            'sf-conclusion': { id: 'sf-conclusion', name: 'Conclusion', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:40', evidence: 'Punchy wrap-up', strength: 'Memorable', weakness: 'None', advice: 'Excellent' },
-            'ex-thesis': { id: 'ex-thesis', name: 'Rapid thesis', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '00:30', evidence: 'Quick framing', strength: 'Fast clarity', weakness: 'Brief lag', advice: 'Anchor faster' },
-            'ex-structure': { id: 'ex-structure', name: 'Spontaneous structure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '01:00', evidence: 'Clean spontaneous points', strength: '3 points clear', weakness: 'Point 2 short', advice: 'Balance points' },
-            'ex-narrative': { id: 'ex-narrative', name: 'Narrative continuity', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '01:45', evidence: 'Story thread held', strength: 'Engaging arc', weakness: 'Minor detour', advice: 'Tighten arc' },
-            'ex-composure': { id: 'ex-composure', name: 'Composure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '02:15', evidence: 'Poised response', strength: 'Calm under pressure', weakness: 'None', advice: 'Flawless poise' },
+            'ud-pacing': { id: 'ud-pacing', name: 'Pacing', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:10', evidence: 'Good pacing', strength: 'Steady', weakness: 'Minor rush', advice: 'Keep steady' },
+            'ud-tone': { id: 'ud-tone', name: 'Tone', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:20', evidence: 'Good tone', strength: 'Clear', weakness: 'Flat at end', advice: 'Modulate' },
+            'ud-variety': { id: 'ud-variety', name: 'Variety', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:30', evidence: 'Varied pitch', strength: 'Dynamic', weakness: 'None', advice: 'Continue' },
+            'ud-filler': { id: 'ud-filler', name: 'Filler', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:40', evidence: 'Low filler', strength: 'Clean', weakness: 'Occasional um', advice: 'Pause instead' },
+            'ud-eye-contact': { id: 'ud-eye-contact', name: 'Eye contact', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:50', evidence: 'Good gaze', strength: 'Direct', weakness: 'None', advice: 'Maintain' },
+            'ud-posture': { id: 'ud-posture', name: 'Posture', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '02:00', evidence: 'Upright', strength: 'Confident', weakness: 'None', advice: 'Maintain' },
+            'ud-gestures': { id: 'ud-gestures', name: 'Gestures', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '02:10', evidence: 'Natural', strength: 'Supportive', weakness: 'Slight repetitive', advice: 'Vary' },
+            'ud-time': { id: 'ud-time', name: 'Time', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '02:20', evidence: 'On target', strength: 'Precise', weakness: 'None', advice: 'Keep it up' },
+            'sf-hook': { id: 'sf-hook', name: 'Hook', category: 'Structural Flow', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '00:15', evidence: 'Strong start', strength: 'Engaging', weakness: 'None', advice: 'Great' },
+            'sf-clarity': { id: 'sf-clarity', name: 'Clarity', category: 'Structural Flow', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '00:45', evidence: 'Clear outline', strength: 'Cohesive', weakness: 'None', advice: 'Continue' },
+            'sf-transitions': { id: 'sf-transitions', name: 'Transitions', category: 'Structural Flow', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:15', evidence: 'Smooth shifts', strength: 'Logical', weakness: 'None', advice: 'Good' },
+            'sf-conclusion': { id: 'sf-conclusion', name: 'Conclusion', category: 'Structural Flow', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '02:40', evidence: 'Punchy wrap-up', strength: 'Memorable', weakness: 'None', advice: 'Excellent' },
+            'ex-thesis': { id: 'ex-thesis', name: 'Rapid thesis', category: 'Track Specialisation', maxPoints: 10, anchor: 'Competent', exactScore: 8, evidenceTimestamp: '00:30', evidence: 'Quick framing', strength: 'Fast clarity', weakness: 'Brief lag', advice: 'Anchor faster' },
+            'ex-structure': { id: 'ex-structure', name: 'Spontaneous structure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Competent', exactScore: 8, evidenceTimestamp: '01:00', evidence: 'Clean spontaneous points', strength: '3 points clear', weakness: 'Point 2 short', advice: 'Balance points' },
+            'ex-narrative': { id: 'ex-narrative', name: 'Narrative continuity', category: 'Track Specialisation', maxPoints: 10, anchor: 'Competent', exactScore: 8, evidenceTimestamp: '01:45', evidence: 'Story thread held', strength: 'Engaging arc', weakness: 'Minor detour', advice: 'Tighten arc' },
+            'ex-composure': { id: 'ex-composure', name: 'Composure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Competent', exactScore: 8, evidenceTimestamp: '02:15', evidence: 'Poised response', strength: 'Calm under pressure', weakness: 'None', advice: 'Flawless poise' },
           },
           overallSummary: 'High-quality spontaneous speech demonstrating rapid thesis formulation.',
           isSubmitted: false,
@@ -984,22 +989,22 @@ test.describe('Volunteer Critical Regression', () => {
           track: 'Extempore',
           trackSlug: 'extempore',
           criteria: {
-            'ud-pacing': { id: 'ud-pacing', name: 'Pacing', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:10', evidence: 'Good pacing', strength: 'Steady', weakness: 'Minor rush', advice: 'Keep steady' },
-            'ud-tone': { id: 'ud-tone', name: 'Tone', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:20', evidence: 'Good tone', strength: 'Clear', weakness: 'Flat at end', advice: 'Modulate' },
-            'ud-variety': { id: 'ud-variety', name: 'Variety', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:30', evidence: 'Varied pitch', strength: 'Dynamic', weakness: 'None', advice: 'Continue' },
-            'ud-filler': { id: 'ud-filler', name: 'Filler', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:40', evidence: 'Low filler', strength: 'Clean', weakness: 'Occasional um', advice: 'Pause instead' },
-            'ud-eye-contact': { id: 'ud-eye-contact', name: 'Eye contact', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:50', evidence: 'Good gaze', strength: 'Direct', weakness: 'None', advice: 'Maintain' },
-            'ud-posture': { id: 'ud-posture', name: 'Posture', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:00', evidence: 'Upright', strength: 'Confident', weakness: 'None', advice: 'Maintain' },
-            'ud-gestures': { id: 'ud-gestures', name: 'Gestures', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:10', evidence: 'Natural', strength: 'Supportive', weakness: 'Slight repetitive', advice: 'Vary' },
-            'ud-time': { id: 'ud-time', name: 'Time', category: 'Universal Delivery', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:20', evidence: 'On target', strength: 'Precise', weakness: 'None', advice: 'Keep it up' },
-            'sf-hook': { id: 'sf-hook', name: 'Hook', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '00:15', evidence: 'Strong start', strength: 'Engaging', weakness: 'None', advice: 'Great' },
-            'sf-clarity': { id: 'sf-clarity', name: 'Clarity', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '00:45', evidence: 'Clear outline', strength: 'Cohesive', weakness: 'None', advice: 'Continue' },
-            'sf-transitions': { id: 'sf-transitions', name: 'Transitions', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '01:15', evidence: 'Smooth shifts', strength: 'Logical', weakness: 'None', advice: 'Good' },
-            'sf-conclusion': { id: 'sf-conclusion', name: 'Conclusion', category: 'Structural Flow', maxPoints: 5, anchor: 'Adequate', exactScore: 5, evidenceTimestamp: '02:40', evidence: 'Punchy wrap-up', strength: 'Memorable', weakness: 'None', advice: 'Excellent' },
-            'ex-thesis': { id: 'ex-thesis', name: 'Rapid thesis', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '00:30', evidence: 'Quick framing', strength: 'Fast clarity', weakness: 'Brief lag', advice: 'Anchor faster' },
-            'ex-structure': { id: 'ex-structure', name: 'Spontaneous structure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '01:00', evidence: 'Clean spontaneous points', strength: '3 points clear', weakness: 'Point 2 short', advice: 'Balance points' },
-            'ex-narrative': { id: 'ex-narrative', name: 'Narrative continuity', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '01:45', evidence: 'Story thread held', strength: 'Engaging arc', weakness: 'Minor detour', advice: 'Tighten arc' },
-            'ex-composure': { id: 'ex-composure', name: 'Composure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Adequate', exactScore: 8, evidenceTimestamp: '02:15', evidence: 'Poised response', strength: 'Calm under pressure', weakness: 'None', advice: 'Flawless poise' },
+            'ud-pacing': { id: 'ud-pacing', name: 'Pacing', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:10', evidence: 'Good pacing', strength: 'Steady', weakness: 'Minor rush', advice: 'Keep steady' },
+            'ud-tone': { id: 'ud-tone', name: 'Tone', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:20', evidence: 'Good tone', strength: 'Clear', weakness: 'Flat at end', advice: 'Modulate' },
+            'ud-variety': { id: 'ud-variety', name: 'Variety', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:30', evidence: 'Varied pitch', strength: 'Dynamic', weakness: 'None', advice: 'Continue' },
+            'ud-filler': { id: 'ud-filler', name: 'Filler', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:40', evidence: 'Low filler', strength: 'Clean', weakness: 'Occasional um', advice: 'Pause instead' },
+            'ud-eye-contact': { id: 'ud-eye-contact', name: 'Eye contact', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:50', evidence: 'Good gaze', strength: 'Direct', weakness: 'None', advice: 'Maintain' },
+            'ud-posture': { id: 'ud-posture', name: 'Posture', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '02:00', evidence: 'Upright', strength: 'Confident', weakness: 'None', advice: 'Maintain' },
+            'ud-gestures': { id: 'ud-gestures', name: 'Gestures', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '02:10', evidence: 'Natural', strength: 'Supportive', weakness: 'Slight repetitive', advice: 'Vary' },
+            'ud-time': { id: 'ud-time', name: 'Time', category: 'Universal Delivery', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '02:20', evidence: 'On target', strength: 'Precise', weakness: 'None', advice: 'Keep it up' },
+            'sf-hook': { id: 'sf-hook', name: 'Hook', category: 'Structural Flow', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '00:15', evidence: 'Strong start', strength: 'Engaging', weakness: 'None', advice: 'Great' },
+            'sf-clarity': { id: 'sf-clarity', name: 'Clarity', category: 'Structural Flow', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '00:45', evidence: 'Clear outline', strength: 'Cohesive', weakness: 'None', advice: 'Continue' },
+            'sf-transitions': { id: 'sf-transitions', name: 'Transitions', category: 'Structural Flow', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '01:15', evidence: 'Smooth shifts', strength: 'Logical', weakness: 'None', advice: 'Good' },
+            'sf-conclusion': { id: 'sf-conclusion', name: 'Conclusion', category: 'Structural Flow', maxPoints: 5, anchor: 'Excellent', exactScore: 5, evidenceTimestamp: '02:40', evidence: 'Punchy wrap-up', strength: 'Memorable', weakness: 'None', advice: 'Excellent' },
+            'ex-thesis': { id: 'ex-thesis', name: 'Rapid thesis', category: 'Track Specialisation', maxPoints: 10, anchor: 'Competent', exactScore: 8, evidenceTimestamp: '00:30', evidence: 'Quick framing', strength: 'Fast clarity', weakness: 'Brief lag', advice: 'Anchor faster' },
+            'ex-structure': { id: 'ex-structure', name: 'Spontaneous structure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Competent', exactScore: 8, evidenceTimestamp: '01:00', evidence: 'Clean spontaneous points', strength: '3 points clear', weakness: 'Point 2 short', advice: 'Balance points' },
+            'ex-narrative': { id: 'ex-narrative', name: 'Narrative continuity', category: 'Track Specialisation', maxPoints: 10, anchor: 'Competent', exactScore: 8, evidenceTimestamp: '01:45', evidence: 'Story thread held', strength: 'Engaging arc', weakness: 'Minor detour', advice: 'Tighten arc' },
+            'ex-composure': { id: 'ex-composure', name: 'Composure', category: 'Track Specialisation', maxPoints: 10, anchor: 'Competent', exactScore: 8, evidenceTimestamp: '02:15', evidence: 'Poised response', strength: 'Calm under pressure', weakness: 'None', advice: 'Flawless poise' },
           },
           overallSummary: 'High-quality spontaneous speech demonstrating rapid thesis formulation.',
           isSubmitted: false,
@@ -1229,7 +1234,7 @@ test.describe('Volunteer Critical Regression', () => {
 
         for (const [_, cData] of Object.entries(draft.criteria as Record<string, any>)) {
           cData.anchor = 'Competent'
-          cData.exactScore = Math.min(cData.maxPoints, 4)
+          cData.exactScore = cData.maxPoints === 10 ? 8 : 4
           cData.evidenceTimestamp = '01:23'
           cData.evidence = 'Valid evidence observed in presentation.'
           cData.strength = 'Clear delivery and confident tone.'
@@ -1239,7 +1244,10 @@ test.describe('Volunteer Critical Regression', () => {
         draft.overallSummary = 'Thorough evaluation of the business pitch presentation.'
         window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft))
 
-        win.__submitVolunteerEvaluation('SUB-8821')
+        const submitResult = win.__submitVolunteerEvaluation('SUB-8821')
+        if (!submitResult?.success) {
+          throw new Error('Expected canonical-band-compatible V-04 fixture to submit successfully')
+        }
       })
 
       await page.goto('/volunteer/evaluation/sub-8821/submitted')
@@ -1311,7 +1319,7 @@ test.describe('Volunteer Critical Regression', () => {
         const draft = win.__getVolunteerScoringDraft ? win.__getVolunteerScoringDraft('SUB-8821') : null
         for (const [_, cData] of Object.entries(draft.criteria as Record<string, any>)) {
           cData.anchor = 'Competent'
-          cData.exactScore = 3
+          cData.exactScore = cData.maxPoints === 10 ? 5 : 3
           cData.evidenceTimestamp = '01:00'
           cData.evidence = 'Good evidence.'
           cData.strength = 'Solid.'
@@ -1320,7 +1328,10 @@ test.describe('Volunteer Critical Regression', () => {
         }
         draft.overallSummary = 'Initial submission summary.'
         window.sessionStorage.setItem('auratio_volunteer_draft_SUB-8821', JSON.stringify(draft))
-        win.__submitVolunteerEvaluation('SUB-8821')
+        const submitResult = win.__submitVolunteerEvaluation('SUB-8821')
+        if (!submitResult?.success) {
+          throw new Error('Expected canonical-band-compatible reopened-workflow fixture to submit successfully')
+        }
       })
 
       await page.goto('/volunteer/evaluation/sub-8821/reopened')

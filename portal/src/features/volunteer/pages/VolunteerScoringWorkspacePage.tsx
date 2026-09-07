@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
 import { VolunteerLayout } from '../components/VolunteerLayout'
+import { VolunteerEvaluationVideoPlayer } from '../components/VolunteerEvaluationVideoPlayer'
 import {
   getVolunteerAssignment,
   getScoringDraft,
@@ -369,12 +370,18 @@ export function VolunteerScoringWorkspacePage() {
         </span>
       </div>
 
+      <VolunteerEvaluationVideoPlayer
+        submissionId={submissionId}
+        title="Submitted video"
+        style={{ top: '276px', height: '330px' }}
+      />
+
       {/* Left Column: Calculated score */}
       <div
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '276px',
+          top: '626px',
           width: '360px',
           height: '286px',
           borderRadius: '14px',
@@ -516,7 +523,7 @@ export function VolunteerScoringWorkspacePage() {
         className="auratio-volunteer-panel"
         style={{
           left: '420px',
-          top: '276px',
+          top: '626px',
           width: '686px',
           height: '286px',
           borderRadius: '14px',
@@ -693,7 +700,7 @@ export function VolunteerScoringWorkspacePage() {
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '580px',
+          top: '930px',
           width: '1076px',
           height: '170px',
           borderRadius: '14px',
@@ -744,7 +751,7 @@ export function VolunteerScoringWorkspacePage() {
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '770px',
+          top: '1120px',
           width: '1076px',
           height: '460px',
           borderRadius: '14px',
@@ -818,7 +825,7 @@ export function VolunteerScoringWorkspacePage() {
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '1250px',
+          top: '1600px',
           width: '1076px',
           height: '270px',
           borderRadius: '14px',
@@ -892,7 +899,7 @@ export function VolunteerScoringWorkspacePage() {
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '1540px',
+          top: '1890px',
           width: '1076px',
           height: '270px',
           borderRadius: '14px',
@@ -966,7 +973,7 @@ export function VolunteerScoringWorkspacePage() {
         className="auratio-volunteer-panel"
         style={{
           left: '30px',
-          top: '1830px',
+          top: '2180px',
           width: '1076px',
           height: '156px',
           borderRadius: '14px',
@@ -1014,7 +1021,7 @@ export function VolunteerScoringWorkspacePage() {
         style={{
           position: 'absolute',
           left: '30px',
-          top: '2000px',
+          top: '2350px',
           width: '1076px',
           height: '40px',
         }}

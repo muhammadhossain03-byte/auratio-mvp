@@ -6,7 +6,7 @@ export interface ActiveAssignment {
   publicationStatus: 'Processing' | 'Pending Moderation' | 'Approved' | 'Rejected'
 }
 
-export type QualitativeAnchor = 'Low' | 'Competent' | 'Excellent'
+export type { QualitativeAnchor } from './generatedRubricAnchors'
 
 export type {
   CriterionDefinition,
@@ -39,6 +39,15 @@ import {
   getCriteriaForTrack,
 } from './canonicalTrackRegistry'
 import { getMappingBySubmissionId } from '../../shared/requestSubmissionMap'
+import type { QualitativeAnchor } from './generatedRubricAnchors'
+import {
+  CANONICAL_SCORE_RANGES,
+  CRITERION_ANCHOR_DESCRIPTIONS,
+  getAnchorScoreRange,
+  getCriterionAnchorDescriptions,
+  isAnchorScoreCompatible,
+  isQualitativeAnchor,
+} from './generatedRubricAnchors'
 
 export interface CriterionScoreData {
   id: string
@@ -465,9 +474,13 @@ export function isValidTimestamp(ts: string | null | undefined): boolean {
 }
 
 export function isCriterionComplete(criterion: CriterionScoreData): boolean {
-  if (!criterion.anchor) return false
-  if (criterion.exactScore === null || isNaN(criterion.exactScore) || !Number.isInteger(criterion.exactScore)) return false
-  if (criterion.exactScore < 0 || criterion.exactScore > criterion.maxPoints) {
+  if (!isQualitativeAnchor(criterion.anchor)) return false
+  if (
+    criterion.exactScore === null ||
+    isNaN(criterion.exactScore) ||
+    !Number.isInteger(criterion.exactScore) ||
+    !isAnchorScoreCompatible(criterion.maxPoints, criterion.anchor, criterion.exactScore)
+  ) {
     return false
   }
   if (!isValidTimestamp(criterion.evidenceTimestamp)) {
@@ -583,13 +596,29 @@ export function saveCriterionScoreData(
   const draft = getScoringDraft(submissionId)
   if (!draft || draft.isSubmitted) return null
 
-  if (draft.criteria[criterionId]) {
-    draft.criteria[criterionId] = {
-      ...draft.criteria[criterionId],
-      ...data,
-    }
-    saveScoringDraft(draft)
+  const current = draft.criteria[criterionId]
+  if (!current) return null
+
+  const next: CriterionScoreData = {
+    ...current,
+    ...data,
   }
+
+  if (next.anchor !== null && !isQualitativeAnchor(next.anchor)) {
+    return null
+  }
+
+  if (
+    next.exactScore !== null &&
+    (!next.anchor ||
+      !isQualitativeAnchor(next.anchor) ||
+      !isAnchorScoreCompatible(next.maxPoints, next.anchor, next.exactScore))
+  ) {
+    return null
+  }
+
+  draft.criteria[criterionId] = next
+  saveScoringDraft(draft)
   return draft
 }
 
@@ -614,17 +643,25 @@ export function calculateDraftTotals(draft: VolunteerSubmissionScoringDraft) {
   let structuredFeedbackCount = 0
 
   for (const c of Object.values(draft.criteria)) {
-    if (c.anchor !== null) {
+    const hasCanonicalAnchor = isQualitativeAnchor(c.anchor)
+    const hasCompatibleScore =
+      hasCanonicalAnchor &&
+      c.exactScore !== null &&
+      !isNaN(c.exactScore) &&
+      Number.isInteger(c.exactScore) &&
+      isAnchorScoreCompatible(c.maxPoints, c.anchor, c.exactScore)
+
+    if (hasCanonicalAnchor) {
       anchorCount++
     }
-    if (c.exactScore !== null && !isNaN(c.exactScore)) {
+    if (hasCompatibleScore && c.exactScore !== null) {
       criterionScoresCount++
       if (c.category === 'Universal Delivery') {
-        universalDelivery += Math.min(c.maxPoints, Math.max(0, c.exactScore))
+        universalDelivery += c.exactScore
       } else if (c.category === 'Structural Flow') {
-        structuralFlow += Math.min(c.maxPoints, Math.max(0, c.exactScore))
+        structuralFlow += c.exactScore
       } else if (c.category === 'Track Specialisation') {
-        trackSpecialisation += Math.min(c.maxPoints, Math.max(0, c.exactScore))
+        trackSpecialisation += c.exactScore
       }
     }
     if (isCriterionComplete(c)) {
@@ -930,6 +967,11 @@ if (typeof window !== 'undefined') {
   win.__getCriteriaForTrack = getCriteriaForTrack
   win.__CANONICAL_TRACK_REGISTRY = CANONICAL_TRACK_REGISTRY
   win.__AUTHORITATIVE_MVP_TRACKS = AUTHORITATIVE_MVP_TRACKS
+  win.__CANONICAL_SCORE_RANGES = CANONICAL_SCORE_RANGES
+  win.__CANONICAL_CRITERION_ANCHORS = CRITERION_ANCHOR_DESCRIPTIONS
+  win.__getCriterionAnchorDescriptions = getCriterionAnchorDescriptions
+  win.__getAnchorScoreRange = getAnchorScoreRange
+  win.__isAnchorScoreCompatible = isAnchorScoreCompatible
   win.__seedVolunteerAssignment = seedVolunteerAssignment
   win.__declineVolunteerAssignment = declineVolunteerAssignment
   win.__getDeclinedAssignments = getDeclinedAssignments

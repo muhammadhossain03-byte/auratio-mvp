@@ -4,14 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "npm run generate:rubric-anchors",
     "dev": "vite",
+    "prebuild": "npm run generate:rubric-anchors",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node scripts/verify_step_iv_hardening.mjs && node scripts/verify_interactions.mjs",
+    "test": "npm run check:rubric-anchors && node scripts/verify_step_iv_hardening.mjs && node scripts/verify_interactions.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "capture": "node scripts/capture.mjs"
+    "capture": "node scripts/capture.mjs",
+    "generate:rubric-anchors": "node scripts/generate-rubric-anchors.mjs",
+    "check:rubric-anchors": "node scripts/generate-rubric-anchors.mjs --check"
   },
   "dependencies": {
     "react": "^19.2.8",

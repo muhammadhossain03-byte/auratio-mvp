@@ -408,7 +408,7 @@ async function run() {
     })
     if (!scoreInputDisabledBeforeAnchor.result.value) throw new Error('Test Case 17 Failed: Exact score input is not disabled before anchor selection')
 
-    // Test Case 18: Selecting "Low" enables exact score input and allows scores in 0-30% range
+    // Test Case 18: Selecting "Low" enables exact score input; canonical 5-point Low band is 0–2
     await sendCdp(ws, 'Runtime.evaluate', {
       expression: `(() => {
         const radio = document.querySelector('input[name="anchor"][value="Low"]');
@@ -452,8 +452,8 @@ async function run() {
       throw new Error('Test Case 21 Failed: Error message not displayed for score exceeding criterion maximum')
     }
 
-    // Set valid score for Excellent (4)
-    await setInputValue('input[aria-label="Exact score"]', '4')
+    // Set valid score for Excellent on this 5-point criterion
+    await setInputValue('input[aria-label="Exact score"]', '5')
     await new Promise((r) => setTimeout(r, 300))
 
     // Test Cases 22, 23, 24, 25: Pure whitespace rejected in all 4 fields
@@ -536,8 +536,8 @@ async function run() {
       expression: `document.body.innerText`,
       returnByValue: true,
     })
-    if (!scoreTextAfter1.result.value.includes('4 / 40') || !scoreTextAfter1.result.value.includes('4 / 100')) {
-      throw new Error('Test Case 27 Failed: Score did not update reactively to 4 / 40 and 4 / 100')
+    if (!scoreTextAfter1.result.value.includes('5 / 40') || !scoreTextAfter1.result.value.includes('5 / 100')) {
+      throw new Error('Test Case 27 Failed: Score did not update reactively to 5 / 40 and 5 / 100')
     }
     if (!scoreTextAfter1.result.value.includes('1 / 16')) {
       throw new Error('Test Case 27 Failed: Completeness did not update reactively to 1 / 16')
