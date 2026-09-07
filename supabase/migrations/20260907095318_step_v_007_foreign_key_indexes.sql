@@ -1,0 +1,11 @@
+create index audit_log_actor_user_id_idx on public.audit_log(actor_user_id);
+create index evaluation_admin_actions_actor_user_id_idx on public.evaluation_admin_actions(actor_user_id);
+create index evaluation_admin_actions_evaluation_version_id_idx on public.evaluation_admin_actions(evaluation_version_id);
+create index evaluation_admin_actions_target_volunteer_user_id_idx on public.evaluation_admin_actions(target_volunteer_user_id);
+create index evaluation_criterion_results_criterion_anchor_idx on public.evaluation_criterion_results(criterion_id,anchor);
+create index evaluation_versions_evaluator_user_id_idx on public.evaluation_versions(evaluator_user_id);
+create index events_created_by_idx on public.events(created_by);
+create index events_updated_by_idx on public.events(updated_by);
+create index human_assignments_assigned_by_idx on public.human_assignments(assigned_by);
+create index staff_invitations_accepted_by_idx on public.staff_invitations(accepted_by);
+create index staff_invitations_invited_by_idx on public.staff_invitations(invited_by);
