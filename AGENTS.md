@@ -32,6 +32,14 @@ An Antigravity commit is never accepted merely because Antigravity reports succe
 ## Current branch
 `step-iv/ui-foundation`
 
+## Local filesystem convention
+- `D:\\auratio-mvp\\` is the actual Auratio Git working repository used by Antigravity.
+- `E:\\Auratio_<Package_Name>\\` is the standard extraction location for ChatGPT-authored transfer/execution packages.
+- ChatGPT-authored ZIP/packages must not be extracted directly into `D:\\auratio-mvp\\` unless ChatGPT explicitly instructs otherwise.
+- Antigravity mechanically applies/copies the ChatGPT-authored package from `E:\\` into `D:\\auratio-mvp\\` only through the exact supplied execution instructions.
+- Temporary package folders on `E:\\` may be deleted only after the corresponding GitHub commit has been independently inspected and accepted by ChatGPT.
+- Never delete, replace, or treat `D:\\auratio-mvp\\` as a temporary extraction folder.
+
 ## Step gate
 Step IV is reopened. Do not start production Supabase/backend/API/Gemini/report/deployment implementation until the Step-IV zero-known-defects gate is explicitly re-closed by ChatGPT.
 

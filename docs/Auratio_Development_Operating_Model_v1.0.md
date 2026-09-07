@@ -89,3 +89,14 @@ A commit is not accepted merely because Antigravity reports success.
 - **Local repository (`D:\auratio-mvp`):** execution workspace used by Antigravity.
 - **ChatGPT Project:** current working context and current authoritative project files; superseded files should not be treated as current.
 - **Antigravity:** repository operator only, never a competing technical authority or developer.
+
+## Local filesystem convention
+
+The following local path convention is locked for Auratio execution handoffs:
+
+- `D:\auratio-mvp\` is the real Auratio Git working repository.
+- `E:\Auratio_<Package_Name>\` is the standard extraction location for ChatGPT-authored ZIP/packages before Antigravity applies them.
+- ChatGPT-authored packages must not be extracted directly into the Git working repository unless ChatGPT explicitly instructs otherwise.
+- Antigravity applies the package from `E:\` to `D:\auratio-mvp\` mechanically, using only the exact ChatGPT-authored patcher/files/instructions.
+- Old temporary package folders on `E:\` may be deleted after the corresponding pushed commit has been independently inspected and accepted by ChatGPT.
+- `D:\auratio-mvp\` must never be deleted or treated as a disposable extraction directory as part of the package-cleanup workflow.
