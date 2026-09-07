@@ -55,27 +55,30 @@ Future<void> _loadFonts() async {
   _fontsLoaded = true;
 }
 
+// Exact canonical mobile inventory preserved from the locked Step-IV 41-screen
+// reconciliation: developer-only /foundation is NOT canonical, while Choose
+// Evaluation has two canonical visible states (AI and Human).
 const _routes = <(String, String)>[
-  ('M01_foundation', '/foundation'),
-  ('M02_sign_in', '/auth/sign-in'),
-  ('M03_create_account', '/auth/create-account'),
-  ('M04_verify_email', '/auth/verify-email'),
-  ('M05_email_verified', '/auth/email-verified'),
-  ('M06_sign_in_new_account', '/auth/sign-in-new-account'),
-  ('M07_forgot_password', '/auth/forgot-password'),
-  ('M08_reset_link_sent', '/auth/reset-link-sent'),
-  ('M09_reset_password', '/auth/reset-password'),
-  ('M10_password_reset_complete', '/auth/password-reset-complete'),
-  ('M11_onboarding_intro', '/onboarding/intro'),
-  ('M12_choose_paths', '/onboarding/choose-paths'),
-  ('M13_home', '/home'),
-  ('M14_tracks', '/tracks'),
-  ('M15_track_details', '/tracks/business-pitch-sales-pitch'),
-  ('M16_submission_requirements', '/submissions/requirements'),
-  ('M17_upload_recording', '/submissions/upload-recording'),
-  ('M18_checking_recording', '/submissions/checking-recording'),
-  ('M19_recording_accepted', '/submissions/recording-accepted'),
-  ('M20_choose_evaluation_method', '/evaluations/choose-method'),
+  ('M01_sign_in', '/auth/sign-in'),
+  ('M02_create_account', '/auth/create-account'),
+  ('M03_verify_email', '/auth/verify-email'),
+  ('M04_email_verified', '/auth/email-verified'),
+  ('M05_onboarding_intro', '/onboarding/intro'),
+  ('M06_choose_paths', '/onboarding/choose-paths'),
+  ('M07_sign_in_new_account', '/auth/sign-in-new-account'),
+  ('M08_forgot_password', '/auth/forgot-password'),
+  ('M09_reset_link_sent', '/auth/reset-link-sent'),
+  ('M10_reset_password', '/auth/reset-password'),
+  ('M11_password_reset_complete', '/auth/password-reset-complete'),
+  ('M12_home', '/home'),
+  ('M13_tracks', '/tracks'),
+  ('M14_track_details', '/tracks/business-pitch-sales-pitch'),
+  ('M15_submission_requirements', '/submissions/requirements'),
+  ('M16_upload_recording', '/submissions/upload-recording'),
+  ('M17_checking_recording', '/submissions/checking-recording'),
+  ('M18_recording_accepted', '/submissions/recording-accepted'),
+  ('M19_choose_evaluation_ai', '/evaluations/choose-method'),
+  ('M20_choose_evaluation_human', '/evaluations/choose-method?method=human'),
   ('M21_routing_ai', '/evaluations/routing/assigned-ai'),
   ('M22_routing_human', '/evaluations/routing/assigned-human'),
   ('M23_processing_ai', '/evaluations/processing/ai'),
@@ -159,7 +162,7 @@ void main() {
 
       expect(
         router.routeInformationProvider.value.uri.path,
-        entry.$2,
+        Uri.parse(entry.$2).path,
         reason: '${entry.$1} unexpectedly redirected',
       );
       expect(find.byType(Scaffold), findsWidgets, reason: '${entry.$1} has no Scaffold');
