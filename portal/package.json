@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "npm run check:rubric-anchors && node scripts/verify_step_iv_hardening.mjs && node scripts/verify_interactions.mjs",
+    "test": "npm run check:rubric-anchors && node scripts/verify_step_iv_hardening.mjs && node scripts/verify_interactions.mjs && node scripts/verify_step_vii_a1_foundation.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "capture": "node scripts/capture.mjs",
@@ -18,6 +18,7 @@
     "check:rubric-anchors": "node scripts/generate-rubric-anchors.mjs --check"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.115.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2"

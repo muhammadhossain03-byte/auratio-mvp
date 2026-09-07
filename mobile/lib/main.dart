@@ -2,7 +2,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
+import 'foundation/integration/auratio_supabase.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuratioSupabase.initializeFromEnvironment();
   runApp(const ProviderScope(child: AuratioApp()));
 }
