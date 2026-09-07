@@ -32,6 +32,21 @@ function reason(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
+async function ensureApprovedReport(supabaseUrl: string, serviceRoleKey: string, requestId: string): Promise<void> {
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/report`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ request_id: requestId }),
+    });
+  } catch {
+    // Approval is authoritative even if report generation needs a later idempotent retry.
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(req) });
   if (req.method !== "POST") return respond(req, 405, { error: "method_not_allowed" });
@@ -99,5 +114,8 @@ Deno.serve(async (req: Request) => {
 
   const { data, error } = await service.rpc(rpc, args);
   if (error) return respond(req, 409, { error: "human_admin_operation_rejected", message: error.message });
+  if ((data as Record<string, unknown> | null)?.status === "approved") {
+    await ensureApprovedReport(supabaseUrl, serviceRoleKey, requestId);
+  }
   return respond(req, 200, data);
 });
