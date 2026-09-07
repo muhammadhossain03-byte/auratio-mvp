@@ -53,7 +53,7 @@ Use the documents below in this order when implementing or reviewing Auratio. Wh
 
 VII-B implementation is CLOSED / APPROVED within its documented scope at implementation SHA `e2d37588e1db6923244c1b2ecbe0899e2dfc287a`.
 
-This documentation closeout directly follows that implementation. Its own commit SHA cannot be embedded recursively. After this documentation commit is pushed and independently accepted, use that actual full SHA as the branch/new-chat HEAD while retaining `e2d375...` as the accepted VII-B implementation checkpoint.
+The initial VII-B documentation closeout was pushed as `3aca24842583c8bacb4fbf13affadcdc8fd31610`. A documentation-only audit correction follows it. In the new chat, use the actual remote branch HEAD after that correction as the resume HEAD while retaining `e2d375...` as the accepted VII-B implementation checkpoint.
 
 Read `AGENTS.md`, this index, Status v16, VII-B Closeout v1.0 and Step-VII Handoff v1.2 before any new change. Verify GitHub branch HEAD and ancestry first. Do not recreate or switch the Step-VII branch.
 
@@ -82,6 +82,18 @@ The B implementation did not add migrations or deploy/modify backend functions.
 Inspection confirms profile/onboarding persistence is not completed by VII-B: `mobile/lib/features/profile` remains presentation-only at this checkpoint. Persisted profile editing, Path selection/manage-Paths completion, and the remaining Auth/session/callback/network flows are explicitly scheduled for VII-E unless a later accepted package moves them earlier.
 
 VII-B acceptance is not live production/runtime acceptance. Actual configured device/browser Supabase E2E, device save-dialog behavior, network/error behavior and final visual/runtime QA remain later gates.
+
+## AI-requested to Human redirection requirement
+
+The authoritative MVP requirement remains: AI/Human mode redirection requires explicit End-User consent.
+
+- An Admin must not force an AI-requested submission into Human evaluation without that consent.
+- The existing Admin prototype already represents an AI-requested submission reaching a `Redirected Human` route after alternate-method consent.
+- The currently persisted backend does not yet close this path: `evaluation_requests.mode` is immutable after creation and the current `ai-admin` function supports cancellation, not a persisted redirect operation.
+- Treat this as an explicit remaining Step-VII integration gap. Do not delete the capability or reinterpret Gemini failure as automatic Human redirection.
+- The eventual persisted design must preserve the originally requested method and auditable consent/routing state.
+
+The upcoming VII-C source inspection must account for this requirement when wiring Admin/Human lifecycle behavior. Any remaining End-User consent UI/client closure must be completed before Step VII is accepted.
 
 ## Locked Gemini decision for VII-D
 

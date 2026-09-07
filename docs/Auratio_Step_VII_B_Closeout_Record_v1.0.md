@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-08
 **Decision:** VII-B1 + VII-B2 + VII-B3 CLOSED / APPROVED within their documented End-User persisted-integration scope.
-**This package:** documentation-only closeout, pending commit/push and independent acceptance of that documentation commit.
+**Documentation closeout base:** `3aca24842583c8bacb4fbf13affadcdc8fd31610`; a documentation-only audit correction follows before final documentation acceptance.
 
 ## Accepted implementation chain
 
@@ -129,6 +129,7 @@ This acceptance does NOT prove:
 - final device DOCX save-dialog behavior;
 - final configured visual/runtime QA;
 - final app/profile/onboarding completeness;
+- explicit-consent AI-requested -> Human redirection persistence/client flow;
 - Human portal lifecycle;
 - live Gemini evaluation;
 - production deployment/readiness.
@@ -146,6 +147,14 @@ remain open and are explicitly scheduled for VII-E unless a later accepted packa
 
 This prevents VII-B acceptance from being misread as complete Step-VII End-User/client closure.
 
+## Explicit AI-requested -> Human redirection gap
+
+The authoritative MVP requirement says mode redirection requires explicit End-User consent. The Admin prototype already represents a `Redirected Human` state after alternate-method consent.
+
+VII-B did not implement that persisted cross-route flow. At the accepted checkpoint, request `mode` remains immutable and the AI Admin operation supports cancellation rather than persisted redirection.
+
+This is an explicit remaining Step-VII integration gap, not a change to VII-B implementation acceptance. Admin must not force the redirect; the eventual design must preserve the originally requested method plus auditable consent/effective-routing state.
+
 ## Locked VII-D Gemini decision
 
 The user approved a new AI architecture on 2026-09-08:
@@ -161,6 +170,7 @@ The user approved a new AI architecture on 2026-09-08:
 - one server-side Gemini API key in Supabase secrets only;
 - one attempt, no automatic retry, no Admin rerun;
 - no silent static-video fallback;
+- no automatic AI-failure -> Human fallback; any AI-requested -> Human redirection is a separate explicit-consent product flow;
 - manually delete the Gemini temporary file after the attempt;
 - holistic full-performance evaluation plus criterion-specific agentic navigation and timestamp evidence.
 

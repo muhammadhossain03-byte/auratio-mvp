@@ -18,9 +18,9 @@ This v1.2 handoff supersedes v1.1 where they conflict.
 - VII-B2: `12a6214d767408afa7c55eebeca1a060bd537f14`.
 - VII-B3 implementation: `e2d37588e1db6923244c1b2ecbe0899e2dfc287a`.
 - Production Supabase project: `Auratio` (`czkbljnzcfsztfrwndsb`).
-- Antigravity repository: `D:uratio-mvp`.
+- Antigravity repository: `D:\auratio-mvp`.
 
-The documentation closeout immediately after B3 has an unknown self-SHA until pushed. In the next chat, verify the actual branch HEAD and direct ancestry before authoring VII-C.
+The initial documentation closeout after B3 was pushed as `3aca24842583c8bacb4fbf13affadcdc8fd31610`; a documentation-only audit correction follows it. In the next chat, verify the actual remote branch HEAD and direct ancestry before authoring VII-C.
 
 ## VII-B delivered / accepted
 
@@ -67,6 +67,24 @@ Before editing:
 7. inspect current portal Human/Admin/Super Admin screens and accepted `human-admin`, `human-volunteer`, staff and report backend contracts.
 
 Do not begin Gemini implementation in VII-C.
+
+## Critical AI-requested -> Human redirection requirement
+
+The authoritative product rule is: mode redirection requires explicit End-User consent.
+
+The intended portal behavior already includes an AI-requested submission reaching a `Redirected Human` state after alternate-method consent. However, at the current persisted checkpoint:
+- `evaluation_requests.mode` is immutable after request creation;
+- the current `ai-admin` Edge Function exposes Admin cancellation only;
+- no persisted consent-aware redirect boundary has yet been closed.
+
+Therefore:
+- Admin must not force AI -> Human redirection without End-User consent;
+- do not remove the intended redirect capability just because the current backend mode field is immutable;
+- do not treat Gemini/API failure as implicit Human fallback;
+- preserve the originally requested method as an auditable fact;
+- the persisted solution must represent consent and effective routing without falsifying request history.
+
+VII-C source inspection must explicitly account for this gap while wiring Admin/Human lifecycle behavior. Any remaining End-User consent/client work must be closed before Step VII acceptance.
 
 ## VII-C required lifecycle surfaces
 
@@ -162,7 +180,8 @@ Gemini must not receive:
 - Admin cancellation while Processing wins over a late result;
 - usable valid result → accepted finalize path;
 - invalid/unassessable/API/agentic failure → accepted failure/Rejected path;
-- no silent downgrade to static video processing.
+- no silent downgrade to static video processing;
+- no automatic AI-failure -> Human fallback; AI-requested -> Human redirection is a separate explicit-consent product flow.
 
 ### Credential
 - one Gemini API key for MVP;

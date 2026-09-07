@@ -99,6 +99,7 @@ Earlier accepted B1/B2 validations remain recorded in the B closeout record. Ful
 VII-B is closed for its End-User persisted product-flow scope. This is not production/runtime acceptance.
 
 Still open:
+- explicit-consent AI-requested -> Human redirection persistence and client flow;
 - persisted profile editing, onboarding/Path selection and Manage Paths;
 - remaining sign-out/session-expiry/account-disable/role-change behavior;
 - password recovery, app/deep links, invitation/email callbacks;
@@ -125,6 +126,8 @@ Wire Volunteer/Admin/Super Admin Human evaluation surfaces to the accepted persi
 
 Do not solve coherence with shared mock state.
 
+VII-C must also preserve the authoritative routing rule that an AI-requested submission may reach Human evaluation only after explicit End-User consent. The current backend does not yet provide that persisted redirect boundary; do not solve it by mutating mock routing state or by silently changing `evaluation_requests.mode`.
+
 ## VII-D — locked Gemini architecture
 
 User-approved target:
@@ -139,7 +142,8 @@ User-approved target:
 - strict structured 16-criterion output;
 - one attempt, no retry, no Admin rerun;
 - manual Gemini temporary-file deletion after the attempt;
-- no silent static-video fallback.
+- no silent static-video fallback;
+- no automatic AI-failure -> Human fallback: any AI-requested -> Human redirection is a separate, explicit-consent product flow.
 
 Recheck current official Google Gemini documentation immediately before implementation.
 
@@ -155,6 +159,6 @@ Finish:
 
 ## Immediate action
 
-Mechanically commit/push the documentation-only VII-B closeout from exact B3 implementation HEAD, return evidence, and stop.
+Apply the documentation-only audit correction on top of `3aca24842583c8bacb4fbf13affadcdc8fd31610`, independently verify its remote SHA/scope, and stop.
 
-VII-C starts in a new conversation only after the documentation closeout commit is independently accepted.
+VII-C starts in a new conversation only after the corrected documentation HEAD is independently accepted.
