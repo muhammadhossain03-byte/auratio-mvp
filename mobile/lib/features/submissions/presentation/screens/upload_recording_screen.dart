@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
+import '../../../evaluations/application/evaluation_repository_provider.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 import '../../../tracks/application/selected_track_provider.dart';
+import '../../application/recording_submission_controller.dart';
 
 class UploadRecordingScreen extends ConsumerWidget {
   const UploadRecordingScreen({super.key});
@@ -27,6 +29,26 @@ class UploadRecordingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final track = ref.watch(selectedTrackProvider);
+    final submission = ref.watch(recordingSubmissionProvider);
+    final recording = submission.recording;
+    final repositoryConfigured = ref
+        .watch(auratioEvaluationRepositoryProvider)
+        .isConfigured;
+
+    final displayedFileName =
+        recording?.name ??
+        (repositoryConfigured ? 'No file selected' : track.effectiveFileName);
+    final displayedFileDetail = recording == null
+        ? repositoryConfigured
+              ? 'Tap the upload area to choose one .mp4 recording.'
+              : 'Selected file • upload is not evaluated until eligibility passes.'
+        : '${recording.formattedDuration} • ${recording.formattedSize}'
+              '${recording.isUploaded ? ' • Uploaded' : ' • Ready to upload'}';
+
+    final canChoose = !submission.isBusy && !(recording?.isUploaded ?? false);
+    final canContinue =
+        !submission.isBusy &&
+        ((recording?.isUploaded ?? false) || submission.hasReadyBytes);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: uploadRecordingScreenKey,
@@ -51,8 +73,6 @@ class UploadRecordingScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20),
-
-                      // Track card (y=112, w=350, h=94)
                       SizedBox(
                         width: double.infinity,
                         height: 94,
@@ -95,82 +115,91 @@ class UploadRecordingScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 22),
-
-                      // Upload zone (y=228, w=350, h=220)
-                      SizedBox(
-                        key: uploadZoneKey,
-                        width: double.infinity,
-                        height: 220,
-                        child: CustomPaint(
-                          painter: const _DashedRoundedRectPainter(
-                            color: AuratioColors.borderStrong,
-                            strokeWidth: 1.0,
-                            dashLength: 8.0,
-                            gapLength: 6.0,
-                            borderRadius: 20.0,
-                          ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AuratioColors.surfaceDefault,
-                              borderRadius: BorderRadius.circular(20),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: canChoose
+                            ? () async {
+                                await ref
+                                    .read(recordingSubmissionProvider.notifier)
+                                    .chooseRecording();
+                              }
+                            : null,
+                        child: SizedBox(
+                          key: uploadZoneKey,
+                          width: double.infinity,
+                          height: 220,
+                          child: CustomPaint(
+                            painter: const _DashedRoundedRectPainter(
+                              color: AuratioColors.borderStrong,
+                              strokeWidth: 1.0,
+                              dashLength: 8.0,
+                              gapLength: 6.0,
+                              borderRadius: 20.0,
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 72,
-                                  height: 72,
-                                  decoration: const BoxDecoration(
-                                    color: AuratioColors.surfaceBrandSoft,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.add,
-                                      size: 32,
-                                      color:
-                                          AuratioColors.actionAccentBackground,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AuratioColors.surfaceDefault,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 72,
+                                    height: 72,
+                                    decoration: const BoxDecoration(
+                                      color: AuratioColors.surfaceBrandSoft,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.add,
+                                        size: 32,
+                                        color: AuratioColors
+                                            .actionAccentBackground,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Choose an .mp4 recording',
-                                  textAlign: TextAlign.center,
-                                  style: AuratioTypography.titleMedium.copyWith(
-                                    color: AuratioColors.textPrimary,
-                                    fontSize: 18,
-                                    height: 26 / 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                  ),
-                                  child: Text(
-                                    'Speaker must remain visible throughout the performance.',
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    recording?.isUploaded ?? false
+                                        ? 'Recording uploaded'
+                                        : 'Choose an .mp4 recording',
                                     textAlign: TextAlign.center,
-                                    style: AuratioTypography.caption.copyWith(
-                                      color: AuratioColors.textSecondary,
-                                      fontSize: 11,
-                                      height: 16 / 11,
-                                      fontWeight: FontWeight.w500,
+                                    style: AuratioTypography.titleMedium
+                                        .copyWith(
+                                          color: AuratioColors.textPrimary,
+                                          fontSize: 18,
+                                          height: 26 / 18,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                    ),
+                                    child: Text(
+                                      recording?.isUploaded ?? false
+                                          ? 'This uploaded object is locked to the current submission flow.'
+                                          : 'Speaker must remain visible throughout the performance.',
+                                      textAlign: TextAlign.center,
+                                      style: AuratioTypography.caption.copyWith(
+                                        color: AuratioColors.textSecondary,
+                                        fontSize: 11,
+                                        height: 16 / 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 20),
-
-                      // Selected-file card (y=468, w=350, h=104)
                       SizedBox(
                         key: selectedFileCardKey,
                         width: double.infinity,
@@ -194,7 +223,9 @@ class UploadRecordingScreen extends ConsumerWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                track.effectiveFileName,
+                                displayedFileName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: AuratioTypography.titleMedium.copyWith(
                                   color: AuratioColors.textPrimary,
                                   fontSize: 18,
@@ -204,7 +235,9 @@ class UploadRecordingScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Selected file • upload is not evaluated until eligibility passes.',
+                                displayedFileDetail,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: AuratioTypography.bodyMedium.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 13.5,
@@ -215,10 +248,18 @@ class UploadRecordingScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-
+                      if (submission.errorMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          submission.errorMessage!,
+                          style: AuratioTypography.bodySmall.copyWith(
+                            color: AuratioColors.statusRejectedForeground,
+                            fontSize: 12,
+                            height: 18 / 12,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 20),
-
-                      // Section label: BEFORE CONTINUING (y=592)
                       Text(
                         'BEFORE CONTINUING',
                         style: AuratioTypography.caption.copyWith(
@@ -229,41 +270,42 @@ class UploadRecordingScreen extends ConsumerWidget {
                           letterSpacing: 0.2,
                         ),
                       ),
-
                       const SizedBox(height: 12),
-
-                      // Check 1: .mp4 only (y=620)
                       _buildCheckRow('.mp4 only'),
-
                       const SizedBox(height: 12),
-
-                      // Check 2: Speaker-visible recording (y=650)
                       _buildCheckRow('Speaker-visible recording'),
-
                       const SizedBox(height: 12),
-
-                      // Check 3: Duration will be measured on the server (y=680)
-                      _buildCheckRow('Duration will be measured on the server'),
-
+                      _buildCheckRow(
+                        repositoryConfigured
+                            ? 'Duration is read from the selected MP4 and revalidated by the server'
+                            : 'Duration will be measured on the server',
+                      ),
                       const SizedBox(height: 36),
-
-                      // Upload & Check CTA (y=734, h=48)
                       SizedBox(
                         height: 48,
                         width: double.infinity,
                         child: AuratioButton(
                           key: uploadAndCheckButtonKey,
-                          label: 'Upload & Check',
+                          label: submission.isBusy
+                              ? 'Preparing…'
+                              : recording?.isUploaded ?? false
+                              ? 'Continue'
+                              : 'Upload & Check',
                           variant: AuratioButtonVariant.primary,
                           expand: true,
-                          onPressed: () =>
-                              context.go(AppRoutePaths.checkingRecording),
+                          onPressed: !repositoryConfigured
+                              ? () =>
+                                    context.go(AppRoutePaths.checkingRecording)
+                              : canContinue
+                              ? () => context.go(
+                                  recording?.isUploaded ?? false
+                                      ? AppRoutePaths.recordingAccepted
+                                      : AppRoutePaths.checkingRecording,
+                                )
+                              : null,
                         ),
                       ),
-
                       const SizedBox(height: 10),
-
-                      // Footer disclaimer (y=792)
                       Center(
                         child: Text(
                           'No AI evaluation or Human assignment starts before eligibility passes.',
@@ -276,7 +318,6 @@ class UploadRecordingScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 20),
                     ],
                   ),

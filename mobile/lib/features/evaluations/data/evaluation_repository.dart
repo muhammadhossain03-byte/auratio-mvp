@@ -169,6 +169,23 @@ class SupabaseAuratioEvaluationRepository
         'invalid_request_response',
         'The evaluation service returned an invalid response.',
       );
+    } on FunctionsHttpException catch (error) {
+      if (error.status == 409) {
+        throw const AuratioEvaluationDataException(
+          'active_request_exists',
+          'An active evaluation request already exists.',
+        );
+      }
+      if (error.status >= 400 && error.status < 500) {
+        throw const AuratioEvaluationDataException(
+          'evaluation_request_rejected',
+          'The evaluation request was rejected.',
+        );
+      }
+      throw const AuratioEvaluationDataException(
+        'evaluation_request_failed',
+        'Unable to create the evaluation request.',
+      );
     } catch (_) {
       throw const AuratioEvaluationDataException(
         'evaluation_request_failed',

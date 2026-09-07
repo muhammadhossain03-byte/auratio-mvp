@@ -7,6 +7,8 @@ import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 import '../../../tracks/application/selected_track_provider.dart';
+import '../../../tracks/domain/track_catalog.dart';
+import '../../application/recording_submission_controller.dart';
 
 class RecordingAcceptedScreen extends ConsumerWidget {
   const RecordingAcceptedScreen({super.key});
@@ -33,7 +35,15 @@ class RecordingAcceptedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final track = ref.watch(selectedTrackProvider);
+    final selectedTrack = ref.watch(selectedTrackProvider);
+    final recording = ref.watch(recordingSubmissionProvider).recording;
+    final boundTrack = recording == null
+        ? null
+        : AuratioTrackCatalog.findByBackendId(recording.trackBackendId);
+    final track = boundTrack ?? selectedTrack;
+    final measuredDuration =
+        recording?.formattedDuration ?? track.sampleValidDuration;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: recordingAcceptedScreenKey,
       value: _overlayStyle,
@@ -57,8 +67,6 @@ class RecordingAcceptedScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 24),
-
-                      // Status Badge: Eligible (y=116, w=80, h=30)
                       Container(
                         key: eligibleBadgeKey,
                         width: 80,
@@ -81,10 +89,7 @@ class RecordingAcceptedScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
-                      // Heading: Recording is eligible (y=164)
                       Text(
                         'Recording is eligible',
                         style: AuratioTypography.headingMedium.copyWith(
@@ -94,22 +99,18 @@ class RecordingAcceptedScreen extends ConsumerWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-
                       const SizedBox(height: 10),
-
-                      // Subheading (y=206, h=38)
                       Text(
-                        'The server-measured duration falls within the accepted window for this track.',
+                        recording == null
+                            ? 'The server-measured duration falls within the accepted window for this track.'
+                            : 'The measured duration falls within the accepted window for this track.',
                         style: AuratioTypography.bodySmall.copyWith(
                           color: AuratioColors.textSecondary,
                           fontSize: 13,
                           height: 19 / 13,
                         ),
                       ),
-
                       const SizedBox(height: 30),
-
-                      // Measured Duration card (y=274, w=350, h=126)
                       SizedBox(
                         key: measuredDurationCardKey,
                         width: double.infinity,
@@ -143,7 +144,7 @@ class RecordingAcceptedScreen extends ConsumerWidget {
                                 ),
                               ),
                               Text(
-                                track.sampleValidDuration,
+                                measuredDuration,
                                 style: AuratioTypography.headingLarge.copyWith(
                                   color: AuratioColors.backgroundBrand,
                                   fontSize: 30,
@@ -163,10 +164,7 @@ class RecordingAcceptedScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
-                      // Eligibility passed card (y=418, w=350, h=104)
                       SizedBox(
                         key: eligibilityPassedCardKey,
                         width: double.infinity,
@@ -210,10 +208,7 @@ class RecordingAcceptedScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 30),
-
-                      // Hint: Next: AI Evaluation or Human Evaluation (y=552)
                       Text(
                         'Next: AI Evaluation or Human Evaluation',
                         style: AuratioTypography.bodySmall.copyWith(
@@ -223,10 +218,7 @@ class RecordingAcceptedScreen extends ConsumerWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-
                       const SizedBox(height: 180),
-
-                      // Continue CTA (y=750, h=48)
                       SizedBox(
                         height: 48,
                         width: double.infinity,
@@ -239,7 +231,6 @@ class RecordingAcceptedScreen extends ConsumerWidget {
                               context.go(AppRoutePaths.chooseEvaluationMethod),
                         ),
                       ),
-
                       const SizedBox(height: 46),
                     ],
                   ),

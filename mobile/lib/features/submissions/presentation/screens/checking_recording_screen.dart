@@ -7,8 +7,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
+import '../../../evaluations/application/evaluation_repository_provider.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 import '../../../tracks/application/selected_track_provider.dart';
+import '../../application/recording_submission_controller.dart';
 
 class CheckingRecordingScreen extends ConsumerStatefulWidget {
   const CheckingRecordingScreen({
@@ -42,29 +44,72 @@ class CheckingRecordingScreen extends ConsumerStatefulWidget {
 
 class _CheckingRecordingScreenState
     extends ConsumerState<CheckingRecordingScreen> {
-  Timer? _timer;
+  Timer? _prototypeTimer;
+  bool _uploadStarted = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.autoTransition) {
-      _timer = Timer(widget.transitionDelay, () {
-        if (mounted) {
-          context.go(AppRoutePaths.recordingAccepted);
-        }
+
+    final configured = ref
+        .read(auratioEvaluationRepositoryProvider)
+        .isConfigured;
+    if (!configured) {
+      if (widget.autoTransition) {
+        _prototypeTimer = Timer(widget.transitionDelay, () {
+          if (mounted) {
+            context.go(AppRoutePaths.recordingAccepted);
+          }
+        });
+      }
+      return;
+    }
+
+    if (ref.read(recordingSubmissionProvider).recording != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _beginUpload();
       });
+    }
+  }
+
+  Future<void> _beginUpload() async {
+    if (_uploadStarted) return;
+    _uploadStarted = true;
+
+    final success = await ref
+        .read(recordingSubmissionProvider.notifier)
+        .uploadSelectedRecording();
+
+    if (!mounted) return;
+    if (success) {
+      context.go(AppRoutePaths.recordingAccepted);
+    } else {
+      _uploadStarted = false;
     }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _prototypeTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final track = ref.watch(selectedTrackProvider);
+    final submission = ref.watch(recordingSubmissionProvider);
+    final configured = ref
+        .watch(auratioEvaluationRepositoryProvider)
+        .isConfigured;
+    final hasRecording = submission.recording != null;
+    final hasRetryableRecording =
+        submission.recording?.bytes?.isNotEmpty ?? false;
+
+    final statusText = configured && submission.errorMessage != null
+        ? submission.errorMessage!
+        : configured
+        ? 'Uploading the recording to private storage and validating its measured duration.'
+        : 'Uploading the recording and measuring duration on the server.';
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: CheckingRecordingScreen.checkingRecordingScreenKey,
@@ -88,8 +133,6 @@ class _CheckingRecordingScreenState
                   child: Column(
                     children: [
                       const SizedBox(height: 134),
-
-                      // Central status treatment: Circle with refresh icon (y=226, w=80, h=80)
                       Container(
                         key: CheckingRecordingScreen.checkingIndicatorKey,
                         width: 80,
@@ -98,12 +141,17 @@ class _CheckingRecordingScreenState
                           color: AuratioColors.surfaceBrandSoft,
                           shape: BoxShape.circle,
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            '↻',
+                            configured && submission.errorMessage != null
+                                ? '!'
+                                : '↻',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: AuratioColors.actionAccentBackground,
+                              color:
+                                  configured && submission.errorMessage != null
+                                  ? AuratioColors.statusRejectedForeground
+                                  : AuratioColors.actionAccentBackground,
                               fontSize: 34,
                               height: 40 / 34,
                               fontWeight: FontWeight.w500,
@@ -111,10 +159,7 @@ class _CheckingRecordingScreenState
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
-                      // Heading (y=330)
                       Text(
                         'Checking eligibility',
                         textAlign: TextAlign.center,
@@ -125,26 +170,22 @@ class _CheckingRecordingScreenState
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Subtitle (y=378, w=290, h=38)
                       SizedBox(
                         width: 290,
                         child: Text(
-                          'Uploading the recording and measuring duration on the server.',
+                          statusText,
                           textAlign: TextAlign.center,
                           style: AuratioTypography.bodySmall.copyWith(
-                            color: AuratioColors.textSecondary,
+                            color: submission.errorMessage != null && configured
+                                ? AuratioColors.statusRejectedForeground
+                                : AuratioColors.textSecondary,
                             fontSize: 13,
                             height: 19 / 13,
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 28),
-
-                      // Information card (y=444, w=350, h=112)
                       SizedBox(
                         key: CheckingRecordingScreen.checkingInfoCardKey,
                         width: double.infinity,
@@ -185,7 +226,9 @@ class _CheckingRecordingScreenState
                                 ),
                               ),
                               Text(
-                                'Evaluation will not begin until this check passes.',
+                                configured
+                                    ? 'Evaluation will not begin until the persisted request is created.'
+                                    : 'Evaluation will not begin until this check passes.',
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 12,
@@ -196,38 +239,48 @@ class _CheckingRecordingScreenState
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 194),
-
-                      // Bottom control: Checking... (y=750, w=350, h=48)
                       SizedBox(
                         key: CheckingRecordingScreen.checkingButtonKey,
                         height: 48,
                         width: double.infinity,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AuratioColors.surfaceDefault,
-                            border: Border.all(
-                              color: AuratioColors.borderStrong,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              AuratioRadii.md,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Checking…',
-                              style: AuratioTypography.labelLarge.copyWith(
-                                color: AuratioColors.backgroundBrand,
-                                fontSize: 14,
-                                height: 20 / 14,
-                                fontWeight: FontWeight.w600,
+                        child: configured && submission.errorMessage != null
+                            ? AuratioButton(
+                                label: hasRecording && hasRetryableRecording
+                                    ? 'Retry Upload'
+                                    : 'Choose Recording',
+                                variant: AuratioButtonVariant.secondary,
+                                expand: true,
+                                onPressed: hasRecording && hasRetryableRecording
+                                    ? _beginUpload
+                                    : () => context.go(
+                                        AppRoutePaths.uploadRecording,
+                                      ),
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  color: AuratioColors.surfaceDefault,
+                                  border: Border.all(
+                                    color: AuratioColors.borderStrong,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AuratioRadii.md,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Checking…',
+                                    style: AuratioTypography.labelLarge
+                                        .copyWith(
+                                          color: AuratioColors.backgroundBrand,
+                                          fontSize: 14,
+                                          height: 20 / 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
                       ),
-
                       const SizedBox(height: 46),
                     ],
                   ),

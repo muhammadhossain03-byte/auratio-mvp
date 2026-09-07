@@ -6,7 +6,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../../submissions/application/recording_submission_controller.dart';
 import '../../application/evaluation_method_controller.dart';
+import '../../application/evaluation_repository_provider.dart';
+import '../../application/latest_evaluation_request_provider.dart';
 import '../../domain/evaluation_method.dart';
 
 class ChooseEvaluationMethodScreen extends ConsumerStatefulWidget {
@@ -52,11 +55,61 @@ class _ChooseEvaluationMethodScreenState
     }
   }
 
+  Future<void> _continue(EvaluationMethod method) async {
+    final repository = ref.read(auratioEvaluationRepositoryProvider);
+    if (!repository.isConfigured) {
+      _goToRouting(method);
+      return;
+    }
+
+    final receipt = await ref
+        .read(recordingSubmissionProvider.notifier)
+        .createEvaluationRequest(method);
+    if (!mounted) return;
+
+    ref.invalidate(latestEvaluationRequestProvider);
+
+    if (receipt != null) {
+      _goToRouting(method);
+      return;
+    }
+
+    final state = ref.read(recordingSubmissionProvider);
+    if (state.errorCode == 'active_request_exists') {
+      context.go(
+        method == EvaluationMethod.ai
+            ? AppRoutePaths.evaluationProcessingAi
+            : AppRoutePaths.evaluationProcessingHuman,
+      );
+      return;
+    }
+
+    final message =
+        state.errorMessage ?? 'Unable to create the evaluation request.';
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _goToRouting(EvaluationMethod method) {
+    context.go(
+      method == EvaluationMethod.ai
+          ? AppRoutePaths.routingAssignedAi
+          : AppRoutePaths.routingAssignedHuman,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedMethod = ref.watch(evaluationMethodSelectionProvider);
+    final submission = ref.watch(recordingSubmissionProvider);
+    final repositoryConfigured = ref
+        .watch(auratioEvaluationRepositoryProvider)
+        .isConfigured;
     final isAi = selectedMethod == EvaluationMethod.ai;
     final isHuman = selectedMethod == EvaluationMethod.human;
+    final canCreateRequest =
+        !repositoryConfigured ||
+        (submission.hasUploadedRecording && !submission.isBusy);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: ChooseEvaluationMethodScreen.screenKey,
@@ -87,8 +140,6 @@ class _ChooseEvaluationMethodScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 30),
-
-                      // Heading (y=122, w=350, h=64)
                       Text(
                         'How should this performance\nbe evaluated?',
                         style: AuratioTypography.headingMedium.copyWith(
@@ -99,10 +150,7 @@ class _ChooseEvaluationMethodScreenState
                           letterSpacing: -0.3,
                         ),
                       ),
-
                       const SizedBox(height: 2),
-
-                      // Subtitle (y=188, w=350, h=40)
                       Text(
                         'Both methods use Auratio’s same 100-point scoring architecture.',
                         style: AuratioTypography.bodyMedium.copyWith(
@@ -112,10 +160,7 @@ class _ChooseEvaluationMethodScreenState
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
-                      // AI Evaluation Option Card (y=252, w=350, h=154)
                       _EvaluationMethodCard(
                         key: ChooseEvaluationMethodScreen.aiCardKey,
                         radioKey: ChooseEvaluationMethodScreen.aiRadioKey,
@@ -124,16 +169,18 @@ class _ChooseEvaluationMethodScreenState
                         title: 'Fast structured evaluation',
                         description: 'Server-side AI evaluator scores the selected track rubric and provides timestamped evidence.',
                         isSelected: isAi,
-                        onTap: () {
-                          ref
-                              .read(evaluationMethodSelectionProvider.notifier)
-                              .select(EvaluationMethod.ai);
-                        },
+                        onTap: submission.isBusy
+                            ? null
+                            : () {
+                                ref
+                                    .read(
+                                      evaluationMethodSelectionProvider
+                                          .notifier,
+                                    )
+                                    .select(EvaluationMethod.ai);
+                              },
                       ),
-
                       const SizedBox(height: 18),
-
-                      // Human Evaluation Option Card (y=424, w=350, h=154)
                       _EvaluationMethodCard(
                         key: ChooseEvaluationMethodScreen.humanCardKey,
                         radioKey: ChooseEvaluationMethodScreen.humanRadioKey,
@@ -142,16 +189,18 @@ class _ChooseEvaluationMethodScreenState
                         title: 'Evaluator-led review',
                         description: 'A Human Evaluator applies the same scoring architecture with required timestamped evidence.',
                         isSelected: isHuman,
-                        onTap: () {
-                          ref
-                              .read(evaluationMethodSelectionProvider.notifier)
-                              .select(EvaluationMethod.human);
-                        },
+                        onTap: submission.isBusy
+                            ? null
+                            : () {
+                                ref
+                                    .read(
+                                      evaluationMethodSelectionProvider
+                                          .notifier,
+                                    )
+                                    .select(EvaluationMethod.human);
+                              },
                       ),
-
                       const SizedBox(height: 24),
-
-                      // Information / Consent Card (y=602, w=350, h=94)
                       SizedBox(
                         key: ChooseEvaluationMethodScreen.consentCardKey,
                         width: double.infinity,
@@ -166,7 +215,9 @@ class _ChooseEvaluationMethodScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Redirects require your consent',
+                                repositoryConfigured
+                                    ? 'One persisted request at a time'
+                                    : 'Redirects require your consent',
                                 style: AuratioTypography.labelLarge.copyWith(
                                   color: AuratioColors.textPrimary,
                                   fontSize: 14,
@@ -177,7 +228,9 @@ class _ChooseEvaluationMethodScreenState
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'If the requested method is unavailable, Auratio may propose the alternate method. Declining cancels the request.',
+                                repositoryConfigured
+                                    ? 'Your selected method is submitted to Auratio exactly as chosen. A second active evaluation request is blocked by the server.'
+                                    : 'If the requested method is unavailable, Auratio may propose the alternate method. Declining cancels the request.',
                                 style: AuratioTypography.caption.copyWith(
                                   color: AuratioColors.textSecondary,
                                   fontSize: 11,
@@ -190,35 +243,31 @@ class _ChooseEvaluationMethodScreenState
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
-                      // Continue CTA Button (y=714, w=350, h=48)
                       SizedBox(
                         height: 48,
                         width: double.infinity,
                         child: AuratioButton(
                           key: ChooseEvaluationMethodScreen.continueButtonKey,
-                          label: isAi
+                          label:
+                              submission.phase ==
+                                  RecordingSubmissionPhase.creatingRequest
+                              ? 'Creating Request…'
+                              : isAi
                               ? 'Continue with AI Evaluation'
                               : 'Continue with Human Evaluation',
                           variant: AuratioButtonVariant.primary,
                           expand: true,
-                          onPressed: () {
-                            if (isAi) {
-                              context.go(AppRoutePaths.routingAssignedAi);
-                            } else {
-                              context.go(AppRoutePaths.routingAssignedHuman);
-                            }
-                          },
+                          onPressed: canCreateRequest
+                              ? () => _continue(selectedMethod)
+                              : null,
                         ),
                       ),
-
                       const SizedBox(height: 12),
-
-                      // Footer Note (y=774, w=350, h=32)
                       Text(
-                        'Evaluator choice affects routing. Processing / moderation / publication status happens later.',
+                        repositoryConfigured
+                            ? 'Continuing creates the persisted evaluation request. Status is read back from Supabase.'
+                            : 'Evaluator choice affects routing. Processing / moderation / publication status happens later.',
                         key: ChooseEvaluationMethodScreen.footerNoteKey,
                         style: AuratioTypography.caption.copyWith(
                           color: AuratioColors.neutral500,
@@ -228,7 +277,6 @@ class _ChooseEvaluationMethodScreenState
                           letterSpacing: 0.2,
                         ),
                       ),
-
                       const SizedBox(height: 38),
                     ],
                   ),
@@ -259,7 +307,7 @@ class _EvaluationMethodCard extends StatelessWidget {
   final String title;
   final String description;
   final bool isSelected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Key? radioKey;
 
   @override
@@ -287,7 +335,6 @@ class _EvaluationMethodCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category and Radio Indicator Row
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -307,8 +354,6 @@ class _EvaluationMethodCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Title
               Text(
                 title,
                 style: AuratioTypography.titleMedium.copyWith(
@@ -319,8 +364,6 @@ class _EvaluationMethodCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-
-              // Description
               Text(
                 description,
                 style: AuratioTypography.bodySmall.copyWith(
