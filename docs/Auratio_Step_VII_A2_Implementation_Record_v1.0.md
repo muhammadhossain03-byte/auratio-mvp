@@ -1,7 +1,15 @@
 # Auratio Step VII-A2 Implementation Record v1.0
 
 **Date:** 2026-09-07
-**Status:** ChatGPT-authored persisted Auth/profile/role-routing integration package; repository commit pending independent audit
+**Status:** CLOSED / APPROVED at `02354879b9fda65ea9bf3c66d404e9a12a06b77c`; VII-A1 + VII-A2 complete.
+
+## Acceptance addendum — final deterministic formatting and audit
+
+After v1.3 still failed constructor wrapping, ChatGPT explicitly authorized Dart 3.13.1 write-mode formatting of only `mobile/test/features/authentication/mobile_auth_routing_test.dart`. The resulting test is 3,515 bytes with SHA-256 `2d7a78065b9bada1d9ee5b240bbb39bb4aa63fa8b6e569e585b8eed1ce7a3d92`. Its committed bytes and the reported pre/post transformation were independently verified.
+
+Antigravity reports scoped formatter/analyze PASS, all 324 Flutter tests PASS and portal lint/build/test PASS. The 85/85 Playwright result is carried from v1.2, not rerun after the final one-file formatting. ChatGPT independently audited remote commit/scope/code and ran the committed portal A2 source verifier. See the VII-A closeout for full provenance and audit limits.
+
+VII-A is accepted within scope. This chat stops after a separate documentation closeout; VII-B begins in a fresh chat. No live cross-client Auth E2E or complete production Auth/callback/recovery/invitation readiness is claimed.
 
 ## Package correction v1.1
 The first execution attempt stopped before repository modification because the authored patch uses intentionally minimal/zero-context hunks, while the original execution instructions invoked Git's default unified-diff context policy.
@@ -34,7 +42,7 @@ No Supabase migration, Edge Function deployment, dependency change, secret confi
 ## Package correction v1.3
 The v1.2 resume execution passed the complete portal validation suite and all 324 Flutter tests, but stopped on two source-quality checks in the A2-owned mobile routing test file: one unnecessary `dart:async` import and Dart formatter wrapping for two long test/call expressions.
 
-Package v1.3 changes only that authored test file plus this implementation record. It removes the unnecessary import and applies the exact formatter-compatible multiline structure. Runtime/auth behavior, the other 16 A2 repository changes, dependency state, backend state, and validation requirements are unchanged.
+Package v1.3 changes only that authored test file plus this implementation record. It removes the unnecessary import and applies the exact formatter-compatible multiline structure. Runtime/auth behavior, the other 15 A2 paths, dependency state, backend state, and validation requirements are unchanged by the two-file v1.3 package. The final formatting operation then preserved the other 16 paths, as reported by Antigravity.
 
 ## Accepted starting checkpoint
 
@@ -63,7 +71,7 @@ Configured portal behavior now uses persisted Supabase Auth and the persisted `p
 - Role mismatch redirects to the caller's own authorized landing area rather than trusting a URL or client-selected role.
 - Missing/invalid production public configuration fails closed to `/auth/access-unavailable`.
 
-The Step-IV prototype route simulation remains available only when the Vite runtime is development mode and both public Supabase configuration values are absent. This keeps the existing visual/interaction regression harness usable without weakening a production build.
+The Step-IV prototype route simulation remains available only when both public Supabase configuration values are absent and the runtime is Vite DEV or hostname exactly `localhost`/`127.0.0.1`. Partial/invalid configuration is unavailable even there. Normal production hosts such as `auratio.cloud` fail closed. This reflects the v1.2 loopback correction.
 
 ## Mobile integration
 
@@ -122,4 +130,4 @@ A dedicated A2 portal verifier checks the persisted route/auth primitives and pr
 
 ## Next action after acceptance
 
-If ChatGPT independently accepts the pushed VII-A2 commit, VII-A is complete. Proceed to **VII-B — End-User persisted submission/request/status/report/progress/leaderboard/event integration** from the accepted VII-A2 HEAD.
+VII-A2 is accepted and VII-A is complete. Finish the separate documentation closeout and audit in this chat, then stop. In a fresh chat, use its actual accepted documentation HEAD and Step-VII Handoff v1.1 to begin VII-B; A2 remains the exact implementation checkpoint.

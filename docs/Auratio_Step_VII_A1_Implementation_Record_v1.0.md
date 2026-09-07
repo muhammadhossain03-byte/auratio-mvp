@@ -1,7 +1,13 @@
 # Auratio Step VII-A1 Implementation Record v1.0
 
 **Date:** 2026-09-07
-**Status:** ChatGPT-authored integration-foundation package; repository commit pending independent audit
+**Status:** CLOSED / APPROVED at `715e92ca71a309358740f26f779e45edabd045cc`; acceptance carried into VII-A closeout.
+
+## Acceptance addendum — VII-A closeout
+
+A1 was independently accepted before A2. A2 is now accepted at `02354879b9fda65ea9bf3c66d404e9a12a06b77c`, completing VII-A. Current next-step authority is `Auratio_Step_VII_A_Closeout_Record_v1.0.md` and `Auratio_Step_VII_Implementation_Handoff_v1.1.md`; proceed to VII-B only in a fresh chat after documentation closeout acceptance.
+
+The original package prose below describes historical A1 scope. Its broad formatter command is superseded by the v1.1 seven-file scoped gate recorded below. Do not rerun A1 or rewrite accepted Step-IV files.
 
 
 ## Package correction v1.1
@@ -115,7 +121,7 @@ Portal:
 
 Mobile:
 - `flutter pub get`
-- `dart format --output=none --set-exit-if-changed lib test`
+- Non-writing formatter check scoped to the seven A1-authored Dart files, as supplied by package v1.1.
 - `flutter analyze`
 - `flutter test`
 
@@ -123,4 +129,4 @@ A failure returns to ChatGPT. Antigravity must not fix source independently.
 
 ## Next action after acceptance
 
-If ChatGPT independently accepts the pushed VII-A1 commit, proceed to VII-A2 and replace the remaining mock authentication/role-routing behavior with persisted Supabase Auth/profile state while preserving the locked Step-IV UI.
+A1 and A2 are now accepted. Use the VII-A closeout and Step-VII Handoff v1.1; do not repeat A2. VII-B is reserved for a fresh chat after documentation acceptance.
