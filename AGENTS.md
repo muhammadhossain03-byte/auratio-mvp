@@ -41,7 +41,9 @@ An Antigravity commit is never accepted merely because Antigravity reports succe
 - Never delete, replace, or treat `D:\\auratio-mvp\\` as a temporary extraction folder.
 
 ## Step gate
-Step IV is reopened. Do not start production Supabase/backend/API/Gemini/report/deployment implementation until the Step-IV zero-known-defects gate is explicitly re-closed by ChatGPT.
+Step IV is CLOSED / APPROVED. Step V — Supabase schema, migrations, relational integrity, and RLS — is authorized.
+
+Do not begin Step VI backend/orchestration implementation until Step V is explicitly accepted by ChatGPT. The deferred Volunteer Human-evaluation mock-state coherence issue must be resolved through the real persisted lifecycle during Step V/VI/VII integration, not by reopening mock-only frontend patching unless a genuine frontend defect is proven.
 
 ## Locked stack
 - Flutter + Riverpod + go_router
