@@ -95,6 +95,24 @@ test.describe('v1.9 Human scoring alignment', () => {
     const score = page.locator('input[aria-label="Exact score"]')
     const alert = page.locator('span[role="alert"]')
     const calibration = page.getByTestId('canonical-anchor-calibration')
+    const title = page.locator('h2.auratio-volunteer-page-title')
+    const statusPill = page.locator('.auratio-volunteer-pill--in-evaluation-header')
+
+    await expect(title).toHaveText(
+      'Criterion Feedback — Pacing, WPM calibration, and pause placement'
+    )
+    const titleBox = await title.boundingBox()
+    const statusBox = await statusPill.boundingBox()
+    expect(titleBox).not.toBeNull()
+    expect(statusBox).not.toBeNull()
+    if (titleBox && statusBox) {
+      const overlaps =
+        titleBox.x < statusBox.x + statusBox.width &&
+        titleBox.x + titleBox.width > statusBox.x &&
+        titleBox.y < statusBox.y + statusBox.height &&
+        titleBox.y + titleBox.height > statusBox.y
+      expect(overlaps).toBe(false)
+    }
 
     await expect(score).toBeDisabled()
     await expect(calibration).toContainText(
@@ -133,6 +151,20 @@ test.describe('v1.9 Human scoring alignment', () => {
     await expect(score).toHaveAttribute('placeholder', '5')
     await score.fill('4')
     await expect(alert).toContainText('Excellent requires a score of 5')
+    const inlineScoreError = page.getByTestId('score-validation-message')
+    await expect(inlineScoreError).toBeVisible()
+    await expect(inlineScoreError).toContainText('Excellent requires a score of 5')
+    const scoreContext = page.getByText('Scoring context', { exact: true }).locator('..')
+    const inlineErrorBox = await inlineScoreError.boundingBox()
+    const scoringContextBox = await scoreContext.boundingBox()
+    expect(inlineErrorBox).not.toBeNull()
+    expect(scoringContextBox).not.toBeNull()
+    if (inlineErrorBox && scoringContextBox) {
+      expect(inlineErrorBox.y).toBeGreaterThanOrEqual(scoringContextBox.y)
+      expect(inlineErrorBox.y + inlineErrorBox.height).toBeLessThanOrEqual(
+        scoringContextBox.y + scoringContextBox.height
+      )
+    }
     await capture(page, 'portal_v19_volunteer_editor_incompatible.png')
     await score.fill('5')
     await expect(alert).toHaveCount(0)

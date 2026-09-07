@@ -128,6 +128,13 @@ export function VolunteerCriterionFeedbackEditorPage() {
     isAnchorScoreCompatible(activeCriterion.maxPoints, anchor, parsedScore)
 
   const isTimestampValid = isValidTimestamp(evidenceTimestamp)
+  const isScoringContextError =
+    errorMessage.startsWith('Score ') ||
+    errorMessage.startsWith('Low requires') ||
+    errorMessage.startsWith('Competent requires') ||
+    errorMessage.startsWith('Excellent requires') ||
+    errorMessage === 'Please enter a valid numeric score.' ||
+    errorMessage === 'Please select an anchor level first.'
   const isEvidenceTextValid = evidence.trim().length > 0
   const isTimestampedEvidenceComplete = isTimestampValid && isEvidenceTextValid
   const strengthComplete = strength.trim().length > 0
@@ -267,7 +274,10 @@ export function VolunteerCriterionFeedbackEditorPage() {
       topbarRightVariant="scoring"
       activeNav="assignments"
     >
-      <h2 className="auratio-volunteer-page-title" style={{ top: '32px' }}>
+      <h2
+        className="auratio-volunteer-page-title"
+        style={{ top: '32px', maxWidth: '1040px' }}
+      >
         Criterion Feedback — {activeCriterion.name}
       </h2>
       <p className="auratio-volunteer-page-subtitle" style={{ top: '74px' }}>
@@ -280,7 +290,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         style={{
           position: 'absolute',
           left: '920px',
-          top: '34px',
+          top: '76px',
           width: '150px',
           height: '36px',
         }}
@@ -534,7 +544,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
             position: 'absolute',
             left: '18px',
             top: '92px',
-            width: '1000px',
+            width: '500px',
             margin: 0,
             fontFamily: 'var(--auratio-font-family-inter), sans-serif',
             fontSize: '12px',
@@ -545,6 +555,26 @@ export function VolunteerCriterionFeedbackEditorPage() {
         >
           Anchor must be selected before the exact numeric score. Exact score is disabled until an anchor level is selected.
         </p>
+
+        {errorMessage && isScoringContextError && (
+          <span
+            role="alert"
+            data-testid="score-validation-message"
+            style={{
+              position: 'absolute',
+              left: '560px',
+              top: '88px',
+              width: '480px',
+              fontFamily: 'var(--auratio-font-family-inter), sans-serif',
+              fontSize: '11px',
+              fontWeight: 600,
+              lineHeight: '16px',
+              color: '#b91c1c',
+            }}
+          >
+            {errorMessage}
+          </span>
+        )}
       </div>
 
       {/* Canonical criterion-specific anchor calibration */}
@@ -1042,7 +1072,7 @@ export function VolunteerCriterionFeedbackEditorPage() {
         Save Criterion Feedback
       </button>
 
-      {errorMessage && (
+      {errorMessage && !isScoringContextError && (
         <span
           role="alert"
           style={{
