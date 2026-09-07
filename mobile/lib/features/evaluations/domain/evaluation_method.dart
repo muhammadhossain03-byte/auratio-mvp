@@ -1,6 +1,17 @@
 enum EvaluationMethod {
-  ai,
-  human;
+  ai('ai'),
+  human('human');
+
+  const EvaluationMethod(this.wireValue);
+
+  final String wireValue;
+
+  static EvaluationMethod fromWire(String value) {
+    return values.firstWhere(
+      (method) => method.wireValue == value,
+      orElse: () => throw FormatException('Unknown evaluation method: $value'),
+    );
+  }
 
   String get displayName {
     switch (this) {

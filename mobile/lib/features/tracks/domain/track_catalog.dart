@@ -41,6 +41,40 @@ class TrackItem {
   final bool hasDetailsRoute;
 
   String get effectiveFileName => sampleFileName ?? '$slug.mp4';
+
+  /// Canonical backend track identifier. Route slugs remain unchanged.
+  String get backendId =>
+      slug == 'business-pitch-sales-pitch' ? 'business-pitch' : slug;
+
+  int get minDurationSeconds => _durationGate[0];
+  int get maxDurationSeconds => _durationGate[1];
+
+  bool acceptsDurationSeconds(num seconds) =>
+      seconds >= minDurationSeconds && seconds <= maxDurationSeconds;
+
+  List<int> get _durationGate {
+    final gate = _durationGatesByBackendId[backendId];
+    if (gate == null) {
+      throw StateError('Missing duration gate for track: $backendId');
+    }
+    return gate;
+  }
+
+  static const Map<String, List<int>> _durationGatesByBackendId = {
+    'informative': [270, 450],
+    'extempore': [90, 210],
+    'persuasive': [270, 450],
+    'argumentative-debate': [210, 390],
+    'explanatory': [270, 450],
+    'news-delivery': [30, 210],
+    'business-pitch': [150, 330],
+    'general-presentation-multimedia': [330, 630],
+    'academic-poster-project-thesis': [450, 930],
+    'corporate-report': [270, 630],
+    'infotainment-oriented': [30, 210],
+    'academic-lecture-course': [450, 1230],
+    'marketing-promotional': [30, 150],
+  };
 }
 
 abstract final class AuratioTrackCatalog {
@@ -206,6 +240,15 @@ abstract final class AuratioTrackCatalog {
   static TrackItem? findBySlug(String slug) {
     for (final track in allTracks) {
       if (track.slug == slug) {
+        return track;
+      }
+    }
+    return null;
+  }
+
+  static TrackItem? findByBackendId(String backendId) {
+    for (final track in allTracks) {
+      if (track.backendId == backendId) {
         return track;
       }
     }
