@@ -10,53 +10,72 @@ All Auratio implementation code, patches, complete replacement files, test chang
 
 Antigravity must never implement Auratio from a broad task description, feature request, bug description, acceptance criteria, or design brief. A repository-changing Antigravity task is valid only when ChatGPT has already supplied the exact finished patch/file contents or an equivalently deterministic mechanical transformation.
 
-If an Antigravity instruction would require Antigravity to decide how to implement, redesign, refactor, troubleshoot, or invent code, Antigravity must stop and report that the task requires a ChatGPT-authored implementation package.
+If an Antigravity instruction would require implementation judgment, Antigravity must stop and report that the task requires a ChatGPT-authored package.
 
 ## Antigravity execution-only rule
 Antigravity may only:
 - verify the exact branch/HEAD and clean working-tree preconditions supplied by ChatGPT;
-- apply the exact ChatGPT-authored patch/files or deterministic mechanical transformation;
-- run explicitly requested validation commands;
+- apply the exact ChatGPT-authored patch/files or deterministic transformation;
+- run explicitly requested validations;
 - show diff/status;
-- report validation failures without independently changing code to fix them;
+- report validation failures without independently editing code;
 - commit with the supplied message;
 - push the supplied branch;
-- return the full SHA/results/errors;
+- return the requested evidence/full SHA;
 - stop.
 
-Antigravity must not independently redesign, reinterpret, optimize, refactor, troubleshoot by editing code, fix unrelated failures, change architecture, choose implementation details, invent fixes, or start another task.
+Antigravity must not independently redesign, reinterpret, optimize, refactor, troubleshoot by editing, fix unrelated failures, change architecture, choose implementation details, invent fixes, or start another task.
 
 ## Acceptance rule
 An Antigravity commit is never accepted merely because Antigravity reports success. ChatGPT must independently inspect the pushed GitHub commit/diff and explicitly accept it.
 
 ## Current branch
-`step-iv/ui-foundation`
+`step-vi/backend-orchestration`
 
-The next development branch, after the Step-V documentation closeout commit is independently accepted, should be created as `step-vi/backend-orchestration` from that accepted HEAD.
+Step VI implementation batches VI-A through VI-F are complete. This VI-G package is the Step-VI closeout/handoff package. After ChatGPT independently accepts the VI-G closeout commit, create the next branch as:
+
+`step-vii/api-client-ai-integration`
+
+Create it from the accepted VI-G closeout HEAD, not from an earlier Step-VI batch commit.
 
 ## Local filesystem convention
 - `D:\auratio-mvp\` is the actual Auratio Git working repository used by Antigravity.
 - `E:\Auratio_<Package_Name>\` is the standard extraction location for ChatGPT-authored transfer/execution packages.
 - ChatGPT-authored ZIP/packages must not be extracted directly into `D:\auratio-mvp\` unless ChatGPT explicitly instructs otherwise.
-- Antigravity mechanically applies/copies the ChatGPT-authored package from `E:\` into `D:\auratio-mvp\` only through the exact supplied execution instructions.
+- Antigravity mechanically copies the package from `E:\` into `D:\auratio-mvp\` only through the supplied instructions.
 - Temporary package folders on `E:\` may be deleted only after the corresponding GitHub commit has been independently inspected and accepted by ChatGPT.
 - Never delete, replace, or treat `D:\auratio-mvp\` as a temporary extraction folder.
 
 ## Step gate
 Steps I–V are CLOSED / APPROVED.
 
-Step VI — backend lifecycle/orchestration, privileged operations, scoring/progress/leaderboard/report services, and storage-lifecycle execution — is authorized after this documentation closeout commit is independently accepted by ChatGPT.
+Step VI — Backend & Orchestration — has completed implementation batches VI-A through VI-F and passed the VI-G final backend/security/reproducibility audit. Step VI becomes formally CLOSED / APPROVED only when ChatGPT independently accepts the VI-G closeout commit.
 
-Do not begin Step VII client/API/Gemini integration until Step VI is explicitly accepted by ChatGPT. The deferred Volunteer Human-evaluation mock-state coherence issue must be resolved through the single persisted Supabase lifecycle during Step VI/VII integration, not by reopening mock-only frontend patching unless a genuine frontend defect is proven.
+Step VII — API/Client/AI Integration — is authorized only after that closeout acceptance. Step VIII remains blocked until Step VII is accepted.
+
+The deferred `SUB-8821` mock-state coherence issue is a mandatory Step-VII persisted-state integration invariant. Do not repair it with new distributed mock state unless a genuine frontend defect is independently proven.
 
 ## Accepted Step-V foundation
 - Production Supabase project: `Auratio` (`czkbljnzcfsztfrwndsb`).
 - Accepted Step-V implementation commit: `102dc424788e177601fd7683c1c2f54015ae1c78`.
-- Nine reproducible migrations under `supabase/migrations/`.
-- Verification suite under `supabase/tests/step_v_schema_verification.sql`.
-- Canonical 3 Paths, 13 Tracks, 64 criteria, 192 anchors.
-- 19 RLS-enabled Auratio public tables and 2 private Storage buckets.
-- Security Advisor: zero security lints at Step-V acceptance.
+- Canonical 3 Paths / 13 Tracks / 64 criteria / 192 anchors.
+- 19 RLS-enabled public Auratio tables.
+- 2 private Storage buckets.
+
+## Step-VI accepted implementation checkpoints
+- VI-A Identity/Staff: `6343d0e10d9985a77110230ae94e7d50c5ff5014`.
+- VI-B Human lifecycle: `e9b72af69cce980c15b670beab2440fc2bba2a1e`.
+- VI-C AI lifecycle/validation boundary: `93d69de2217d68315f1cac633e86e0c7f27ac03e`.
+- VI-D Progress/Mastery/Leaderboard: `c15b5ffce32c5d6c29aeb49b3acddb79df2d7af8`.
+- VI-E Deterministic DOCX service: `b51aa3feb544aa9cb57d0b07fdb61ef517c548a4`.
+- VI-F Video cleanup/adversarial backend QA: `fa25ccfaad1643b7e5ecac111c972ea40d2abbfe`.
+
+The production Supabase project now has 24 migrations through `20260907133302_step_vi_f_video_deletion_worker` and 9 active JWT-verified Edge Functions. VI-G introduces no production schema change.
+
+## Locked Step-VII Gemini credential decision
+For the MVP, use exactly one Gemini API key unless ChatGPT/user explicitly changes the decision later.
+
+The key must be stored server-side only as a Supabase secret/environment secret. Never commit it and never expose it to Flutter, React, Vercel client bundles, logs, or user-visible payloads. Multiple keys are not required for the MVP.
 
 ## Locked stack
 - Flutter + Riverpod + go_router
@@ -68,7 +87,7 @@ Do not begin Step VII client/API/Gemini integration until Step VI is explicitly 
 - Android release APK for academic demo
 
 ## Secrets
-Never commit Gemini keys, Supabase service-role secrets, passwords, or privileged credentials. No privileged secret may be exposed to Flutter/React client code.
+Never commit Gemini keys, Supabase service-role secrets, passwords, privileged tokens, or equivalent credentials. No privileged secret may be exposed to Flutter/React client code.
 
 ## Validation commands
 When ChatGPT requests full frontend validation:
@@ -92,4 +111,4 @@ npm run test
 npx playwright test
 ```
 
-Backend/Supabase validation is task-specific and must use the exact commands/queries supplied by ChatGPT. Runtime/visual QA remains required after meaningful frontend changes; automated tests do not replace it.
+Backend/Supabase validation is task-specific and must use the exact queries/commands supplied by ChatGPT. Runtime/visual QA remains required after meaningful frontend changes; automated tests do not replace it.
