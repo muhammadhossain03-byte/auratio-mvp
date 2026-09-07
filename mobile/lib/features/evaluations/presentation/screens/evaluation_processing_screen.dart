@@ -99,6 +99,7 @@ class _EvaluationProcessingScreenState
           status: request?.userStatus,
           prototype: false,
           requestFound: request != null,
+          requestId: request?.id,
         );
       },
       loading: () => _buildScreen(
@@ -129,8 +130,13 @@ class _EvaluationProcessingScreenState
     bool loading = false,
     bool loadFailed = false,
     bool requestFound = true,
+    String? requestId,
   }) {
     final isAi = method == EvaluationMethod.ai;
+    final canViewApprovedResult =
+        !prototype &&
+        status == UserEvaluationStatus.approved &&
+        requestId != null;
     final statusLabel = loading
         ? 'Refreshing…'
         : loadFailed
@@ -351,10 +357,26 @@ class _EvaluationProcessingScreenState
                         width: double.infinity,
                         child: AuratioButton(
                           key: EvaluationProcessingScreen.returnHomeButtonKey,
-                          label: 'Return to Home',
-                          variant: AuratioButtonVariant.secondary,
+                          label: canViewApprovedResult
+                              ? 'View Approved Result'
+                              : 'Return to Home',
+                          variant: canViewApprovedResult
+                              ? AuratioButtonVariant.primary
+                              : AuratioButtonVariant.secondary,
                           expand: true,
-                          onPressed: () => context.go(AppRoutePaths.home),
+                          onPressed: canViewApprovedResult
+                              ? () {
+                                  final resultPath = isAi
+                                      ? AppRoutePaths.evaluationResultAi
+                                      : AppRoutePaths.evaluationResultHuman;
+                                  context.go(
+                                    Uri(
+                                      path: resultPath,
+                                      queryParameters: {'request': requestId},
+                                    ).toString(),
+                                  );
+                                }
+                              : () => context.go(AppRoutePaths.home),
                         ),
                       ),
                       const SizedBox(height: 46),

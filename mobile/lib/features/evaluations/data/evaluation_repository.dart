@@ -23,6 +23,10 @@ abstract interface class AuratioEvaluationRepository {
 
   Future<PersistedEvaluationRequest?> fetchActiveRequest();
 
+  Future<ApprovedEvaluationDetail?> fetchApprovedEvaluationForSubmission(
+    String submissionId,
+  );
+
   Future<String> uploadVideoBytes({
     required String objectName,
     required Uint8List bytes,
@@ -39,6 +43,8 @@ abstract interface class AuratioEvaluationRepository {
   Future<ApprovedEvaluationDetail?> fetchApprovedEvaluation(String requestId);
 
   Future<ApprovedReportMetadata?> fetchApprovedReport(String requestId);
+
+  Future<ApprovedReportMetadata?> ensureApprovedReport(String requestId);
 
   Future<Uint8List> downloadApprovedReport(ApprovedReportMetadata report);
 }
@@ -195,6 +201,53 @@ class SupabaseAuratioEvaluationRepository
   }
 
   @override
+  Future<ApprovedEvaluationDetail?> fetchApprovedEvaluationForSubmission(
+    String submissionId,
+  ) async {
+    final userId = _requireUserId();
+    final normalizedSubmissionId = submissionId.trim();
+    if (normalizedSubmissionId.isEmpty) {
+      throw const AuratioEvaluationDataException(
+        'invalid_submission_id',
+        'The Approved submission identifier is invalid.',
+      );
+    }
+
+    try {
+      final row = await _client
+          .from('evaluation_requests')
+          .select('id')
+          .eq('submission_id', normalizedSubmissionId)
+          .eq('user_id', userId)
+          .eq('status', 'approved')
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+      if (row == null) return null;
+
+      final requestId = row['id'];
+      if (requestId is! String || requestId.isEmpty) {
+        throw const FormatException(
+          'Approved evaluation request identifier is invalid.',
+        );
+      }
+      return await fetchApprovedEvaluation(requestId);
+    } on AuratioEvaluationDataException {
+      rethrow;
+    } on FormatException {
+      throw const AuratioEvaluationDataException(
+        'invalid_approved_evaluation',
+        'The persisted Approved evaluation is incomplete or invalid.',
+      );
+    } on PostgrestException {
+      throw const AuratioEvaluationDataException(
+        'approved_evaluation_load_failed',
+        'Unable to load the Approved evaluation.',
+      );
+    }
+  }
+
+  @override
   Future<ApprovedEvaluationDetail?> fetchApprovedEvaluation(
     String requestId,
   ) async {
@@ -318,6 +371,61 @@ class SupabaseAuratioEvaluationRepository
       throw const AuratioEvaluationDataException(
         'report_metadata_load_failed',
         'Unable to load the Approved report metadata.',
+      );
+    }
+  }
+
+  @override
+  Future<ApprovedReportMetadata?> ensureApprovedReport(String requestId) async {
+    final request = await _fetchRequestById(requestId);
+    if (request == null ||
+        request.status != PersistedEvaluationStatus.approved) {
+      return null;
+    }
+
+    final existing = await fetchApprovedReport(requestId);
+    if (existing != null) {
+      return existing;
+    }
+
+    try {
+      final response = await _client.functions.invoke(
+        'report',
+        body: {'request_id': requestId},
+      );
+      final payload = _asJsonMap(response.data);
+      final state = payload['state'];
+      if (state != 'ready' && state != 'in_progress') {
+        throw const FormatException('Unexpected report-service state.');
+      }
+
+      final rawReport = payload['report'];
+      if (rawReport != null) {
+        final report = ApprovedReportMetadata.fromJson(_asJsonMap(rawReport));
+        if (report.bucketName != _reportBucket ||
+            report.requestId != requestId) {
+          throw const FormatException('Unexpected report metadata.');
+        }
+        return report;
+      }
+
+      return await fetchApprovedReport(requestId);
+    } on AuratioEvaluationDataException {
+      rethrow;
+    } on FormatException {
+      throw const AuratioEvaluationDataException(
+        'invalid_report_service_response',
+        'The report service returned an invalid response.',
+      );
+    } on FunctionsHttpException {
+      throw const AuratioEvaluationDataException(
+        'report_generation_failed',
+        'Unable to prepare the Approved report.',
+      );
+    } catch (_) {
+      throw const AuratioEvaluationDataException(
+        'report_generation_failed',
+        'Unable to prepare the Approved report.',
       );
     }
   }
@@ -496,6 +604,13 @@ class UnconfiguredAuratioEvaluationRepository
   Future<PersistedEvaluationRequest?> fetchActiveRequest() async => null;
 
   @override
+  Future<ApprovedEvaluationDetail?> fetchApprovedEvaluationForSubmission(
+    String submissionId,
+  ) async {
+    throw _error;
+  }
+
+  @override
   Future<String> uploadVideoBytes({
     required String objectName,
     required Uint8List bytes,
@@ -523,6 +638,11 @@ class UnconfiguredAuratioEvaluationRepository
 
   @override
   Future<ApprovedReportMetadata?> fetchApprovedReport(String requestId) async {
+    throw _error;
+  }
+
+  @override
+  Future<ApprovedReportMetadata?> ensureApprovedReport(String requestId) async {
     throw _error;
   }
 

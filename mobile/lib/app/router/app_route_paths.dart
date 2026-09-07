@@ -48,6 +48,9 @@ abstract final class AppRoutePaths {
   static const leaderboardHuman = '$leaderboard/human';
   static const events = '/events';
   static const eventDetails = '$events/details';
+  static const persistedEventDetails = '$events/id/:id';
+  static String persistedEventDetailsFor(String eventId) =>
+      '$events/id/$eventId';
   static const profile = '/profile';
   static const profileSettings = '$profile/settings';
   static const managePaths = '$profile/manage-paths';

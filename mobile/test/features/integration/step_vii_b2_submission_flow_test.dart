@@ -175,7 +175,19 @@ class _FakeEvaluationRepository implements AuratioEvaluationRepository {
   }
 
   @override
+  Future<ApprovedEvaluationDetail?> fetchApprovedEvaluationForSubmission(
+    String submissionId,
+  ) async {
+    return null;
+  }
+
+  @override
   Future<ApprovedReportMetadata?> fetchApprovedReport(String requestId) async {
+    return null;
+  }
+
+  @override
+  Future<ApprovedReportMetadata?> ensureApprovedReport(String requestId) async {
     return null;
   }
 

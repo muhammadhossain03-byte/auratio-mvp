@@ -22,6 +22,8 @@ abstract interface class AuratioEventsRepository {
     DateTime? fromInclusive,
     DateTime? beforeExclusive,
   });
+
+  Future<PersistedEvent?> fetchPublishedEvent(String eventId);
 }
 
 class SupabaseAuratioEventsRepository implements AuratioEventsRepository {
@@ -31,6 +33,54 @@ class SupabaseAuratioEventsRepository implements AuratioEventsRepository {
 
   @override
   bool get isConfigured => true;
+
+  @override
+  Future<PersistedEvent?> fetchPublishedEvent(String eventId) async {
+    if (_client.auth.currentUser == null) {
+      throw const AuratioEventsDataException(
+        'authentication_required',
+        'Sign in before accessing events.',
+      );
+    }
+
+    final normalizedId = eventId.trim();
+    if (normalizedId.isEmpty) {
+      throw const AuratioEventsDataException(
+        'invalid_event_id',
+        'The event identifier is invalid.',
+      );
+    }
+
+    const selection =
+        'id,title,description,country_code,division,city,venue,organizer,'
+        'registration_url,starts_at,ends_at,status,event_paths(path_id)';
+
+    try {
+      final row = await _client
+          .from('events')
+          .select(selection)
+          .eq('id', normalizedId)
+          .eq('status', 'published')
+          .maybeSingle();
+      if (row == null) return null;
+
+      final event = PersistedEvent.fromJson(row);
+      if (event.countryCode != 'BD' || event.status != 'published') {
+        return null;
+      }
+      return event;
+    } on FormatException {
+      throw const AuratioEventsDataException(
+        'invalid_event_payload',
+        'The persisted event payload is invalid.',
+      );
+    } on PostgrestException {
+      throw const AuratioEventsDataException(
+        'event_load_failed',
+        'Unable to load the event.',
+      );
+    }
+  }
 
   @override
   Future<List<PersistedEvent>> fetchPublishedEvents({
@@ -123,4 +173,9 @@ class UnconfiguredAuratioEventsRepository implements AuratioEventsRepository {
     DateTime? fromInclusive,
     DateTime? beforeExclusive,
   }) async => throw _error;
+
+  @override
+  Future<PersistedEvent?> fetchPublishedEvent(String eventId) async {
+    throw _error;
+  }
 }
