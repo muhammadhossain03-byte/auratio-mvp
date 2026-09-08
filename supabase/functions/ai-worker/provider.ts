@@ -240,6 +240,69 @@ export function buildInteractionRequest(context: RuntimeContext, videoUri: strin
   };
 }
 
+export function buildGenerateContentRequest(
+  context: RuntimeContext,
+  providerFileUri: string,
+): Record<string, unknown> {
+  return {
+    system_instruction: {
+      parts: [{ text: SYSTEM_PROMPT }],
+    },
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            file_data: {
+              file_uri: providerFileUri,
+              mime_type: "video/mp4",
+            },
+            media_processing: "AGENTIC",
+          },
+          {
+            text: buildRuntimeInstruction(context),
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      thinkingConfig: {
+        thinkingLevel: "medium",
+        includeThoughts: false,
+      },
+      maxOutputTokens: 32768,
+      responseFormat: {
+        text: {
+          mimeType: "application/json",
+          schema: buildTransportSchema(context),
+        },
+      },
+    },
+  };
+}
+
+export function extractGenerateContentStructuredText(
+  response: Record<string, unknown>,
+): string {
+  const candidates = Array.isArray(response.candidates) ? response.candidates : [];
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object") continue;
+    const content = (candidate as Record<string, unknown>).content;
+    if (!content || typeof content !== "object") continue;
+    const parts = Array.isArray((content as Record<string, unknown>).parts)
+      ? (content as Record<string, unknown>).parts as unknown[]
+      : [];
+    const text = parts
+      .filter((part): part is Record<string, unknown> => !!part && typeof part === "object")
+      .filter((part) => part.thought !== true && typeof part.text === "string")
+      .map((part) => part.text as string)
+      .join("")
+      .trim();
+    if (text) return text;
+  }
+  throw new Error("gemini_generate_content_without_text_output");
+}
+
 export function normalizeFileState(value: unknown): "ACTIVE" | "PROCESSING" | "FAILED" | "UNKNOWN" {
   if (typeof value !== "string") return "UNKNOWN";
   const normalized = value.toUpperCase();

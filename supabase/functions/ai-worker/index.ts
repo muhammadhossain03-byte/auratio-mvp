@@ -1,10 +1,13 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
+  buildGenerateContentRequest,
   buildInteractionRequest,
   extractFinalStructuredText,
+  extractGenerateContentStructuredText,
   GEMINI_API_REVISION,
   GEMINI_BASE_URL,
   GEMINI_MODEL,
+  normalizeFileState,
   normalizeInteractionStatus,
   providerErrorMessage,
   ProviderJob,
@@ -14,9 +17,8 @@ import {
 
 type SupabaseService = ReturnType<typeof createClient>;
 
+const FILE_POLL_SECONDS = 5;
 const INTERACTION_POLL_SECONDS = 15;
-const SIGNED_SOURCE_TTL_SECONDS = 2 * 60 * 60;
-const EXTERNAL_URL_MAX_BYTES = 100_000_000;
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -103,25 +105,268 @@ async function markCleanup(
   });
 }
 
-async function createSignedSourceUrl(
+async function createSignedSource(
   service: SupabaseService,
   context: RuntimeContext,
-): Promise<string> {
+): Promise<Response> {
   if (context.video_bucket !== "evaluation-videos") throw new Error("invalid_source_bucket");
   if (context.video_mime_type !== "video/mp4") throw new Error("invalid_source_mime_type");
 
-  const size = Number(context.video_size_bytes ?? 0);
-  if (!Number.isFinite(size) || size <= 0) throw new Error("source_content_length_missing");
-  if (size > EXTERNAL_URL_MAX_BYTES) throw new Error("source_exceeds_external_url_limit");
-
   const { data, error } = await service.storage
     .from(context.video_bucket)
-    .createSignedUrl(context.video_object_path, SIGNED_SOURCE_TTL_SECONDS);
+    .createSignedUrl(context.video_object_path, 120);
   if (error || !data?.signedUrl) {
     throw new Error(`source_sign_failed: ${error?.message ?? "missing_signed_url"}`);
   }
 
-  return data.signedUrl;
+  const source = await fetch(data.signedUrl);
+  if (!source.ok || !source.body) {
+    throw new Error(`source_download_failed: ${source.status}`);
+  }
+  return source;
+}
+
+async function getGeminiFile(
+  apiKey: string,
+  fileName: string,
+): Promise<Record<string, unknown>> {
+  const response = await geminiFetch(apiKey, `/v1beta/${fileName}`, { method: "GET" });
+  const body = await safeJson(response);
+  if (!response.ok) {
+    throw new Error(
+      `gemini_file_get_failed: ${providerErrorMessage(body, String(response.status))}`,
+    );
+  }
+  return body;
+}
+
+async function uploadSourceToGemini(
+  service: SupabaseService,
+  apiKey: string,
+  context: RuntimeContext,
+): Promise<{ name: string; uri: string; state: string }> {
+  const source = await createSignedSource(service, context);
+  const headerSize = Number(source.headers.get("content-length") ?? 0);
+  const size = Number(context.video_size_bytes ?? headerSize);
+  if (!Number.isFinite(size) || size <= 0) {
+    throw new Error("source_content_length_missing");
+  }
+
+  const start = await geminiFetch(apiKey, "/upload/v1beta/files", {
+    method: "POST",
+    headers: {
+      "X-Goog-Upload-Protocol": "resumable",
+      "X-Goog-Upload-Command": "start",
+      "X-Goog-Upload-Header-Content-Length": String(size),
+      "X-Goog-Upload-Header-Content-Type": "video/mp4",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      file: { display_name: `Auratio ${context.submission_id}` },
+    }),
+  });
+  if (!start.ok) {
+    const body = await safeJson(start);
+    throw new Error(
+      `gemini_file_start_failed: ${providerErrorMessage(body, String(start.status))}`,
+    );
+  }
+
+  const uploadUrl = start.headers.get("x-goog-upload-url");
+  if (!uploadUrl) throw new Error("gemini_upload_url_missing");
+
+  const upload = await fetch(uploadUrl, {
+    method: "POST",
+    headers: {
+      "Content-Length": String(size),
+      "X-Goog-Upload-Offset": "0",
+      "X-Goog-Upload-Command": "upload, finalize",
+      "Content-Type": "video/mp4",
+    },
+    body: source.body,
+  });
+  const uploadBody = await safeJson(upload);
+  if (!upload.ok) {
+    throw new Error(
+      `gemini_file_upload_failed: ${providerErrorMessage(uploadBody, String(upload.status))}`,
+    );
+  }
+
+  const file = uploadBody.file && typeof uploadBody.file === "object"
+    ? uploadBody.file as Record<string, unknown>
+    : uploadBody;
+  const name = typeof file.name === "string" ? file.name : "";
+  const uri = typeof file.uri === "string" ? file.uri : "";
+  if (!name || !uri) throw new Error("gemini_uploaded_file_identity_missing");
+
+  return {
+    name,
+    uri,
+    state: normalizeFileState(file.state),
+  };
+}
+
+async function finalizeGenerateContentResult(
+  service: SupabaseService,
+  job: ProviderJob,
+  body: Record<string, unknown>,
+): Promise<string> {
+  let rawText: string;
+  let digest: string;
+  try {
+    rawText = extractGenerateContentStructuredText(body);
+    digest = await sha256Hex(rawText);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "gemini_output_missing";
+    await failActiveAttempt(
+      service,
+      job.request_id,
+      "invalid",
+      "invalid_output_json",
+      reason,
+    );
+    await markCleanup(service, job.claim_token, reason);
+    return "invalid_output";
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawText);
+  } catch {
+    await failActiveAttempt(
+      service,
+      job.request_id,
+      "invalid",
+      "invalid_output_json",
+      "Gemini structured output was not valid JSON",
+      digest,
+    );
+    await markCleanup(service, job.claim_token, "invalid_output_json");
+    return "invalid_output";
+  }
+
+  const activeBeforeFinalize = await readRequestActive(service, job.request_id);
+  if (!activeBeforeFinalize) {
+    await markCleanup(service, job.claim_token, "auratio_request_no_longer_active");
+    return "late_output_discarded";
+  }
+
+  const { error: finalizeError } = await service.rpc("svc_ai_finalize_result", {
+    p_request_id: job.request_id,
+    p_result: parsed,
+    p_output_digest_sha256: digest,
+  });
+
+  if (finalizeError) {
+    const stillActive = await readRequestActive(service, job.request_id);
+    if (stillActive) {
+      await failActiveAttempt(
+        service,
+        job.request_id,
+        "api_failure",
+        "auratio_finalize_failed",
+        finalizeError.message,
+        digest,
+      );
+    }
+  }
+
+  await markCleanup(service, job.claim_token, finalizeError?.message ?? null);
+  return finalizeError ? "finalize_failed" : "completed";
+}
+
+async function handleFileReadyGenerateContent(
+  service: SupabaseService,
+  apiKey: string,
+  job: ProviderJob,
+  context: RuntimeContext,
+): Promise<string> {
+  if (!job.provider_file_name || !job.provider_file_uri) {
+    throw new Error("provider_file_identity_missing");
+  }
+
+  const metadata = await getGeminiFile(apiKey, job.provider_file_name);
+  const fileState = normalizeFileState(metadata.state);
+
+  if (fileState === "PROCESSING" || fileState === "UNKNOWN") {
+    await rpc(service, "svc_ai_provider_schedule_file_poll", {
+      p_claim_token: job.claim_token,
+      p_provider_status: fileState,
+      p_delay_seconds: FILE_POLL_SECONDS,
+    });
+    return "file_processing";
+  }
+
+  if (fileState === "FAILED") {
+    const reason = providerErrorMessage(metadata, "Gemini file processing failed");
+    await failActiveAttempt(
+      service,
+      job.request_id,
+      "api_failure",
+      "gemini_file_processing_failed",
+      reason,
+    );
+    await markCleanup(service, job.claim_token, reason);
+    return "file_failed";
+  }
+
+  await rpc(service, "svc_ai_provider_begin_interaction", {
+    p_claim_token: job.claim_token,
+  });
+
+  let response: Response;
+  let body: Record<string, unknown>;
+  try {
+    response = await geminiFetch(
+      apiKey,
+      `/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          buildGenerateContentRequest(context, job.provider_file_uri),
+        ),
+      },
+    );
+    body = await safeJson(response);
+  } catch (error) {
+    const reason = error instanceof Error
+      ? error.message
+      : "gemini_generate_content_transport_error";
+    await rpc(service, "svc_ai_provider_mark_interaction_uncertain", {
+      p_claim_token: job.claim_token,
+      p_error: reason,
+    });
+    await failActiveAttempt(
+      service,
+      job.request_id,
+      "api_failure",
+      "gemini_generate_content_uncertain",
+      reason,
+    );
+    await markCleanup(service, job.claim_token, reason);
+    return "generate_content_uncertain";
+  }
+
+  if (!response.ok) {
+    const reason = providerErrorMessage(
+      body,
+      `Gemini Generate Content failed (${response.status})`,
+    );
+    await failActiveAttempt(
+      service,
+      job.request_id,
+      "api_failure",
+      "gemini_generate_content_failed",
+      reason,
+    );
+    await markCleanup(service, job.claim_token, reason);
+    return response.status === 503
+      ? "provider_high_demand"
+      : "generate_content_failed";
+  }
+
+  return await finalizeGenerateContentResult(service, job, body);
 }
 
 async function initializeJob(
@@ -130,7 +375,11 @@ async function initializeJob(
   job: ProviderJob,
 ): Promise<string> {
   if (!isActiveAiJob(job)) {
-    await markCleanup(service, job.claim_token, "auratio_request_no_longer_active");
+    await markCleanup(
+      service,
+      job.claim_token,
+      "auratio_request_no_longer_active",
+    );
     return "inactive_cleanup";
   }
 
@@ -149,70 +398,63 @@ async function initializeJob(
     p_request_id: job.request_id,
   }) as RuntimeContext;
 
-  let sourceUrl: string;
   try {
-    sourceUrl = await createSignedSourceUrl(service, context);
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : "signed_source_url_error";
-    await failActiveAttempt(service, job.request_id, "api_failure", "signed_source_url_error", reason);
-    await markCleanup(service, job.claim_token, reason);
-    return "signed_source_failed";
-  }
-
-  await rpc(service, "svc_ai_provider_begin_interaction", {
-    p_claim_token: job.claim_token,
-  });
-
-  let response: Response;
-  let body: Record<string, unknown>;
-  try {
-    response = await geminiFetch(apiKey, "/v1beta/interactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildInteractionRequest(context, sourceUrl)),
-    }, true);
-    body = await safeJson(response);
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : "gemini_interaction_creation_transport_error";
-    await rpc(service, "svc_ai_provider_mark_interaction_uncertain", {
+    const uploaded = await uploadSourceToGemini(service, apiKey, context);
+    await rpc(service, "svc_ai_provider_record_file", {
       p_claim_token: job.claim_token,
-      p_error: reason,
+      p_provider_file_name: uploaded.name,
+      p_provider_file_uri: uploaded.uri,
     });
+
+    job.provider_file_name = uploaded.name;
+    job.provider_file_uri = uploaded.uri;
+    job.state = "file_ready";
+
+    if (uploaded.state === "PROCESSING" || uploaded.state === "UNKNOWN") {
+      await rpc(service, "svc_ai_provider_schedule_file_poll", {
+        p_claim_token: job.claim_token,
+        p_provider_status: uploaded.state,
+        p_delay_seconds: FILE_POLL_SECONDS,
+      });
+      return "file_uploaded_processing";
+    }
+
+    if (uploaded.state === "FAILED") {
+      await failActiveAttempt(
+        service,
+        job.request_id,
+        "api_failure",
+        "gemini_file_processing_failed",
+        "Gemini file processing failed immediately after upload",
+      );
+      await markCleanup(
+        service,
+        job.claim_token,
+        "gemini_file_processing_failed",
+      );
+      return "file_failed";
+    }
+
+    return await handleFileReadyGenerateContent(
+      service,
+      apiKey,
+      job,
+      context,
+    );
+  } catch (error) {
+    const reason = error instanceof Error
+      ? error.message
+      : "gemini_file_upload_error";
     await failActiveAttempt(
       service,
       job.request_id,
       "api_failure",
-      "gemini_interaction_creation_uncertain",
+      "gemini_file_upload_error",
       reason,
     );
     await markCleanup(service, job.claim_token, reason);
-    return "interaction_creation_uncertain";
+    return "file_upload_failed";
   }
-
-  const interactionId = typeof body.id === "string" ? body.id : "";
-  if (!response.ok || !interactionId) {
-    const reason = providerErrorMessage(body, `Gemini Interaction creation failed (${response.status})`);
-    await rpc(service, "svc_ai_provider_mark_interaction_uncertain", {
-      p_claim_token: job.claim_token,
-      p_error: reason,
-    });
-    await failActiveAttempt(
-      service,
-      job.request_id,
-      "api_failure",
-      "gemini_interaction_creation_uncertain",
-      reason,
-    );
-    await markCleanup(service, job.claim_token, reason);
-    return "interaction_creation_uncertain";
-  }
-
-  await rpc(service, "svc_ai_provider_record_interaction", {
-    p_claim_token: job.claim_token,
-    p_interaction_id: interactionId,
-    p_provider_status: normalizeInteractionStatus(body.status),
-  });
-  return "interaction_created";
 }
 
 async function pollInteraction(
@@ -451,16 +693,23 @@ async function processJob(
       return await initializeJob(service, apiKey, job);
 
     case "file_ready": {
-      const reason = "legacy_gemini_files_api_transport_unsupported";
-      await failActiveAttempt(
+      if (!isActiveAiJob(job)) {
+        await markCleanup(
+          service,
+          job.claim_token,
+          "auratio_request_no_longer_active",
+        );
+        return "inactive_cleanup";
+      }
+      const context = await rpc(service, "svc_ai_provider_runtime_context", {
+        p_request_id: job.request_id,
+      }) as RuntimeContext;
+      return await handleFileReadyGenerateContent(
         service,
-        job.request_id,
-        "api_failure",
-        "legacy_gemini_file_transport_unsupported",
-        reason,
+        apiKey,
+        job,
+        context,
       );
-      await markCleanup(service, job.claim_token, reason);
-      return "legacy_file_transport_cleanup";
     }
 
     case "interaction_creating":

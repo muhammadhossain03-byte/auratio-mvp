@@ -11,11 +11,17 @@ This file pins the provider-specific transport/orchestration contract used by Au
 
 If this file conflicts with the provider-agnostic scoring/validation rules in `Auratio_AI_Evaluation_Specification_v1.1.md`, the scoring/validation rules win. If Google changes the API, update this provider contract before changing implementation.
 
-### VII-D2 live transport correction — 2026-09-09
+### VII-D2 live provider correction — 2026-09-09
 
-Live testing in the isolated Auratio Supabase test project established a provider-specific incompatibility in the originally pinned transport: a background Agentic Video Interaction created successfully from a Gemini Files API URI, but later retrieval returned `400 invalid_request` with an internal `Unsupported file uri: blobstore:///...` error. A control background text Interaction retrieved successfully with the same API key/revision, and a background Agentic Video Interaction using a short-lived Supabase signed HTTPS URL also retrieved successfully.
+Live testing in the isolated Auratio Supabase test project established two provider-side failures in the Interactions API video path:
 
-Therefore the Auratio MVP runtime MUST use an external pre-signed HTTPS URL for the video input to new Gemini Interactions. It MUST NOT upload new source videos to the Gemini Files API. This is a transport correction only; the model, Thinking level, Agentic Video mode, rubric, structured-output contract, single-Interaction rule and backend validation semantics remain unchanged.
+1. background Agentic Video created from a Gemini Files API URI later failed retrieval with an internal `Unsupported file uri: blobstore:///...` error;
+2. background video created from a Supabase signed HTTPS URL also later failed retrieval (`invalid_request` / permission errors), even though the URL itself was independently retrievable.
+
+A controlled call using the same project/key, the same Auratio video, Gemini Files API upload, and the Generate Content API with `media_processing: "AGENTIC"` reached the model normally; the observed non-success response was the model's standard transient `503 UNAVAILABLE / high demand`, not a permission or request-shape error.
+
+Therefore Auratio VII-D2 MUST use Gemini Files API for temporary video upload plus the Generate Content API for the single model evaluation call. The Interactions API is no longer used for new video evaluations. This is a provider transport/orchestration correction only; the model, Medium Thinking, Agentic Video mode, rubric, structured-output contract, no-retry semantics, backend validation, and cleanup rules remain unchanged.
+
 
 ## 2. Verified provider capabilities
 
@@ -55,78 +61,60 @@ Authenticate with:
 
 For new Auratio AI evaluations:
 
-- generate a short-lived signed HTTPS URL from the private Supabase `evaluation-videos` object;
-- use the signed URL directly as the Interaction video `uri`;
-- keep the URL lifetime bounded (VII-D2 pins two hours);
-- never persist the signed URL in provider-job state, logs, reports or client-visible data;
-- enforce a maximum source size of 100,000,000 bytes for this transport;
-- do **not** upload new Auratio source videos to the Gemini Files API.
+- download the private Supabase `evaluation-videos` object server-side;
+- upload it to Gemini Files API using resumable upload;
+- poll the same provider file until `ACTIVE`;
+- pass the Gemini Files API URI to `models/gemini-3.8-flash:generateContent`;
+- set the video part's `media_processing` to `AGENTIC`;
+- delete the Gemini file during Auratio cleanup;
+- never expose the Gemini API key or provider file URI to mobile/web clients.
 
-The underlying source video remains governed by Auratio's existing private Supabase Storage lifecycle and terminal deletion job.
+The original Supabase video remains governed by Auratio's existing terminal video-deletion lifecycle.
 
-### Background Interaction
-### Background Interaction
+### Generate Content evaluation
 
-- Create: `POST /v1beta/interactions`.
-- Retrieve: `GET /v1beta/interactions/{interaction_id}`.
-- Cancel running background work: `POST /v1beta/interactions/{interaction_id}/cancel`.
-- Delete stored Interaction: `DELETE /v1beta/interactions/{interaction_id}`.
+- Endpoint: `POST /v1beta/models/gemini-3.8-flash:generateContent`.
+- Authentication: `x-goog-api-key: <GEMINI_API_KEY>`.
+- The provider call is one-shot and fail-closed: Auratio MUST NOT automatically issue a second model evaluation call after a call has begun.
+- The existing durable provider state `interaction_creating` is retained temporarily as the fail-closed one-shot provider-call guard; it does **not** mean the new runtime creates an Interactions API resource.
+- A normal provider capacity response such as `503 UNAVAILABLE / high demand` is recorded as an API failure, not silently retried.
 
-For background execution, use the currently documented API revision header:
-
-`Api-Revision: 2026-05-20`
-
-## 4. One Interaction request shape
+## 4. One Generate Content request shape
 
 The request must use:
 
-- `model: "gemini-3.8-flash"`;
-- `background: true`;
-- `generation_config.thinking_level: "medium"`;
-- `generation_config.thinking_summaries: "none"`;
-- system instruction from Auratio's locked prompt;
-- input containing:
-  - one video item with an ephemeral Supabase signed HTTPS URI, `mime_type: "video/mp4"`, `processing: "agentic"`;
-  - one text item containing runtime identity, measured duration, selected Track and the exact 16-criterion rubric/anchors;
-- `response_format`:
-  - `type: "text"`;
-  - `mime_type: "application/json"`;
-  - provider-compatible transport schema.
+- model endpoint `gemini-3.8-flash`;
+- `system_instruction` from Auratio's locked prompt;
+- one user content item containing:
+  - one `file_data` video part with the Gemini Files API URI and `mime_type: "video/mp4"`;
+  - `media_processing: "AGENTIC"` on that video part;
+  - one text part containing runtime identity, measured duration, selected Track and the exact 16-criterion rubric/anchors;
+- `generationConfig.thinkingConfig.thinkingLevel: "medium"`;
+- `generationConfig.thinkingConfig.includeThoughts: false`;
+- `generationConfig.maxOutputTokens: 32768`;
+- `generationConfig.responseFormat.text.mimeType: "application/json"`;
+- the provider-compatible transport schema under `generationConfig.responseFormat.text.schema`.
 
 No tools for external search, URL context, browsing or fact checking are enabled.
 
 Do not send speaker identity/history or unrelated Track rubrics.
 
-## 5. Background status handling
+## 5. Provider result handling
 
-Persist the Interaction ID before relying on later work.
-
-The scheduled worker may retrieve the same Interaction until terminal.
-
-Recognized provider statuses include:
-
-- `queued`;
-- `in_progress`;
-- `completed`;
-- `failed`;
-- `cancelled`;
-- `incomplete`;
-- `budget_exceeded`;
-- `requires_action`.
+Generate Content returns one terminal HTTP response to the worker.
 
 Auratio behavior:
 
-- `queued`: leave Auratio attempt in flight; poll the same Interaction later.
-- `in_progress`: leave Auratio attempt in flight; poll the same Interaction later.
-- `completed`: parse final structured output and run the accepted Auratio finalize boundary exactly once.
-- `failed`: fail the Auratio AI attempt as provider/API failure.
-- `incomplete`: fail the attempt; do not create a retry Interaction.
-- `budget_exceeded`: fail the attempt; do not create a retry Interaction.
-- `requires_action`: fail the attempt; Auratio does not expose an interactive provider-tool loop.
-- `cancelled`: if Auratio already cancelled/redirected, preserve Auratio state; otherwise treat as provider failure.
-- unknown terminal/provider state: fail closed.
+- HTTP 2xx with valid structured output: validate and finalize through `svc_ai_finalize_result` exactly once;
+- HTTP 503 / `UNAVAILABLE`: fail the AI attempt as provider high demand; do not automatically issue a second model call;
+- other provider 4xx/5xx: fail the AI attempt as provider/API failure;
+- transport uncertainty after the provider call begins: fail closed and do not automatically retry;
+- invalid/missing JSON: fail as invalid provider output;
+- late output after Admin cancellation or explicit AI-to-Human redirect: discard and preserve the authoritative Auratio state.
 
-Retrieval of an existing Interaction is not an evaluation retry.
+The Files API metadata polling that occurs **before** model evaluation is not an evaluation retry.
+
+## 6. Cancellation and redirect precedence
 
 ## 6. Cancellation and redirect precedence
 
