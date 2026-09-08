@@ -1,7 +1,7 @@
 # Auratio Current Documentation Index
 
 **Date:** 2026-09-08
-**Status:** Steps I-VI CLOSED / APPROVED; VII-A CLOSED / APPROVED; VII-B CLOSED / APPROVED; Step VII overall IN PROGRESS; VII-C next in a fresh chat
+**Status:** Steps I-VI CLOSED / APPROVED; VII-A CLOSED / APPROVED; VII-B CLOSED / APPROVED; VII-C CLOSED / APPROVED; Step VII overall IN PROGRESS; VII-D next
 
 Use the documents below in this order when implementing or reviewing Auratio. Where an older file conflicts, the newer/current file wins.
 
@@ -16,17 +16,18 @@ Use the documents below in this order when implementing or reviewing Auratio. Wh
 7. `Auratio_Execution_Specification_v1.12.md`
 8. `Auratio_MVP_Path_Selection_Addendum_v1.0.txt`
 9. `Auratio_Final_Pre-Launch_QA_Flow_v1.1.md`
-10. `Project-Status-2026-09-08-v16.md`
-11. `Auratio_Step_VII_Implementation_Handoff_v1.2.md`
-12. `Auratio_Step_VII_B_Closeout_Record_v1.0.md`
-13. `Auratio_Step_VII_A_Closeout_Record_v1.0.md` and the accepted VII-A1/A2 implementation records
-14. `Auratio_Step_VI_Closeout_Record_v1.0.md`
-15. `Auratio_Step_VI_Implementation_Handoff_v1.0.md`
-16. Step-VI batch implementation records `Auratio_Step_VI_A_Implementation_Record_v1.0.md` through `Auratio_Step_VI_F_Implementation_Record_v1.0.md`
-17. `Auratio_Step_V_Implementation_Record_v1.0.md`
-18. `Auratio_Development_Operating_Model_v1.0.md`
-19. `Auratio_Step_IV_Visual_QA_Protocol_v1.2.md`
-20. `Auratio_Step_IV_Zero_Known_Defects_Reclose_Strategy_Addendum_v1.2.md`
+10. `Project-Status-2026-09-08-v17.md`
+11. `Auratio_Step_VII_C_Closeout_Record_v1.0.md`
+12. `Auratio_Step_VII_Implementation_Handoff_v1.2.md`
+13. `Auratio_Step_VII_B_Closeout_Record_v1.0.md`
+14. `Auratio_Step_VII_A_Closeout_Record_v1.0.md` and the accepted VII-A1/A2 implementation records
+15. `Auratio_Step_VI_Closeout_Record_v1.0.md`
+16. `Auratio_Step_VI_Implementation_Handoff_v1.0.md`
+17. Step-VI batch implementation records `Auratio_Step_VI_A_Implementation_Record_v1.0.md` through `Auratio_Step_VI_F_Implementation_Record_v1.0.md`
+18. `Auratio_Step_V_Implementation_Record_v1.0.md`
+19. `Auratio_Development_Operating_Model_v1.0.md`
+20. `Auratio_Step_IV_Visual_QA_Protocol_v1.2.md`
+21. `Auratio_Step_IV_Zero_Known_Defects_Reclose_Strategy_Addendum_v1.2.md`
 
 ## Accepted implementation checkpoints
 
@@ -43,92 +44,176 @@ Use the documents below in this order when implementing or reviewing Auratio. Wh
 - VII-A1: `715e92ca71a309358740f26f779e45edabd045cc`.
 - VII-A2 implementation: `02354879b9fda65ea9bf3c66d404e9a12a06b77c`.
 - VII-A documentation closeout HEAD accepted before VII-B: `4e305cc55da5ff02bcb661ab604a20cf0b2b1dba`.
-- VII-B1 persisted End-User data gateway: `710d280551214fd031fa4747c3cbd168611be3e5`.
-- VII-B2 persisted End-User MP4 submission/request/status flow: `12a6214d767408afa7c55eebeca1a060bd537f14`.
-- VII-B3 persisted Approved result/report/progress/history/leaderboard/events surfaces: `e2d37588e1db6923244c1b2ecbe0899e2dfc287a`.
+- VII-B1: `710d280551214fd031fa4747c3cbd168611be3e5`.
+- VII-B2: `12a6214d767408afa7c55eebeca1a060bd537f14`.
+- VII-B3: `e2d37588e1db6923244c1b2ecbe0899e2dfc287a`.
+- VII-B documentation correction / VII-C implementation base: `64695479c996d16e121d872fea515cedcba90081`.
+- VII-C1 consent-aware routing initial implementation: `ea52872aed2e50c25479816017b85e3b9f07a22b`.
+- VII-C1 hardened private-RLS-helper correction: `1547775ad7ed7db682a0ac6d3257e19101876c33`.
+- VII-C2A Volunteer ownership lifecycle: `63a542b1ecce2ef1385845d5411d6fdc5e16db4a`.
+- VII-C2B Volunteer scoring/submission: `9b85b88b73c477ef247d2e92e06a665ddc359b28`.
+- VII-C2B canonical video-lifecycle correction: `fcfe63a9b5c6012b0d8568efa132557f132d7743`.
+- VII-C2C1 Admin/Super Admin Human request lifecycle: `59d308ffefd2237ee5d01ffb929daada8baa643b`.
+- VII-C2C2 persisted moderation/history/coherence closure: `bdf464c95c22f10f108c5b27b4ba0fd77ac338a4`.
+- VII-C3 mobile explicit AI-to-Human consent: `0d616b748be3ac5bc3dd71910564084a826ee939`.
 - Production Supabase project: `Auratio` (`czkbljnzcfsztfrwndsb`).
+- Persistent development/runtime QA project: `Auratio VII-C Test` (`dboyrlgzifpffnsznvde`).
 - Current branch: `step-vii/api-client-ai-integration`.
 
-## Resume checkpoint and chat boundary
+## Resume checkpoint
 
-VII-B implementation is CLOSED / APPROVED within its documented scope at implementation SHA `e2d37588e1db6923244c1b2ecbe0899e2dfc287a`.
+VII-C is CLOSED / APPROVED within the scope recorded by `Auratio_Step_VII_C_Closeout_Record_v1.0.md`.
 
-The initial VII-B documentation closeout was pushed as `3aca24842583c8bacb4fbf13affadcdc8fd31610`. A documentation-only audit correction follows it. In the new chat, use the actual remote branch HEAD after that correction as the resume HEAD while retaining `e2d375...` as the accepted VII-B implementation checkpoint.
+The accepted VII-C implementation endpoint is:
 
-Read `AGENTS.md`, this index, Status v16, VII-B Closeout v1.0 and Step-VII Handoff v1.2 before any new change. Verify GitHub branch HEAD and ancestry first. Do not recreate or switch the Step-VII branch.
+`0d616b748be3ac5bc3dd71910564084a826ee939`
 
-**This chat ends after VII-B documentation closeout. VII-C starts only in a fresh chat.**
+GitHub comparison from the corrected VII-B documentation HEAD `64695479c996d16e121d872fea515cedcba90081` to the accepted VII-C endpoint is exactly eight commits ahead and zero behind, with `64695479...` as the merge base.
 
-Next scope: persisted Volunteer/Admin/Super Admin Human lifecycle integration and mandatory `SUB-8821` coherence closure. Do not begin Gemini implementation during VII-C.
+Before authoring VII-D, verify the remote branch HEAD and ancestry, read `AGENTS.md`, this index, Status v17, VII-C Closeout v1.0 and Step-VII Handoff v1.2, then recheck current official Google Gemini documentation. Do not recreate or switch the Step-VII branch.
 
-## VII-B accepted scope
+## VII-C accepted scope
 
-Configured End-User operation now includes:
+Configured Human-evaluation operation now includes:
 
-- canonical Path/Track/mode contracts and persisted repositories;
-- real `.mp4` file selection, MP4 duration extraction, canonical duration-gate validation and private upload;
-- `evaluation-request` invocation and persisted user-facing status reads;
-- Approved result detail with exactly 16 persisted criterion results;
-- Approved-only immutable report preparation/download through the accepted `report` Edge Function and private report bucket;
-- private progress/mastery and Approved history;
-- JWT leaderboard reads separated by Track / AI-Human / All-Time-Monthly;
-- published Bangladesh event discovery and persisted event details;
-- configured/unconfigured route switching that preserves accepted Step-IV prototype behavior when Supabase is absent.
+- explicit-consent AI-requested -> Human effective routing while permanently preserving the originally requested method;
+- no Admin-forced redirect and no automatic AI/API-failure -> Human fallback;
+- persisted Volunteer assignment queue/detail;
+- Accept, Decline, Return and Begin lifecycle;
+- persisted canonical 16-criterion scoring;
+- canonical anchor bands;
+- timestamp/evidence/strength/weakness/actionable-improvement persistence;
+- persisted Overall Summary;
+- Human submission and read-only submitted evaluator versions;
+- private authorized evaluation-video access through signed Storage URLs;
+- Admin/Super Admin persisted Human queue/detail;
+- assign/reassign/cancel before submission;
+- persisted moderation queue/detail;
+- approve/reject/reopen/re-review;
+- server-authoritative post-submission reassignment/re-review versioning;
+- persisted Volunteer Completed/History by exact evaluator version;
+- configured dashboard/evaluation records;
+- mandatory `SUB-8821` coherence closure across request/version/assignment surfaces;
+- mobile explicit AI -> Human consent confirmation and persisted requested/effective route display;
+- prototype/unconfigured screens retained where required by the accepted Step-IV visual/routing contract.
 
-The B implementation did not add migrations or deploy/modify backend functions.
+## `SUB-8821` coherence invariant — closed
 
-## Explicit remaining End-User/client gaps
+Configured operation now enforces/represents the required invariant:
 
-Inspection confirms profile/onboarding persistence is not completed by VII-B: `mobile/lib/features/profile` remains presentation-only at this checkpoint. Persisted profile editing, Path selection/manage-Paths completion, and the remaining Auth/session/callback/network flows are explicitly scheduled for VII-E unless a later accepted package moves them earlier.
+1. exactly one Volunteer owns active Human work;
+2. Decline/Return removes active ownership;
+3. reassignment changes ownership through the server-authoritative mutation boundary;
+4. a submitted evaluator version is not editable active work;
+5. post-submission reassignment/re-review preserves the submitted version and creates the later draft/version lifecycle;
+6. user-facing nonterminal states may map to Processing;
+7. Approved is terminal;
+8. relevant configured portal screens resolve persisted request/version/assignment state rather than shared mock state.
 
-VII-B acceptance is not live production/runtime acceptance. Actual configured device/browser Supabase E2E, device save-dialog behavior, network/error behavior and final visual/runtime QA remain later gates.
+The literal prototype fixture `SUB-8821` is not used as a database identity in configured operation.
 
-## AI-requested to Human redirection requirement
+## AI-requested -> Human redirection — closed for VII-C
 
-The authoritative MVP requirement remains: AI/Human mode redirection requires explicit End-User consent.
+The authoritative MVP rule is now represented end-to-end:
 
-- An Admin must not force an AI-requested submission into Human evaluation without that consent.
-- The existing Admin prototype already represents an AI-requested submission reaching a `Redirected Human` route after alternate-method consent.
-- The currently persisted backend does not yet close this path: `evaluation_requests.mode` is immutable after creation and the current `ai-admin` function supports cancellation, not a persisted redirect operation.
-- Treat this as an explicit remaining Step-VII integration gap. Do not delete the capability or reinterpret Gemini failure as automatic Human redirection.
-- The eventual persisted design must preserve the originally requested method and auditable consent/routing state.
+- `evaluation_requests.requested_mode` permanently preserves the original End-User choice;
+- `evaluation_requests.mode` represents the effective/current evaluator route;
+- only AI-requested -> Human effective routing is allowed;
+- a persisted consent record is required;
+- only the request owner can provide that consent;
+- the mobile UI uses a separate explicit confirmation;
+- a failed/rejected redirect leaves the AI route unchanged;
+- Admins cannot force the redirect;
+- Gemini/API failure must not trigger an implicit Human fallback.
 
-The upcoming VII-C source inspection must account for this requirement when wiring Admin/Human lifecycle behavior. Any remaining End-User consent UI/client closure must be completed before Step VII is accepted.
+## VII-C backend/runtime QA evidence
 
-## Locked Gemini decision for VII-D
+Development runtime QA used the separate persistent Supabase project `Auratio VII-C Test` (`dboyrlgzifpffnsznvde`). Docker was not used.
 
-User decision on 2026-09-08:
+Accepted C1 test-project evidence included:
 
-- Provider: Google Gemini API.
-- Model: stable GA `gemini-3.8-flash`.
-- API interface: Interactions API.
-- Video processing: Agentic Video Understanding (`processing: "agentic"`).
-- Input: original submitted MP4, preserving audio + visual information.
-- Transport: server uploads the temporary video to the Gemini Files API, waits until usable, invokes the Interactions API, and manually deletes the Gemini temporary file after the attempt; provider automatic expiry remains secondary cleanup.
-- Evaluation context: selected Track only, locked Auratio prompt/rubric/schema, no speaker identity/history/prior scores/mastery/leaderboard or unrelated Track rubric.
-- Output: strict structured data compatible with the accepted 16-criterion Auratio finalization boundary.
-- Credential: one Gemini API key, server-side only as a Supabase Edge Function secret/environment secret.
-- Attempt policy: one AI attempt, no automatic retry, no Admin rerun.
-- Fallback policy: do not silently switch to static-video evaluation. Agentic/API/unassessable failure follows the accepted failure/Rejected lifecycle.
-- Prompt requirement: evaluate the complete performance holistically while using agentic navigation to inspect criterion-relevant moments and produce criterion-specific timestamped evidence.
+- exact authoritative pre-C1 migration replay plus C1: 25 migrations total;
+- canonical reference counts: 3 Paths, 13 Tracks, 64 criteria, 192 anchor descriptions;
+- 20 RLS-enabled public application tables after the C1 consent table;
+- routing-consent verification: PASS;
+- accepted Step VI-B Human lifecycle regression: PASS;
+- Step VI-C behavioral regression: PASS;
+- authenticated direct execution of the consent service RPC denied; service-role execution granted;
+- consent table RLS enabled and using hardened private helper functions;
+- Security Advisor: zero lints;
+- `evaluation-request` deployed to the test project with JWT verification enabled.
 
-Provider/API support must still be rechecked against current official Gemini documentation immediately before VII-D implementation.
+No runtime-QA write was made to the production/main Supabase project.
 
-## Backend evidence freshness
+## Validation boundary
 
-The last accepted read-only backend checkpoint remains the VII-A closeout checkpoint:
+VII-C is accepted as repository implementation plus development/test-project QA. It is not production deployment acceptance.
 
-- 24 production migrations through `20260907133302_step_vi_f_video_deletion_worker`.
-- 9 ACTIVE JWT-verified Edge Functions.
-- 28 privileged `svc_*` RPCs; authenticated direct execution: 0; missing service-role grants: 0.
-- 19 RLS-enabled public application tables.
-- 2 private MIME-restricted Storage buckets.
-- Security Advisor: 0 lints.
+Reported final validation includes:
 
-VII-B added client integration only and did not claim a fresh backend recount. Do not present the above as a 2026-09-08 backend re-query.
+- C2A persistence verifier: PASS;
+- C2B scoring/submission/private-video verifier: PASS;
+- C2C1 Admin/Super Admin request-lifecycle verifier: PASS;
+- C2C2 moderation/history/coherence verifier: PASS;
+- portal production build: PASS;
+- portal test suite: PASS;
+- VII-C3 focused mobile consent tests: 3/3 PASS;
+- `flutter analyze`: PASS / no issues;
+- preserved Batch-6 geometry regression: 2/2 PASS;
+- preserved Batch-6 routing regression: 4/4 PASS;
+- preserved Batch-6 visual QA regression: 2/2 PASS;
+- full final Flutter suite: 348/348 PASS.
+
+ChatGPT independently audited the accepted C3 GitHub commit and the C implementation ancestry/scope. Command results executed locally by Antigravity remain Antigravity-reported evidence unless separately noted.
+
+## Locked development/user testing responsibility
+
+For Auratio development:
+
+- the user is not expected to run local builds, Docker, local databases, automated suites or development infrastructure;
+- ChatGPT owns technical QA planning/audit and authors deterministic changes;
+- Antigravity performs explicit execution/validation tasks;
+- backend runtime QA uses the separate Supabase test project where needed;
+- the user's personal acceptance testing occurs after deployment, using the real deployed `auratio.cloud` portal and the real mobile APK.
+
+Do not shift local-development testing responsibility back to the user unless they explicitly change this rule.
+
+## Remaining Step VII
+
+### VII-D — next
+
+Implement the locked live Gemini evaluation architecture through the accepted server-side AI boundary.
+
+Before coding, recheck current official Google Gemini documentation and confirm the current supported model/API names and Agentic Video capabilities. Do not rely solely on the previously recorded provider labels if official support has changed.
+
+Core constraints remain:
+
+- server-side Gemini credential only;
+- original temporary MP4 with audio + visuals;
+- selected Track prompt/rubric/schema only;
+- strict structured output compatible with the accepted 16-criterion finalization boundary;
+- one AI attempt;
+- no automatic retry;
+- no Admin rerun;
+- no silent static-video fallback;
+- no automatic AI-failure -> Human fallback;
+- explicit user consent remains the only AI-requested -> Human product path.
+
+### VII-E
+
+Complete remaining Auth/profile/Path/client gaps, including:
+
+- persisted profile editing;
+- onboarding Path selection and Manage Paths persistence;
+- sign-out/session expiry/account disable/role-change behavior;
+- password recovery, invitations/email callbacks and app/deep links;
+- cross-client configured integration E2E;
+- error/network handling;
+- configured visual/runtime QA;
+- final Step-VII regression and Step-VIII handoff.
 
 ## Historical files
 
-Project Status v15 and earlier, Step-VII Handoff v1.1 and earlier, Execution Specification v1.11 and earlier, older Step-V/VI handoffs and older QA/Step-IV documents are historical wherever they conflict with the current authority set.
+Project Status v16 and earlier, Step-VII B-closeout-era "VII-C next" wording, and older Step-VII handoffs are historical wherever they conflict with Status v17 or VII-C Closeout v1.0.
 
-Brand assets, Path Selection Addendum, evaluator requirement note and historical concept/overview material remain useful where they do not conflict with current specifications.
+Brand assets, evaluator requirements, Path Selection Addendum and earlier concept/overview material remain useful where they do not conflict with current authoritative specifications.
