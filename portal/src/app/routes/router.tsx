@@ -44,7 +44,6 @@ import {
   AdminCancelEvaluationRequestPage,
   AdminEvaluationProcessingHumanPage,
   AdminEvaluationRecordsPage,
-  AdminEvaluationRequestQueuePage,
   AdminEventEditorPage,
   AdminEventManagementPage,
   AdminInviteVolunteerPage,
@@ -60,6 +59,11 @@ import {
   AdminVolunteerEvaluatorsPage,
   AdminVolunteerTrackEligibilityPage,
 } from '../../features/admin'
+import {
+  AdminEvaluationRequestQueueBoundary,
+  AdminHumanRequestRouteBoundary,
+  AdminPrototypeFixtureBoundary,
+} from '../../features/admin/pages/AdminPersistedHumanRouteBoundaries'
 import {
   SuperAdminAccountPage,
   SuperAdminAccountsPage,
@@ -234,39 +238,67 @@ export const router = createBrowserRouter([
   },
   {
     path: portalRoutePaths.admin.requests,
-    element: <AdminEvaluationRequestQueuePage />,
+    element: <AdminEvaluationRequestQueueBoundary />,
   },
   {
     path: portalRoutePaths.admin.requestDetailsRouting,
-    element: <AdminRequestDetailsRoutingPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.requests}>
+        <AdminRequestDetailsRoutingPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.assignmentPicker,
-    element: <AdminAssignmentPickerPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.requests}>
+        <AdminAssignmentPickerPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.confirmReassignment,
-    element: <AdminConfirmReassignmentPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.requests}>
+        <AdminConfirmReassignmentPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.cancelRequest,
-    element: <AdminCancelRequestPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.requests}>
+        <AdminCancelRequestPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.requestAssignedAi,
-    element: <AdminRequestAssignedAiPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.requests}>
+        <AdminRequestAssignedAiPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: '/admin/requests/req-1038',
-    element: <AdminRequestAssignedHumanPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.requests}>
+        <AdminRequestAssignedHumanPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.requestRedirectedHuman,
-    element: <AdminRequestRedirectedHumanPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.requests}>
+        <AdminRequestRedirectedHumanPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: '/admin/requests/:requestId',
-    element: <Navigate to={portalRoutePaths.admin.requests} replace />,
+    element: <AdminHumanRequestRouteBoundary />,
   },
   {
     path: '/admin/requests/:requestId/*',
