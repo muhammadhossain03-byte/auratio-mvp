@@ -597,19 +597,44 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return jsonResponse(405, { error: "method_not_allowed" });
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const legacyServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 
-  if (!supabaseUrl || !serviceRoleKey || !geminiApiKey) {
+  let namedSecretKeys: string[] = [];
+  try {
+    const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      namedSecretKeys = Object.values(parsed)
+        .filter((value): value is string => typeof value === "string" && value.length > 0);
+    }
+  } catch {
+    namedSecretKeys = [];
+  }
+
+  if (!supabaseUrl || !geminiApiKey || (!legacyServiceRoleKey && namedSecretKeys.length === 0)) {
     return jsonResponse(500, { error: "server_configuration_error" });
   }
 
-  const accessToken = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
-  if (!accessToken || accessToken !== serviceRoleKey) {
-    return jsonResponse(403, { error: "service_role_required" });
+  // Service-to-service callers should use a modern Supabase secret key on the
+  // `apikey` header. The legacy x-auratio-worker-key path exists only for the
+  // Supabase Dashboard test panel, whose browser-managed Authorization header
+  // cannot reliably carry the legacy service_role JWT.
+  const suppliedApiKey = req.headers.get("apikey") ?? "";
+  const suppliedLegacyTestKey = req.headers.get("x-auratio-worker-key") ?? "";
+
+  const matchedSecretKey = namedSecretKeys.find((key) => key === suppliedApiKey) ?? null;
+  const matchedLegacyKey =
+    legacyServiceRoleKey && suppliedLegacyTestKey === legacyServiceRoleKey
+      ? legacyServiceRoleKey
+      : null;
+
+  const adminKey = matchedSecretKey ?? matchedLegacyKey;
+  if (!adminKey) {
+    return jsonResponse(403, { error: "worker_secret_required" });
   }
 
-  const service = createClient(supabaseUrl, serviceRoleKey, {
+  const service = createClient(supabaseUrl, adminKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
