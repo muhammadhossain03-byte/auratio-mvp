@@ -432,7 +432,7 @@ export async function createPersistedVolunteerVideoSource(
 
   const video = videoData as unknown as RecordLike
   const lifecycleStatus = requireString(video, 'lifecycle_status')
-  if (lifecycleStatus !== 'active' && lifecycleStatus !== 'pending_deletion') {
+  if (lifecycleStatus !== 'retained') {
     return null
   }
 

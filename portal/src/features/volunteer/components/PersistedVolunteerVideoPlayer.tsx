@@ -37,6 +37,7 @@ export function PersistedVolunteerVideoPlayer({
       className="auratio-volunteer-panel"
       style={{
         left: '30px',
+        top: '124px',
         width: '1076px',
         height: '330px',
         borderRadius: '14px',

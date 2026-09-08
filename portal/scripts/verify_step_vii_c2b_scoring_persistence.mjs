@@ -24,6 +24,9 @@ requireText(service, ".from('evaluation_criterion_results')", 'criterion persist
 requireText(service, ".from('evaluation_versions')", 'evaluator version persistence read is missing')
 requireText(service, ".from('submission_videos')", 'private video metadata read is missing')
 requireText(service, '.createSignedUrl(', 'private video must use temporary signed URL')
+requireText(service, "lifecycleStatus !== 'retained'", 'configured video must use canonical retained lifecycle state')
+forbidText(service, "lifecycleStatus !== 'active'", 'non-canonical active video lifecycle state must not be used')
+forbidText(service, "pending_deletion", 'non-canonical pending_deletion video lifecycle state must not be used')
 requireText(service, ".functions.invoke('human-volunteer'", 'privileged scoring mutations must use human-volunteer')
 requireText(service, "action: 'save_criterion'", 'save_criterion mutation is missing')
 requireText(service, "action: 'save_summary'", 'save_summary mutation is missing')
@@ -35,6 +38,9 @@ forbidText(service, 'localStorage', 'persisted scoring must not use localStorage
 forbidText(service, '.rpc(', 'client must not call svc RPCs directly')
 forbidText(service, 'svc_', 'service RPC names must remain behind Edge Function')
 forbidText(service, 'STEP_IV_MOCK_EVALUATION_VIDEO_URL', 'configured scoring must not use mock video')
+
+const persistedVideo = read('src/features/volunteer/components/PersistedVolunteerVideoPlayer.tsx')
+requireText(persistedVideo, "top: '124px'", 'persisted video panel must have an explicit workspace position')
 
 const configuredWrappers = [
   ['src/features/volunteer/pages/VolunteerCriterionFeedbackEditorPage.tsx', 'PersistedVolunteerCriterionFeedbackEditorPage'],
