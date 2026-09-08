@@ -371,7 +371,9 @@ async function pollInteraction(
 
   const status = normalizeInteractionStatus(body.status);
 
-  if (status === "in_progress") {
+  // Gemini may queue a background Interaction before it becomes in_progress.
+  // Both states are nonterminal and must poll the same Interaction ID.
+  if (status === "in_progress" || status === "queued") {
     await rpc(service, "svc_ai_provider_schedule_poll", {
       p_claim_token: job.claim_token,
       p_provider_status: status,
@@ -494,7 +496,7 @@ async function deleteGeminiInteraction(
   if (!interactionId || alreadyDeleted) return true;
 
   const status = normalizeInteractionStatus(providerStatus);
-  if (status === "in_progress" || status === "requires_action" || status === "unknown") {
+  if (status === "queued" || status === "in_progress" || status === "requires_action" || status === "unknown") {
     try {
       await geminiFetch(
         apiKey,

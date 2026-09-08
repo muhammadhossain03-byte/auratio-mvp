@@ -92,19 +92,23 @@ The scheduled worker may retrieve the same Interaction until terminal.
 
 Recognized provider statuses include:
 
+- `queued`;
 - `in_progress`;
 - `completed`;
 - `failed`;
 - `cancelled`;
 - `incomplete`;
+- `budget_exceeded`;
 - `requires_action`.
 
 Auratio behavior:
 
-- `in_progress`: leave Auratio attempt in flight; poll later.
+- `queued`: leave Auratio attempt in flight; poll the same Interaction later.
+- `in_progress`: leave Auratio attempt in flight; poll the same Interaction later.
 - `completed`: parse final structured output and run the accepted Auratio finalize boundary exactly once.
 - `failed`: fail the Auratio AI attempt as provider/API failure.
 - `incomplete`: fail the attempt; do not create a retry Interaction.
+- `budget_exceeded`: fail the attempt; do not create a retry Interaction.
 - `requires_action`: fail the attempt; Auratio does not expose an interactive provider-tool loop.
 - `cancelled`: if Auratio already cancelled/redirected, preserve Auratio state; otherwise treat as provider failure.
 - unknown terminal/provider state: fail closed.
