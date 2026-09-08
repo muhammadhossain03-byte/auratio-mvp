@@ -1,7 +1,17 @@
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import { getDeclinedAssignments } from '../data/mockVolunteerData'
+import { PersistedVolunteerAfterDeclinePage } from './PersistedVolunteerAfterDeclinePage'
 
 export function VolunteerActiveAssignmentsAfterDeclinePage() {
+  if (portalSupabaseRuntimeMode() === 'configured') {
+    return <PersistedVolunteerAfterDeclinePage />
+  }
+
+  return <VolunteerActiveAssignmentsAfterDeclinePrototypePage />
+}
+
+function VolunteerActiveAssignmentsAfterDeclinePrototypePage() {
   const declinedRecords = getDeclinedAssignments()
   const lastDeclined = declinedRecords.length > 0 ? declinedRecords[declinedRecords.length - 1] : null
   const declinedId = lastDeclined?.submissionId || 'SUB-8821'

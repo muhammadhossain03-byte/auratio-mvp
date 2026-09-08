@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import { getVolunteerAssignment, declineVolunteerAssignment } from '../data/mockVolunteerData'
+import { PersistedVolunteerDeclineAssignmentPage } from './PersistedVolunteerDeclineAssignmentPage'
 
 export function VolunteerDeclineAssignmentPage() {
+  if (portalSupabaseRuntimeMode() === 'configured') {
+    return <PersistedVolunteerDeclineAssignmentPage />
+  }
+
+  return <VolunteerDeclineAssignmentPrototypePage />
+}
+
+function VolunteerDeclineAssignmentPrototypePage() {
   const navigate = useNavigate()
   const { submissionId: routeSubmissionId } = useParams<{ submissionId?: string }>()
   const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()

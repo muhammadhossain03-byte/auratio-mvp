@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import { VolunteerEvaluationVideoPlayer } from '../components/VolunteerEvaluationVideoPlayer'
+import { PersistedVolunteerScoringPendingPage } from './PersistedVolunteerScoringPendingPage'
 import {
   getVolunteerAssignment,
   getScoringDraft,
@@ -20,6 +22,14 @@ import {
 } from '../data/mockVolunteerData'
 
 export function VolunteerScoringWorkspacePage() {
+  if (portalSupabaseRuntimeMode() === 'configured') {
+    return <PersistedVolunteerScoringPendingPage />
+  }
+
+  return <VolunteerScoringWorkspacePrototypePage />
+}
+
+function VolunteerScoringWorkspacePrototypePage() {
   const navigate = useNavigate()
   const { submissionId: routeSubmissionId } = useParams<{ submissionId?: string }>()
   const submissionId = (routeSubmissionId || 'SUB-8821').toUpperCase()

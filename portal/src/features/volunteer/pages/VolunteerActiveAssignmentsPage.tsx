@@ -1,8 +1,18 @@
 import { useNavigate } from 'react-router-dom'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import { getVolunteerAssignments, type ActiveAssignment } from '../data/mockVolunteerData'
+import { PersistedVolunteerActiveAssignmentsPage } from './PersistedVolunteerActiveAssignmentsPage'
 
 export function VolunteerActiveAssignmentsPage() {
+  if (portalSupabaseRuntimeMode() === 'configured') {
+    return <PersistedVolunteerActiveAssignmentsPage />
+  }
+
+  return <VolunteerActiveAssignmentsPrototypePage />
+}
+
+function VolunteerActiveAssignmentsPrototypePage() {
   const navigate = useNavigate()
   const assignments = getVolunteerAssignments().filter((a) => a.assignmentStatus !== 'Submitted')
 

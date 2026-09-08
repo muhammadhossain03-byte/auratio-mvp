@@ -1,9 +1,19 @@
 import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import { getVolunteerAssignment, updateAssignmentStatus } from '../data/mockVolunteerData'
+import { PersistedVolunteerAssignedTaskPage } from './PersistedVolunteerAssignedTaskPage'
 
 export function VolunteerAssignedTaskPage() {
+  if (portalSupabaseRuntimeMode() === 'configured') {
+    return <PersistedVolunteerAssignedTaskPage />
+  }
+
+  return <VolunteerAssignedTaskPrototypePage />
+}
+
+function VolunteerAssignedTaskPrototypePage() {
   const navigate = useNavigate()
   const { submissionId: paramId } = useParams<{ submissionId?: string }>()
   const submissionId = (paramId || 'SUB-8821').toUpperCase()
