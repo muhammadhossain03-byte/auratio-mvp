@@ -9,7 +9,7 @@ Use the documents below in this order when implementing or reviewing Auratio. Wh
 
 1. `Auratio_Authoritative_Clarifications_MVP_v1.9.0.md`
 2. `Auratio_Scoring_and_Leaderboard_System_Specification_v3.8.md`
-3. `ai/Auratio_AI_Evaluation_Specification_v1.0.md` + its prompt/schema/rubric assets
+3. `ai/Auratio_AI_Evaluation_Specification_v1.1.md` + `ai/Auratio_Gemini_Provider_Contract_v1.0.md` + its prompt/schema/rubric assets
 4. `Auratio_DOCX_Report_Generation_Specification_v1.0.md`
 5. `Auratio_MVP_Deployment_and_Demo_Distribution_Addendum_v1.2.md`
 6. `Auratio_MVP_Concepts_and_Requirements_v1.9.md`
@@ -184,7 +184,19 @@ Do not shift local-development testing responsibility back to the user unless th
 
 Implement the locked live Gemini evaluation architecture through the accepted server-side AI boundary.
 
-Before coding, recheck current official Google Gemini documentation and confirm the current supported model/API names and Agentic Video capabilities. Do not rely solely on the previously recorded provider labels if official support has changed.
+The required pre-D provider verification was completed against current official Google Gemini and Supabase documentation on 2026-09-08. The verified provider contract is recorded in `ai/Auratio_Gemini_Provider_Contract_v1.0.md`.
+
+Verified implementation decisions include:
+
+- stable GA `gemini-3.8-flash`;
+- Gemini Thinking explicitly enabled at `thinking_level: "medium"` with `thinking_summaries: "none"`;
+- Interactions API;
+- Agentic Video Understanding with `processing: "agentic"`;
+- Gemini Files API;
+- one background Interaction persisted and polled rather than one long synchronous Edge request;
+- provider-compatible structured-output transport schema plus authoritative Auratio server validation;
+- explicit deletion of the temporary Gemini file and stored Interaction;
+- Paid Tier required before real participant video unless different data-use terms are explicitly accepted.
 
 Core constraints remain:
 
@@ -214,6 +226,6 @@ Complete remaining Auth/profile/Path/client gaps, including:
 
 ## Historical files
 
-Project Status v16 and earlier, Step-VII B-closeout-era "VII-C next" wording, and older Step-VII handoffs are historical wherever they conflict with Status v17 or VII-C Closeout v1.0.
+Project Status v16 and earlier, Step-VII B-closeout-era "VII-C next" wording, older Step-VII handoffs, and `ai/Auratio_AI_Evaluation_Specification_v1.0.md` are historical wherever they conflict with Status v17, VII-C Closeout v1.0, `ai/Auratio_AI_Evaluation_Specification_v1.1.md`, or the current Gemini provider contract.
 
 Brand assets, evaluator requirements, Path Selection Addendum and earlier concept/overview material remain useful where they do not conflict with current authoritative specifications.

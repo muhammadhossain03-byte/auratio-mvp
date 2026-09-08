@@ -210,25 +210,31 @@ This remains the default operating rule unless the user explicitly changes it.
 
 Implement live Gemini evaluation through the accepted server-side one-attempt AI lifecycle.
 
-Before authoring implementation, recheck current official Google Gemini documentation. Previously recorded target decisions are:
+The required provider recheck was completed on 2026-09-08 and is captured by `ai/Auratio_AI_Evaluation_Specification_v1.1.md` plus `ai/Auratio_Gemini_Provider_Contract_v1.0.md`.
+
+Verified target:
 
 - Google Gemini API;
 - stable GA `gemini-3.8-flash`;
+- Gemini Thinking explicitly enabled at `thinking_level: "medium"` with `thinking_summaries: "none"`;
 - Interactions API;
 - Agentic Video Understanding (`processing: "agentic"`);
 - Gemini Files API for temporary original MP4;
 - original audio + visuals;
 - selected Track prompt/rubric/schema only;
-- strict structured 16-criterion result;
+- strict structured 16-criterion Auratio result;
+- a Gemini-compatible transport schema plus authoritative server-side semantic validation;
 - one server-side API key;
-- one attempt;
+- one background Interaction per Auratio AI attempt, polled later by an idempotent worker;
 - no automatic retry;
 - no Admin rerun;
-- manual provider-file cleanup;
+- explicit provider-file and stored-Interaction cleanup;
 - no silent static-video fallback;
 - no automatic AI failure -> Human fallback.
 
-If current official support differs, update the implementation decision before coding rather than forcing stale provider names.
+Because Supabase Edge Functions have finite hosted wall-clock/request limits, VII-D must use persisted background-provider orchestration rather than keeping one Edge request open for the full video evaluation.
+
+For real participant video, the current privacy gate is Gemini Paid Tier unless different provider-data-use terms are explicitly accepted; Free Tier development tests must use synthetic/non-personal fixtures.
 
 ## VII-E — remaining client/system closure
 
