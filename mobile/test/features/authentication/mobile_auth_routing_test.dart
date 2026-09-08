@@ -43,6 +43,22 @@ class _FakeAuthRepository implements AuratioAuthRepository {
   Future<void> resendSignUpVerification({required String email}) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> requestPasswordReset({
+    required String email,
+    String? redirectTo,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> updatePassword({required String newPassword}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<void> authChanges() => const Stream<void>.empty();
 }
 
 AuratioAuthSession _sessionFor(AuratioAppRole role) {

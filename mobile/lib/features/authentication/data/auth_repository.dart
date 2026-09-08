@@ -52,6 +52,15 @@ abstract interface class AuratioAuthRepository {
 
   Future<void> resendSignUpVerification({required String email});
 
+  Future<void> requestPasswordReset({
+    required String email,
+    String? redirectTo,
+  });
+
+  Future<void> updatePassword({required String newPassword});
+
+  Stream<void> authChanges();
+
   Future<AuratioAuthSession?> currentSession();
 
   Future<void> signOut();
@@ -135,6 +144,56 @@ class SupabaseAuratioAuthRepository implements AuratioAuthRepository {
   }
 
   @override
+  Future<void> requestPasswordReset({
+    required String email,
+    String? redirectTo,
+  }) async {
+    final normalizedEmail = email.trim();
+    if (normalizedEmail.isEmpty) {
+      throw const AuratioAuthenticationException(
+        'password_reset_email_invalid',
+        'Enter your email address.',
+      );
+    }
+
+    try {
+      await _client.auth.resetPasswordForEmail(
+        normalizedEmail,
+        redirectTo: redirectTo,
+      );
+    } on AuthException catch (error) {
+      throw AuratioAuthenticationException(
+        'password_reset_request_failed',
+        error.message,
+      );
+    }
+  }
+
+  @override
+  Future<void> updatePassword({required String newPassword}) async {
+    if (newPassword.length < 8) {
+      throw const AuratioAuthenticationException(
+        'password_reset_password_invalid',
+        'Use at least 8 characters.',
+      );
+    }
+
+    try {
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
+    } on AuthException catch (error) {
+      throw AuratioAuthenticationException(
+        'password_reset_update_failed',
+        error.message,
+      );
+    }
+  }
+
+  @override
+  Stream<void> authChanges() {
+    return _client.auth.onAuthStateChange.map((_) {});
+  }
+
+  @override
   Future<AuratioAuthSession?> currentSession() async {
     final user = _client.auth.currentUser;
     if (user == null) return null;
@@ -213,7 +272,23 @@ class UnconfiguredAuratioAuthRepository implements AuratioAuthRepository {
   bool get isConfigured => false;
 
   @override
+  Stream<void> authChanges() => const Stream<void>.empty();
+
+  @override
   Future<AuratioAuthSession?> currentSession() async => null;
+
+  @override
+  Future<void> requestPasswordReset({
+    required String email,
+    String? redirectTo,
+  }) async {
+    throw _error;
+  }
+
+  @override
+  Future<void> updatePassword({required String newPassword}) async {
+    throw _error;
+  }
 
   @override
   Future<void> signOut() async {}
