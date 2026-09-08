@@ -652,12 +652,22 @@ Deno.serve(async (req: Request) => {
       results.push({ request_id: job.request_id, state: job.state, outcome });
     } catch (error) {
       const message = error instanceof Error ? error.message : "worker_job_failed";
+      console.error("ai_worker_job_failed", {
+        request_id: job.request_id,
+        state: job.state,
+        message,
+      });
       try {
         if (job.claim_token) {
           await failActiveAttempt(service, job.request_id, "api_failure", "ai_worker_internal_error", message);
           await markCleanup(service, job.claim_token, message);
         }
-      } catch {
+      } catch (recoveryError) {
+        console.error("ai_worker_job_recovery_failed", {
+          request_id: job.request_id,
+          state: job.state,
+          message: recoveryError instanceof Error ? recoveryError.message : "worker_recovery_failed",
+        });
         // The durable claim remains recoverable by the stale-claim timeout.
       }
       results.push({ request_id: job.request_id, state: job.state, outcome: "worker_error" });
