@@ -10,8 +10,15 @@ import '../../application/path_selection_controller.dart';
 import '../../domain/auratio_path.dart';
 import '../onboarding_keys.dart';
 
-class ChoosePathsScreen extends ConsumerWidget {
-  const ChoosePathsScreen({super.key});
+class ChoosePathsScreen extends ConsumerStatefulWidget {
+  const ChoosePathsScreen({
+    this.initialPaths,
+    this.onPersistedContinue,
+    super.key,
+  });
+
+  final Set<AuratioPath>? initialPaths;
+  final Future<void> Function(Set<AuratioPath>)? onPersistedContinue;
 
   static const _overlayStyle = SystemUiOverlayStyle(
     statusBarColor: AuratioColors.backgroundBrand,
@@ -22,13 +29,76 @@ class ChoosePathsScreen extends ConsumerWidget {
   );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectedPaths = ref.watch(selectedPathsProvider);
+  ConsumerState<ChoosePathsScreen> createState() => _ChoosePathsScreenState();
+}
+
+class _ChoosePathsScreenState extends ConsumerState<ChoosePathsScreen> {
+  Set<AuratioPath>? _persistedSelection;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialPaths != null) {
+      _persistedSelection = Set<AuratioPath>.from(widget.initialPaths!);
+    }
+  }
+
+  void _togglePersisted(AuratioPath path) {
+    final current = _persistedSelection;
+    if (current == null) return;
+
+    setState(() {
+      final next = Set<AuratioPath>.from(current);
+      if (!next.add(path)) {
+        next.remove(path);
+      }
+      _persistedSelection = next;
+    });
+  }
+
+  Future<void> _continue(Set<AuratioPath> selectedPaths) async {
+    if (selectedPaths.isEmpty || _saving) return;
+
+    final persistedContinue = widget.onPersistedContinue;
+    if (persistedContinue == null) {
+      context.go(AppRoutePaths.home);
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      await persistedContinue(Set.unmodifiable(selectedPaths));
+      if (!mounted) return;
+      context.go(AppRoutePaths.home);
+    } catch (error) {
+      if (!mounted) return;
+      final text = error.toString();
+      final separator = text.indexOf(': ');
+      final message = separator >= 0 ? text.substring(separator + 2) : text;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final persistedSelection = _persistedSelection;
+    final Set<AuratioPath> selectedPaths =
+        persistedSelection ??
+        ref.watch<Set<AuratioPath>>(selectedPathsProvider);
     final controller = ref.read(selectedPathsProvider.notifier);
+    final ValueChanged<AuratioPath> onToggle = persistedSelection == null
+        ? controller.toggle
+        : _togglePersisted;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: OnboardingKeys.choosePathsScreen,
-      value: _overlayStyle,
+      value: ChoosePathsScreen._overlayStyle,
       child: Scaffold(
         backgroundColor: AuratioColors.backgroundApp,
         body: SafeArea(
@@ -58,19 +128,19 @@ class ChoosePathsScreen extends ConsumerWidget {
                       top: 74,
                       path: AuratioPath.publicSpeaking,
                       selectedPaths: selectedPaths,
-                      onTap: controller.toggle,
+                      onTap: onToggle,
                     ),
                     _positionedPathCard(
                       top: 202,
                       path: AuratioPath.professionalPresenting,
                       selectedPaths: selectedPaths,
-                      onTap: controller.toggle,
+                      onTap: onToggle,
                     ),
                     _positionedPathCard(
                       top: 330,
                       path: AuratioPath.contentCreation,
                       selectedPaths: selectedPaths,
-                      onTap: controller.toggle,
+                      onTap: onToggle,
                     ),
                     const Positioned(
                       left: AuratioSpacing.xl,
@@ -86,9 +156,9 @@ class ChoosePathsScreen extends ConsumerWidget {
                       child: AuratioButton(
                         key: OnboardingKeys.continueButton,
                         label: 'Continue',
-                        onPressed: selectedPaths.isEmpty
+                        onPressed: selectedPaths.isEmpty || _saving
                             ? null
-                            : () => context.go(AppRoutePaths.home),
+                            : () => _continue(selectedPaths),
                         expand: true,
                       ),
                     ),

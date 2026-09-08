@@ -39,7 +39,9 @@ import '../../features/leaderboard/presentation/screens/leaderboard_human_all_ti
 import '../../features/leaderboard/presentation/screens/persisted_leaderboard_screen.dart';
 import '../../features/onboarding/presentation/screens/choose_paths_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_intro_screen.dart';
+import '../../features/profile/application/profile_repository_provider.dart';
 import '../../features/profile/presentation/screens/manage_paths_screen.dart';
+import '../../features/profile/presentation/screens/persisted_profile_route_screens.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
 import '../../features/progress/application/progress_repository_provider.dart';
@@ -85,6 +87,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final eventsConfigured = ref
       .read(auratioEventsRepositoryProvider)
       .isConfigured;
+  final profileConfigured = ref
+      .read(auratioProfileRepositoryProvider)
+      .isConfigured;
 
   final router = GoRouter(
     redirect: (context, state) =>
@@ -121,7 +126,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.choosePaths,
-        builder: (context, state) => const ChoosePathsScreen(),
+        builder: (context, state) => profileConfigured
+            ? const PersistedChoosePathsRouteScreen()
+            : const ChoosePathsScreen(),
       ),
       GoRoute(
         path: AppRoutePaths.signInNewAccount,
@@ -404,13 +411,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.profile,
-        pageBuilder: (context, state) =>
-            _dissolvePage(key: state.pageKey, child: const ProfileScreen()),
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: profileConfigured
+              ? const PersistedProfileRouteScreen()
+              : const ProfileScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutePaths.profileThreePaths,
-        pageBuilder: (context, state) =>
-            _dissolvePage(key: state.pageKey, child: const ProfileScreen()),
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: profileConfigured
+              ? const PersistedProfileRouteScreen()
+              : const ProfileScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutePaths.profileSettings,
@@ -419,13 +434,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.managePaths,
-        pageBuilder: (context, state) =>
-            _dissolvePage(key: state.pageKey, child: const ManagePathsScreen()),
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: profileConfigured
+              ? const PersistedManagePathsRouteScreen()
+              : const ManagePathsScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutePaths.managePathsContentAdded,
-        pageBuilder: (context, state) =>
-            _dissolvePage(key: state.pageKey, child: const ManagePathsScreen()),
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: profileConfigured
+              ? const PersistedManagePathsRouteScreen()
+              : const ManagePathsScreen(),
+        ),
       ),
     ],
   );

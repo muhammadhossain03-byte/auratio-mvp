@@ -9,9 +9,16 @@ import '../../../onboarding/domain/auratio_path.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 
 class ManagePathsScreen extends ConsumerStatefulWidget {
-  const ManagePathsScreen({this.isContentAdded = false, super.key});
+  const ManagePathsScreen({
+    this.isContentAdded = false,
+    this.initialPaths,
+    this.onPersistedSave,
+    super.key,
+  });
 
   final bool isContentAdded;
+  final Set<AuratioPath>? initialPaths;
+  final Future<void> Function(Set<AuratioPath>)? onPersistedSave;
 
   static const screenKey = ValueKey('manage-paths-screen');
   static const publicSpeakingCardKey = ValueKey(
@@ -37,11 +44,14 @@ class ManagePathsScreen extends ConsumerStatefulWidget {
 
 class _ManagePathsScreenState extends ConsumerState<ManagePathsScreen> {
   late Set<AuratioPath> _draftSelection;
+  bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    final saved = ref.read(selectedPathsProvider);
+    final Set<AuratioPath> saved =
+        widget.initialPaths ??
+        ref.read<Set<AuratioPath>>(selectedPathsProvider);
     _draftSelection = Set<AuratioPath>.from(saved);
   }
 
@@ -55,21 +65,43 @@ class _ManagePathsScreenState extends ConsumerState<ManagePathsScreen> {
     });
   }
 
-  void _handleSave() {
-    if (_draftSelection.isEmpty) {
+  Future<void> _handleSave() async {
+    if (_draftSelection.isEmpty || _saving) {
       return;
     }
-    ref.read(selectedPathsProvider.notifier).setPaths(_draftSelection);
-    if (_draftSelection.length >= 3) {
-      context.go(AppRoutePaths.profileThreePaths);
-    } else {
-      context.go(AppRoutePaths.profile);
+
+    setState(() => _saving = true);
+    try {
+      final persistedSave = widget.onPersistedSave;
+      if (persistedSave != null) {
+        await persistedSave(Set.unmodifiable(_draftSelection));
+      } else {
+        ref.read(selectedPathsProvider.notifier).setPaths(_draftSelection);
+      }
+
+      if (!mounted) return;
+      if (_draftSelection.length >= 3) {
+        context.go(AppRoutePaths.profileThreePaths);
+      } else {
+        context.go(AppRoutePaths.profile);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      final text = error.toString();
+      final separator = text.indexOf(': ');
+      final message = separator >= 0 ? text.substring(separator + 2) : text;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final canSave = _draftSelection.isNotEmpty;
+    final canSave = _draftSelection.isNotEmpty && !_saving;
 
     return Scaffold(
       key: ManagePathsScreen.screenKey,

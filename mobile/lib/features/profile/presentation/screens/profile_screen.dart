@@ -10,9 +10,18 @@ import '../../../onboarding/domain/auratio_path.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({this.showThreePaths = false, super.key});
+  const ProfileScreen({
+    this.showThreePaths = false,
+    this.displayName = 'Alex Morgan',
+    this.email = 'alex@example.com',
+    this.persistedPaths,
+    super.key,
+  });
 
   final bool showThreePaths;
+  final String displayName;
+  final String email;
+  final Set<AuratioPath>? persistedPaths;
 
   static const screenKey = ValueKey('profile-screen');
   static const avatarKey = ValueKey('profile-avatar');
@@ -33,9 +42,22 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final savedPaths = ref.watch(selectedPathsProvider);
+    final Set<AuratioPath> savedPaths =
+        persistedPaths ?? ref.watch<Set<AuratioPath>>(selectedPathsProvider);
     final isThreePaths = savedPaths.length >= 3;
     final orderedPaths = AuratioPath.values.where(savedPaths.contains).toList();
+    final nameParts = displayName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    final initials = nameParts.isEmpty
+        ? 'AU'
+        : nameParts.length == 1
+        ? nameParts.first
+              .substring(0, nameParts.first.length >= 2 ? 2 : 1)
+              .toUpperCase()
+        : '${nameParts.first[0]}${nameParts.last[0]}'.toUpperCase();
     return Scaffold(
       key: screenKey,
       backgroundColor: AuratioColors.backgroundApp,
@@ -68,7 +90,7 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                             alignment: Alignment.center,
                             child: Text(
-                              'AM',
+                              initials,
                               style: AuratioTypography.titleMedium.copyWith(
                                 color: AuratioColors.backgroundBrand,
                                 fontSize: 16,
@@ -84,7 +106,7 @@ class ProfileScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Alex Morgan',
+                                displayName,
                                 style: AuratioTypography.headingMedium.copyWith(
                                   color: const Color(0xFF111827),
                                   fontSize: 22,
@@ -137,7 +159,7 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'alex@example.com',
+                                email,
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: const Color(0xFF4E5968),
                                   fontSize: 12,
