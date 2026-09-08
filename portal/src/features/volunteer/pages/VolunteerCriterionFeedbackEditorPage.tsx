@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams, Navigate } from 'react-router-dom'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
 import { VolunteerLayout } from '../components/VolunteerLayout'
 import { VolunteerEvaluationVideoPlayer } from '../components/VolunteerEvaluationVideoPlayer'
+import { PersistedVolunteerCriterionFeedbackEditorPage } from './PersistedVolunteerCriterionFeedbackEditorPage'
 import {
   formatAnchorScoreRange,
   getAnchorScoreRange,
@@ -23,6 +25,14 @@ import {
 } from '../data/mockVolunteerData'
 
 export function VolunteerCriterionFeedbackEditorPage() {
+  if (portalSupabaseRuntimeMode() === 'configured') {
+    return <PersistedVolunteerCriterionFeedbackEditorPage />
+  }
+
+  return <VolunteerCriterionFeedbackEditorPrototypePage />
+}
+
+function VolunteerCriterionFeedbackEditorPrototypePage() {
   const navigate = useNavigate()
   const { submissionId: routeSubmissionId, criterionId: pathCriterionId } = useParams<{
     submissionId?: string
