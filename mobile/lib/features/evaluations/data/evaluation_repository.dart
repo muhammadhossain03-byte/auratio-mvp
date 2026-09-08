@@ -40,6 +40,8 @@ abstract interface class AuratioEvaluationRepository {
     required int sizeBytes,
   });
 
+  Future<PersistedEvaluationRequest> consentAiToHuman(String requestId);
+
   Future<ApprovedEvaluationDetail?> fetchApprovedEvaluation(String requestId);
 
   Future<ApprovedReportMetadata?> fetchApprovedReport(String requestId);
@@ -196,6 +198,70 @@ class SupabaseAuratioEvaluationRepository
       throw const AuratioEvaluationDataException(
         'evaluation_request_failed',
         'Unable to create the evaluation request.',
+      );
+    }
+  }
+
+  @override
+  Future<PersistedEvaluationRequest> consentAiToHuman(String requestId) async {
+    final normalizedRequestId = requestId.trim();
+    if (normalizedRequestId.isEmpty) {
+      throw const AuratioEvaluationDataException(
+        'invalid_request_id',
+        'The evaluation request identifier is invalid.',
+      );
+    }
+
+    try {
+      final response = await _client.functions.invoke(
+        'evaluation-request',
+        body: {
+          'action': 'consent_ai_to_human',
+          'request_id': normalizedRequestId,
+        },
+      );
+      final payload = _asJsonMap(response.data);
+      if (payload['ok'] != true ||
+          payload['request_id'] != normalizedRequestId ||
+          payload['requested_mode'] != 'ai' ||
+          payload['mode'] != 'human' ||
+          payload['status'] != 'unassigned') {
+        throw const FormatException(
+          'AI to Human redirect response is inconsistent.',
+        );
+      }
+
+      final refreshed = await _fetchRequestById(normalizedRequestId);
+      if (refreshed == null ||
+          !refreshed.wasRedirectedAiToHuman ||
+          refreshed.status != PersistedEvaluationStatus.unassigned) {
+        throw const FormatException(
+          'Redirected evaluation request did not persist coherently.',
+        );
+      }
+      return refreshed;
+    } on AuratioEvaluationDataException {
+      rethrow;
+    } on FormatException {
+      throw const AuratioEvaluationDataException(
+        'invalid_mode_redirection_response',
+        'Auratio could not verify the Human redirect. The current route was not changed by the app.',
+      );
+    } on FunctionsHttpException catch (error) {
+      if (error.status == 409) {
+        throw const AuratioEvaluationDataException(
+          'mode_redirection_rejected',
+          'This AI request can no longer be switched to Human. The AI route remains unchanged.',
+        );
+      }
+      throw const AuratioEvaluationDataException(
+        'mode_redirection_failed',
+        'Unable to switch this request to Human. The AI route remains unchanged.',
+      );
+    } catch (_) {
+      throw const AuratioEvaluationDataException(
+        'mode_redirection_failed',
+        'Unable to switch this request to Human. The AI route remains unchanged.',
       );
     }
   }
@@ -460,7 +526,7 @@ class SupabaseAuratioEvaluationRepository
       final rows = await _client
           .from('evaluation_requests')
           .select(
-            'id,submission_id,mode,status,created_at,updated_at,terminal_at',
+            'id,submission_id,requested_mode,mode,status,created_at,updated_at,terminal_at',
           )
           .eq('user_id', userId)
           .order('created_at', ascending: false)
@@ -500,7 +566,7 @@ class SupabaseAuratioEvaluationRepository
       final row = await _client
           .from('evaluation_requests')
           .select(
-            'id,submission_id,mode,status,created_at,updated_at,terminal_at',
+            'id,submission_id,requested_mode,mode,status,created_at,updated_at,terminal_at',
           )
           .eq('id', requestId)
           .eq('user_id', userId)
@@ -626,6 +692,11 @@ class UnconfiguredAuratioEvaluationRepository
     required double durationSeconds,
     required int sizeBytes,
   }) async {
+    throw _error;
+  }
+
+  @override
+  Future<PersistedEvaluationRequest> consentAiToHuman(String requestId) async {
     throw _error;
   }
 

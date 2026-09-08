@@ -12,6 +12,7 @@ import '../../../tracks/application/selected_track_provider.dart';
 import '../../../tracks/domain/track_catalog.dart';
 import '../../application/evaluation_repository_provider.dart';
 import '../../application/latest_evaluation_request_provider.dart';
+import '../../data/evaluation_repository.dart';
 import '../../domain/evaluation_method.dart';
 import '../../domain/persisted_evaluation.dart';
 
@@ -33,6 +34,15 @@ class EvaluationProcessingScreen extends ConsumerStatefulWidget {
   static const returnHomeButtonKey = Key(
     'evaluation-processing-return-home-button',
   );
+  static const redirectCardKey = Key('evaluation-processing-redirect-card');
+  static const redirectButtonKey = Key('evaluation-processing-redirect-button');
+  static const redirectKeepAiButtonKey = Key(
+    'evaluation-processing-redirect-keep-ai-button',
+  );
+  static const redirectConfirmButtonKey = Key(
+    'evaluation-processing-redirect-confirm-button',
+  );
+  static const redirectErrorKey = Key('evaluation-processing-redirect-error');
 
   static const _overlayStyle = SystemUiOverlayStyle(
     statusBarColor: AuratioColors.backgroundBrand,
@@ -50,6 +60,8 @@ class EvaluationProcessingScreen extends ConsumerStatefulWidget {
 class _EvaluationProcessingScreenState
     extends ConsumerState<EvaluationProcessingScreen> {
   Timer? _pollTimer;
+  bool _redirecting = false;
+  String? _redirectError;
 
   @override
   void initState() {
@@ -83,6 +95,7 @@ class _EvaluationProcessingScreenState
         trackName: track.name,
         status: UserEvaluationStatus.processing,
         prototype: true,
+        persistedRequest: null,
       );
     }
 
@@ -99,7 +112,7 @@ class _EvaluationProcessingScreenState
           status: request?.userStatus,
           prototype: false,
           requestFound: request != null,
-          requestId: request?.id,
+          persistedRequest: request,
         );
       },
       loading: () => _buildScreen(
@@ -108,6 +121,7 @@ class _EvaluationProcessingScreenState
         trackName: 'Evaluation',
         status: null,
         prototype: false,
+        persistedRequest: null,
         loading: true,
       ),
       error: (_, _) => _buildScreen(
@@ -116,9 +130,70 @@ class _EvaluationProcessingScreenState
         trackName: 'Evaluation',
         status: null,
         prototype: false,
+        persistedRequest: null,
         loadFailed: true,
       ),
     );
+  }
+
+  Future<bool> _confirmHumanRedirect() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Switch this request to Human?'),
+        content: const Text(
+          'You originally requested AI Evaluation. By confirming, you explicitly consent to redirect this same request to Human Evaluation. This is not automatic and is not an AI-error fallback.',
+        ),
+        actions: [
+          TextButton(
+            key: EvaluationProcessingScreen.redirectKeepAiButtonKey,
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep AI Evaluation'),
+          ),
+          TextButton(
+            key: EvaluationProcessingScreen.redirectConfirmButtonKey,
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Yes, switch to Human'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _consentAiToHuman(PersistedEvaluationRequest request) async {
+    if (!request.canConsentAiToHuman || _redirecting) return;
+
+    final confirmed = await _confirmHumanRedirect();
+    if (!confirmed || !mounted) return;
+
+    setState(() {
+      _redirecting = true;
+      _redirectError = null;
+    });
+
+    try {
+      await ref
+          .read(auratioEvaluationRepositoryProvider)
+          .consentAiToHuman(request.id);
+      ref.invalidate(latestEvaluationRequestProvider);
+      if (!mounted) return;
+      setState(() {
+        _redirecting = false;
+      });
+    } on AuratioEvaluationDataException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _redirecting = false;
+        _redirectError = error.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _redirecting = false;
+        _redirectError = 'Unable to switch this request to Human. The AI route remains unchanged.';
+      });
+    }
   }
 
   Widget _buildScreen({
@@ -130,9 +205,17 @@ class _EvaluationProcessingScreenState
     bool loading = false,
     bool loadFailed = false,
     bool requestFound = true,
-    String? requestId,
+    required PersistedEvaluationRequest? persistedRequest,
   }) {
     final isAi = method == EvaluationMethod.ai;
+    final requestedMethod = persistedRequest?.requestedMethod ?? method;
+    final requestId = persistedRequest?.id;
+    final redirectableRequest =
+        !prototype && persistedRequest?.canConsentAiToHuman == true
+        ? persistedRequest
+        : null;
+    final wasRedirected =
+        !prototype && persistedRequest?.wasRedirectedAiToHuman == true;
     final canViewApprovedResult =
         !prototype &&
         status == UserEvaluationStatus.approved &&
@@ -233,7 +316,7 @@ class _EvaluationProcessingScreenState
                       SizedBox(
                         key: EvaluationProcessingScreen.evaluationCardKey,
                         width: double.infinity,
-                        height: 104,
+                        height: prototype ? 104 : 128,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
@@ -270,15 +353,37 @@ class _EvaluationProcessingScreenState
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              Text(
-                                'Method: ${method.displayName}',
-                                style: AuratioTypography.bodySmall.copyWith(
-                                  color: AuratioColors.textSecondary,
-                                  fontSize: 12,
-                                  height: 18 / 12,
-                                  fontWeight: FontWeight.w400,
+                              if (prototype) ...[
+                                Text(
+                                  'Method: ${method.displayName}',
+                                  style: AuratioTypography.bodySmall.copyWith(
+                                    color: AuratioColors.textSecondary,
+                                    fontSize: 12,
+                                    height: 18 / 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
-                              ),
+                              ] else ...[
+                                Text(
+                                  'Requested: ${requestedMethod.displayName}',
+                                  style: AuratioTypography.bodySmall.copyWith(
+                                    color: AuratioColors.textSecondary,
+                                    fontSize: 12,
+                                    height: 18 / 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Current route: ${method.displayName}',
+                                  style: AuratioTypography.bodySmall.copyWith(
+                                    color: AuratioColors.textSecondary,
+                                    fontSize: 12,
+                                    height: 18 / 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -338,6 +443,114 @@ class _EvaluationProcessingScreenState
                           ),
                         ),
                       ),
+                      if (redirectableRequest != null) ...[
+                        const SizedBox(height: 18),
+                        Container(
+                          key: EvaluationProcessingScreen.redirectCardKey,
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AuratioColors.surfaceBrandSoft,
+                            border: Border.all(
+                              color: AuratioColors.borderDefault,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Prefer Human evaluation?',
+                                style: AuratioTypography.labelLarge.copyWith(
+                                  color: AuratioColors.backgroundBrand,
+                                  fontSize: 14,
+                                  height: 20 / 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'You requested AI. You may explicitly switch this same request to Human before AI output is persisted. Auratio will never make this switch automatically because of an AI/API failure.',
+                                style: AuratioTypography.bodySmall.copyWith(
+                                  color: AuratioColors.textSecondary,
+                                  fontSize: 12,
+                                  height: 18 / 12,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 44,
+                                child: AuratioButton(
+                                  key: EvaluationProcessingScreen
+                                      .redirectButtonKey,
+                                  label: _redirecting
+                                      ? 'Switching…'
+                                      : 'Switch to Human',
+                                  variant: AuratioButtonVariant.secondary,
+                                  expand: true,
+                                  onPressed: _redirecting
+                                      ? null
+                                      : () => _consentAiToHuman(
+                                          redirectableRequest,
+                                        ),
+                                ),
+                              ),
+                              if (_redirectError != null) ...[
+                                const SizedBox(height: 10),
+                                Text(
+                                  _redirectError!,
+                                  key: EvaluationProcessingScreen
+                                      .redirectErrorKey,
+                                  style: AuratioTypography.bodySmall.copyWith(
+                                    color:
+                                        AuratioColors.statusRejectedForeground,
+                                    fontSize: 12,
+                                    height: 18 / 12,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ] else if (wasRedirected) ...[
+                        const SizedBox(height: 18),
+                        Container(
+                          key: EvaluationProcessingScreen.redirectCardKey,
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AuratioColors.surfaceBrandSoft,
+                            border: Border.all(
+                              color: AuratioColors.borderDefault,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'AI → Human consent recorded',
+                                style: AuratioTypography.labelLarge.copyWith(
+                                  color: AuratioColors.backgroundBrand,
+                                  fontSize: 14,
+                                  height: 20 / 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'You originally requested AI and explicitly consented to Human evaluation. The original request method remains recorded while the current route is Human.',
+                                style: AuratioTypography.bodySmall.copyWith(
+                                  color: AuratioColors.textSecondary,
+                                  fontSize: 12,
+                                  height: 18 / 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 26),
                       Text(
                         status == UserEvaluationStatus.processing || prototype

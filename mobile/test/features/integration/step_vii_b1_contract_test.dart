@@ -148,6 +148,7 @@ void main() {
         request: {
           'id': 'request-id',
           'submission_id': 'submission-id',
+          'requested_mode': 'human',
           'mode': 'human',
           'status': 'approved',
           'created_at': '2026-09-07T10:00:00Z',
@@ -197,6 +198,7 @@ void main() {
         criteria: [criterion],
       );
 
+      expect(detail.request.requestedMethod, EvaluationMethod.human);
       expect(detail.request.method, EvaluationMethod.human);
       expect(detail.request.userStatus, UserEvaluationStatus.approved);
       expect(detail.version.finalScore, 81);

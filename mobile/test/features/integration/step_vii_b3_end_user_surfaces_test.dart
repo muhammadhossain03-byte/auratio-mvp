@@ -203,6 +203,11 @@ class _FakeEvaluationRepository implements AuratioEvaluationRepository {
   Future<PersistedEvaluationRequest?> fetchActiveRequest() async => null;
 
   @override
+  Future<PersistedEvaluationRequest> consentAiToHuman(String requestId) {
+    throw UnsupportedError('Not used by B3 test.');
+  }
+
+  @override
   Future<ApprovedEvaluationDetail?> fetchApprovedEvaluation(
     String requestId,
   ) async {

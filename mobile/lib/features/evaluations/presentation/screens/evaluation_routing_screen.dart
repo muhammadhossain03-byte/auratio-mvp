@@ -81,6 +81,10 @@ class EvaluationRoutingScreen extends ConsumerWidget {
     bool loadFailed = false,
   }) {
     final isAi = effectiveMethod == EvaluationMethod.ai;
+    final requestedMethod =
+        persistedRequest?.requestedMethod ?? effectiveMethod;
+    final wasRedirected =
+        !prototype && persistedRequest?.wasRedirectedAiToHuman == true;
     final userStatus = persistedRequest?.userStatus;
     final statusLabel = loading
         ? 'Refreshing…'
@@ -89,14 +93,14 @@ class EvaluationRoutingScreen extends ConsumerWidget {
         : _statusLabel(userStatus);
     final heading = prototype
         ? effectiveMethod.assignedTitle
-        : isAi
-        ? 'AI Evaluation requested'
-        : 'Human Evaluation requested';
+        : wasRedirected
+        ? 'Evaluation redirected to Human'
+        : '${requestedMethod.displayName} Evaluation requested';
     final badge = prototype
         ? effectiveMethod.badgeLabel
-        : isAi
-        ? 'AI request created'
-        : 'Human request created';
+        : wasRedirected
+        ? 'Human route active'
+        : '${requestedMethod.displayName} request created';
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: isAi ? aiScreenKey : humanScreenKey,
@@ -188,7 +192,7 @@ class EvaluationRoutingScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Requested method: ${effectiveMethod.displayName}',
+                                'Requested method: ${requestedMethod.displayName}',
                                 style: AuratioTypography.bodyMedium.copyWith(
                                   color: AuratioColors.textPrimary,
                                   fontSize: 13,
@@ -200,7 +204,7 @@ class EvaluationRoutingScreen extends ConsumerWidget {
                               Text(
                                 prototype
                                     ? 'Current routing: ${effectiveMethod.badgeLabel}'
-                                    : 'Persisted status: $statusLabel',
+                                    : 'Current route: ${effectiveMethod.displayName} • $statusLabel',
                                 style: AuratioTypography.bodyMedium.copyWith(
                                   color: AuratioColors.textPrimary,
                                   fontSize: 13,
@@ -265,6 +269,8 @@ class EvaluationRoutingScreen extends ConsumerWidget {
                                 Text(
                                   prototype
                                       ? 'An authorized evaluator completes the standardized rubric, criterion-specific anchor assessment, exact scores, and required structured feedback. The official .docx report is generated automatically only after publication approval.'
+                                      : wasRedirected
+                                      ? 'You originally requested AI and explicitly consented to redirect this request to Human. The original requested method remains recorded.'
                                       : 'The persisted Human request starts unassigned. An Admin must assign an authorized evaluator before Human evaluation work can begin.',
                                   style: AuratioTypography.bodySmall.copyWith(
                                     color: AuratioColors.textSecondary,

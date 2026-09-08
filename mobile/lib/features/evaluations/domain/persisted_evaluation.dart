@@ -64,17 +64,26 @@ class PersistedEvaluationRequest {
     required this.updatedAt,
     required this.submittedAt,
     this.terminalAt,
-  });
+    EvaluationMethod? requestedMethod,
+  }) : requestedMethod = requestedMethod ?? method;
 
   factory PersistedEvaluationRequest.fromRows({
     required Map<String, dynamic> request,
     required Map<String, dynamic> submission,
   }) {
+    final effectiveMethod = EvaluationMethod.fromWire(
+      _requiredString(request, 'mode'),
+    );
+    final requestedMethod = EvaluationMethod.fromWire(
+      _requiredString(request, 'requested_mode'),
+    );
+
     return PersistedEvaluationRequest(
       id: _requiredString(request, 'id'),
       submissionId: _requiredString(request, 'submission_id'),
       trackId: _requiredString(submission, 'track_id'),
-      method: EvaluationMethod.fromWire(_requiredString(request, 'mode')),
+      method: effectiveMethod,
+      requestedMethod: requestedMethod,
       status: PersistedEvaluationStatus.fromWire(
         _requiredString(request, 'status'),
       ),
@@ -89,6 +98,7 @@ class PersistedEvaluationRequest {
   final String submissionId;
   final String trackId;
   final EvaluationMethod method;
+  final EvaluationMethod requestedMethod;
   final PersistedEvaluationStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -96,6 +106,15 @@ class PersistedEvaluationRequest {
   final DateTime? terminalAt;
 
   UserEvaluationStatus get userStatus => status.userStatus;
+
+  bool get canConsentAiToHuman =>
+      requestedMethod == EvaluationMethod.ai &&
+      method == EvaluationMethod.ai &&
+      status == PersistedEvaluationStatus.processing;
+
+  bool get wasRedirectedAiToHuman =>
+      requestedMethod == EvaluationMethod.ai &&
+      method == EvaluationMethod.human;
 }
 
 class EvaluationRequestCommand {
