@@ -597,44 +597,35 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return jsonResponse(405, { error: "method_not_allowed" });
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const legacyServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 
-  let namedSecretKeys: string[] = [];
-  try {
-    const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
-    if (raw) {
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      namedSecretKeys = Object.values(parsed)
-        .filter((value): value is string => typeof value === "string" && value.length > 0);
-    }
-  } catch {
-    namedSecretKeys = [];
-  }
-
-  if (!supabaseUrl || !geminiApiKey || (!legacyServiceRoleKey && namedSecretKeys.length === 0)) {
+  if (!supabaseUrl || !serviceRoleKey || !geminiApiKey) {
     return jsonResponse(500, { error: "server_configuration_error" });
   }
 
-  // Service-to-service callers should use a modern Supabase secret key on the
-  // `apikey` header. The legacy x-auratio-worker-key path exists only for the
-  // Supabase Dashboard test panel, whose browser-managed Authorization header
-  // cannot reliably carry the legacy service_role JWT.
-  const suppliedApiKey = req.headers.get("apikey") ?? "";
-  const suppliedLegacyTestKey = req.headers.get("x-auratio-worker-key") ?? "";
+  // The Supabase platform `verify_jwt` gate cryptographically validates the
+  // legacy JWT before this handler runs. The worker then authorizes only a
+  // validated JWT whose Postgres role claim is exactly `service_role`.
+  const authorization = req.headers.get("Authorization") ?? "";
+  const token = authorization.replace(/^Bearer\s+/i, "");
+  let callerRole = "";
 
-  const matchedSecretKey = namedSecretKeys.find((key) => key === suppliedApiKey) ?? null;
-  const matchedLegacyKey =
-    legacyServiceRoleKey && suppliedLegacyTestKey === legacyServiceRoleKey
-      ? legacyServiceRoleKey
-      : null;
-
-  const adminKey = matchedSecretKey ?? matchedLegacyKey;
-  if (!adminKey) {
-    return jsonResponse(403, { error: "worker_secret_required" });
+  try {
+    const payloadPart = token.split(".")[1] ?? "";
+    const normalized = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    const payload = JSON.parse(atob(padded)) as Record<string, unknown>;
+    callerRole = typeof payload.role === "string" ? payload.role : "";
+  } catch {
+    callerRole = "";
   }
 
-  const service = createClient(supabaseUrl, adminKey, {
+  if (callerRole !== "service_role") {
+    return jsonResponse(403, { error: "service_role_jwt_required" });
+  }
+
+  const service = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
