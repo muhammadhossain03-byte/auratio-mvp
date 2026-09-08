@@ -11,6 +11,12 @@ This file pins the provider-specific transport/orchestration contract used by Au
 
 If this file conflicts with the provider-agnostic scoring/validation rules in `Auratio_AI_Evaluation_Specification_v1.1.md`, the scoring/validation rules win. If Google changes the API, update this provider contract before changing implementation.
 
+### VII-D2 live transport correction — 2026-09-09
+
+Live testing in the isolated Auratio Supabase test project established a provider-specific incompatibility in the originally pinned transport: a background Agentic Video Interaction created successfully from a Gemini Files API URI, but later retrieval returned `400 invalid_request` with an internal `Unsupported file uri: blobstore:///...` error. A control background text Interaction retrieved successfully with the same API key/revision, and a background Agentic Video Interaction using a short-lived Supabase signed HTTPS URL also retrieved successfully.
+
+Therefore the Auratio MVP runtime MUST use an external pre-signed HTTPS URL for the video input to new Gemini Interactions. It MUST NOT upload new source videos to the Gemini Files API. This is a transport correction only; the model, Thinking level, Agentic Video mode, rubric, structured-output contract, single-Interaction rule and backend validation semantics remain unchanged.
+
 ## 2. Verified provider capabilities
 
 Current official Google documentation confirms:
@@ -31,6 +37,7 @@ Current official Google documentation confirms:
 - uploaded Files API objects automatically expire after 48 hours;
 - Files API maximum file size is 2 GB;
 - Interactions structured output accepts a JSON schema through `response_format`.
+- External public HTTPS and pre-signed HTTPS URLs are supported as file inputs across Gemini API endpoints including Interactions; the current external-URL payload limit is 100 MB.
 
 ## 3. API surface pinned for VII-D
 
@@ -44,14 +51,20 @@ Authenticate with:
 
 `x-goog-api-key: <GEMINI_API_KEY>`
 
-### Provider file
+### Video source transport
 
-- Start resumable upload: `POST /upload/v1beta/files`.
-- Get provider file metadata: `GET /v1beta/{file_name}`.
-- Delete provider file: `DELETE /v1beta/{file_name}`.
+For new Auratio AI evaluations:
 
-Use `video/mp4` and the server-known content length. Persist only the returned provider `name` and `uri` needed for orchestration, in private server-only state.
+- generate a short-lived signed HTTPS URL from the private Supabase `evaluation-videos` object;
+- use the signed URL directly as the Interaction video `uri`;
+- keep the URL lifetime bounded (VII-D2 pins two hours);
+- never persist the signed URL in provider-job state, logs, reports or client-visible data;
+- enforce a maximum source size of 100,000,000 bytes for this transport;
+- do **not** upload new Auratio source videos to the Gemini Files API.
 
+The underlying source video remains governed by Auratio's existing private Supabase Storage lifecycle and terminal deletion job.
+
+### Background Interaction
 ### Background Interaction
 
 - Create: `POST /v1beta/interactions`.
@@ -73,7 +86,7 @@ The request must use:
 - `generation_config.thinking_summaries: "none"`;
 - system instruction from Auratio's locked prompt;
 - input containing:
-  - one video item with provider URI, `mime_type: "video/mp4"`, `processing: "agentic"`;
+  - one video item with an ephemeral Supabase signed HTTPS URI, `mime_type: "video/mp4"`, `processing: "agentic"`;
   - one text item containing runtime identity, measured duration, selected Track and the exact 16-criterion rubric/anchors;
 - `response_format`:
   - `type: "text"`;
@@ -184,12 +197,12 @@ A worker invocation should do bounded work and exit. Repeated polling is allowed
 
 Primary Auratio cleanup policy after terminal/abandoned provider work:
 
-1. delete Gemini Files API object;
-2. delete stored Gemini Interaction;
-3. persist cleanup success;
-4. permit cleanup retry if provider cleanup temporarily fails.
+1. delete/cancel the stored Gemini Interaction when possible;
+2. persist cleanup success;
+3. permit cleanup retry if provider cleanup temporarily fails;
+4. allow the ephemeral Supabase signed source URL to expire naturally.
 
-Google's automatic file expiry and Interaction retention are secondary safeguards.
+New signed-URL jobs create no Gemini Files API object. The original Supabase video remains governed by Auratio's existing terminal video-deletion lifecycle.
 
 No cleanup retry may invoke a new model Interaction.
 
@@ -238,5 +251,6 @@ Recheck official Google and Supabase docs before implementation if:
 - Interactions request or revision contract changes;
 - agentic video support changes;
 - structured-output schema support changes;
+- Google confirms the background Agentic Video + Gemini Files API retrieval defect is fixed and Auratio considers returning to provider-file transport;
 - Files API lifecycle changes;
 - Supabase Edge runtime/scheduling limits materially change.

@@ -209,7 +209,7 @@ export function buildRuntimeInstruction(context: RuntimeContext): string {
   );
 }
 
-export function buildInteractionRequest(context: RuntimeContext, providerFileUri: string): Record<string, unknown> {
+export function buildInteractionRequest(context: RuntimeContext, videoUri: string): Record<string, unknown> {
   return {
     model: GEMINI_MODEL,
     background: true,
@@ -218,7 +218,7 @@ export function buildInteractionRequest(context: RuntimeContext, providerFileUri
     input: [
       {
         type: "video",
-        uri: providerFileUri,
+        uri: videoUri,
         mime_type: "video/mp4",
         processing: "agentic",
       },
