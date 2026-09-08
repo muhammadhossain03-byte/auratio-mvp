@@ -44,13 +44,12 @@ async function rpc(service: SupabaseService, name: string, args: Record<string, 
 }
 
 async function readRequestActive(service: SupabaseService, requestId: string): Promise<boolean> {
-  const { data, error } = await service
-    .from("evaluation_requests")
-    .select("mode,status")
-    .eq("id", requestId)
-    .maybeSingle();
+  const { data, error } = await service.rpc("svc_ai_request_is_active", {
+    p_request_id: requestId,
+  });
   if (error) throw new Error(`request_state_read_failed: ${error.message}`);
-  return !!data && data.mode === "ai" && data.status === "processing";
+  if (typeof data !== "boolean") throw new Error("request_state_read_invalid_response");
+  return data;
 }
 
 async function geminiFetch(
