@@ -7,6 +7,7 @@ import { PersistedVolunteerVideoPlayer } from '../components/PersistedVolunteerV
 import {
   beginPersistedVolunteerEvaluation,
   loadPersistedVolunteerAssignment,
+  returnPersistedVolunteerAssignment,
   type PersistedVolunteerAssignment,
 } from '../integration/persistedVolunteerLifecycle'
 import {
@@ -22,6 +23,7 @@ export function PersistedVolunteerScoringPendingPage() {
   const [assignment, setAssignment] = useState<PersistedVolunteerAssignment | null>(null)
   const [draft, setDraft] = useState<PersistedVolunteerScoringDraft | null>(null)
   const [summary, setSummary] = useState('')
+  const [returnReason, setReturnReason] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -75,6 +77,24 @@ export function PersistedVolunteerScoringPendingPage() {
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : 'Unable to begin evaluation.')
     } finally {
+      setBusy(false)
+    }
+  }
+
+  async function returnAssignment() {
+    const currentAssignment = assignment
+    if (!currentAssignment || currentAssignment.assignmentStatus === 'Assigned') return
+    if (!returnReason.trim()) {
+      setMessage('A return reason is required.')
+      return
+    }
+    setBusy(true)
+    setMessage(null)
+    try {
+      await returnPersistedVolunteerAssignment(currentAssignment.requestId, returnReason)
+      navigate(portalRoutePaths.volunteer.assignments, { replace: true })
+    } catch (cause) {
+      setMessage(cause instanceof Error ? cause.message : 'Unable to return assignment.')
       setBusy(false)
     }
   }
@@ -154,6 +174,23 @@ export function PersistedVolunteerScoringPendingPage() {
             {busy ? 'Starting…' : 'Begin Evaluation'}
           </button>
           {message && <p role="alert">{message}</p>}
+        </div>
+        <div
+          className="auratio-volunteer-panel"
+          style={{ left: '30px', top: '410px', width: '1076px', height: '190px', padding: '24px', boxSizing: 'border-box' }}
+        >
+          <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>Return Assignment</h3>
+          <textarea
+            value={returnReason}
+            disabled={busy}
+            onChange={(event) => setReturnReason(event.target.value)}
+            placeholder="Reason required"
+            aria-label="Return assignment reason"
+            style={{ width: '720px', height: '58px', marginTop: '10px', boxSizing: 'border-box' }}
+          />
+          <button type="button" disabled={busy || !returnReason.trim()} onClick={() => void returnAssignment()} className="auratio-volunteer-btn auratio-volunteer-btn--secondary" style={{ width: '170px', height: '40px', marginLeft: '14px' }}>
+            Return Assignment
+          </button>
         </div>
       </VolunteerLayout>
     )
@@ -294,6 +331,23 @@ export function PersistedVolunteerScoringPendingPage() {
           style={{ width: '190px', height: '44px', opacity: totals.isReady ? 1 : 0.45 }}
         >
           Review & Submit
+        </button>
+      </div>
+      <div
+        className="auratio-volunteer-panel"
+        style={{ left: '30px', top: '1672px', width: '1076px', height: '190px', padding: '24px', boxSizing: 'border-box' }}
+      >
+        <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>Return Assignment</h3>
+        <textarea
+          value={returnReason}
+          disabled={busy}
+          onChange={(event) => setReturnReason(event.target.value)}
+          placeholder="Returning discards the editable draft; reason required"
+          aria-label="Return in-progress assignment reason"
+          style={{ width: '720px', height: '58px', marginTop: '10px', boxSizing: 'border-box' }}
+        />
+        <button type="button" disabled={busy || !returnReason.trim()} onClick={() => void returnAssignment()} className="auratio-volunteer-btn auratio-volunteer-btn--secondary" style={{ width: '170px', height: '40px', marginLeft: '14px' }}>
+          Return Assignment
         </button>
       </div>
     </VolunteerLayout>

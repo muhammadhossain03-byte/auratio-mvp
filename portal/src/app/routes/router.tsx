@@ -18,8 +18,6 @@ import {
   VolunteerAvailabilityPage,
   VolunteerAvailabilityUnavailablePage,
   VolunteerCompletedApprovedPage,
-  VolunteerCompletedDetailPage,
-  VolunteerCompletedHistoryPage,
   VolunteerCompletedPendingModerationPage,
   VolunteerCompletedProcessingPage,
   VolunteerCompletedRejectedPage,
@@ -27,9 +25,14 @@ import {
   VolunteerDeclineAssignmentPage,
   VolunteerEvaluationSubmittedPage,
   VolunteerFinalSubmissionPage,
-  VolunteerReopenedEvaluationPage,
   VolunteerScoringWorkspacePage,
 } from '../../features/volunteer'
+import {
+  VolunteerCompletedDetailBoundary,
+  VolunteerCompletedHistoryBoundary,
+  VolunteerPrototypeFixtureBoundary,
+  VolunteerReopenedEvaluationBoundary,
+} from '../../features/volunteer/pages/VolunteerPersistedHistoryRouteBoundaries'
 import {
   AdminAssignmentPickerPage,
   AdminAuditLogPage,
@@ -43,13 +46,9 @@ import {
   AdminConfirmEvaluationReassignmentPage,
   AdminCancelEvaluationRequestPage,
   AdminEvaluationProcessingHumanPage,
-  AdminEvaluationRecordsPage,
   AdminEventEditorPage,
   AdminEventManagementPage,
   AdminInviteVolunteerPage,
-  AdminModerationQueuePage,
-  AdminModerationReviewPage,
-  AdminOperationsDashboardPage,
   AdminRequestAssignedAiPage,
   AdminRequestAssignedHumanPage,
   AdminRequestDetailsRoutingPage,
@@ -64,6 +63,13 @@ import {
   AdminHumanRequestRouteBoundary,
   AdminPrototypeFixtureBoundary,
 } from '../../features/admin/pages/AdminPersistedHumanRouteBoundaries'
+import {
+  AdminEvaluationRecordsBoundary,
+  AdminModerationLegacyActionBoundary,
+  AdminModerationQueueBoundary,
+  AdminModerationReviewBoundary,
+  AdminOperationsDashboardBoundary,
+} from '../../features/admin/pages/AdminPersistedCompletionRouteBoundaries'
 import {
   SuperAdminAccountPage,
   SuperAdminAccountsPage,
@@ -198,35 +204,55 @@ export const router = createBrowserRouter([
   },
   {
     path: portalRoutePaths.volunteer.completedHistory,
-    element: <VolunteerCompletedHistoryPage />,
+    element: <VolunteerCompletedHistoryBoundary />,
   },
   {
     path: portalRoutePaths.volunteer.completedPendingModeration,
-    element: <VolunteerCompletedPendingModerationPage />,
+    element: (
+      <VolunteerPrototypeFixtureBoundary>
+        <VolunteerCompletedPendingModerationPage />
+      </VolunteerPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.volunteer.completedApproved,
-    element: <VolunteerCompletedApprovedPage />,
+    element: (
+      <VolunteerPrototypeFixtureBoundary>
+        <VolunteerCompletedApprovedPage />
+      </VolunteerPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.volunteer.completedRejected,
-    element: <VolunteerCompletedRejectedPage />,
+    element: (
+      <VolunteerPrototypeFixtureBoundary>
+        <VolunteerCompletedRejectedPage />
+      </VolunteerPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.volunteer.completedProcessing,
-    element: <VolunteerCompletedProcessingPage />,
+    element: (
+      <VolunteerPrototypeFixtureBoundary>
+        <VolunteerCompletedProcessingPage />
+      </VolunteerPrototypeFixtureBoundary>
+    ),
   },
   {
     path: '/volunteer/completed/:submissionId',
-    element: <VolunteerCompletedDetailPage />,
+    element: <VolunteerCompletedDetailBoundary />,
+  },
+  {
+    path: '/volunteer/completed/:submissionId/version/:versionId',
+    element: <VolunteerCompletedDetailBoundary />,
   },
   {
     path: portalRoutePaths.volunteer.reopenedEvaluation,
-    element: <VolunteerReopenedEvaluationPage />,
+    element: <VolunteerReopenedEvaluationBoundary />,
   },
   {
     path: '/volunteer/evaluation/:submissionId/reopened',
-    element: <VolunteerReopenedEvaluationPage />,
+    element: <VolunteerReopenedEvaluationBoundary />,
   },
   {
     path: portalRoutePaths.admin.root,
@@ -234,7 +260,7 @@ export const router = createBrowserRouter([
   },
   {
     path: portalRoutePaths.admin.dashboard,
-    element: <AdminOperationsDashboardPage />,
+    element: <AdminOperationsDashboardBoundary />,
   },
   {
     path: portalRoutePaths.admin.requests,
@@ -306,63 +332,107 @@ export const router = createBrowserRouter([
   },
   {
     path: portalRoutePaths.admin.evaluations,
-    element: <AdminEvaluationRecordsPage />,
+    element: <AdminEvaluationRecordsBoundary />,
   },
   {
     path: portalRoutePaths.admin.evaluationProcessingHuman,
-    element: <AdminEvaluationProcessingHumanPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.evaluations}>
+        <AdminEvaluationProcessingHumanPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.evaluationReassignmentPicker,
-    element: <AdminEvaluationReassignmentPickerPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.evaluations}>
+        <AdminEvaluationReassignmentPickerPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.confirmEvaluationReassignment,
-    element: <AdminConfirmEvaluationReassignmentPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.evaluations}>
+        <AdminConfirmEvaluationReassignmentPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.cancelEvaluationRequest,
-    element: <AdminCancelEvaluationRequestPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.evaluations}>
+        <AdminCancelEvaluationRequestPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.evaluationApprovedAi,
-    element: <AdminEvaluationApprovedAiPage />,
+    element: (
+      <AdminPrototypeFixtureBoundary fallbackTo={portalRoutePaths.admin.evaluations}>
+        <AdminEvaluationApprovedAiPage />
+      </AdminPrototypeFixtureBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.moderation,
-    element: <AdminModerationQueuePage />,
+    element: <AdminModerationQueueBoundary />,
   },
   {
     path: portalRoutePaths.admin.moderationReview,
-    element: <AdminModerationReviewPage />,
+    element: <AdminModerationReviewBoundary />,
   },
   {
     path: '/admin/moderation/:submissionId',
-    element: <AdminModerationReviewPage />,
+    element: <AdminModerationReviewBoundary />,
   },
   {
     path: portalRoutePaths.admin.confirmModerationApproval,
-    element: <AdminConfirmModerationApprovalPage />,
+    element: (
+      <AdminModerationLegacyActionBoundary>
+        <AdminConfirmModerationApprovalPage />
+      </AdminModerationLegacyActionBoundary>
+    ),
   },
   {
     path: '/admin/moderation/:submissionId/approve',
-    element: <AdminConfirmModerationApprovalPage />,
+    element: (
+      <AdminModerationLegacyActionBoundary>
+        <AdminConfirmModerationApprovalPage />
+      </AdminModerationLegacyActionBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.confirmModerationRejection,
-    element: <AdminConfirmModerationRejectionPage />,
+    element: (
+      <AdminModerationLegacyActionBoundary>
+        <AdminConfirmModerationRejectionPage />
+      </AdminModerationLegacyActionBoundary>
+    ),
   },
   {
     path: '/admin/moderation/:submissionId/reject',
-    element: <AdminConfirmModerationRejectionPage />,
+    element: (
+      <AdminModerationLegacyActionBoundary>
+        <AdminConfirmModerationRejectionPage />
+      </AdminModerationLegacyActionBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.requestReReview,
-    element: <AdminRequestReReviewPage />,
+    element: (
+      <AdminModerationLegacyActionBoundary>
+        <AdminRequestReReviewPage />
+      </AdminModerationLegacyActionBoundary>
+    ),
   },
   {
     path: '/admin/moderation/:submissionId/re-review',
-    element: <AdminRequestReReviewPage />,
+    element: (
+      <AdminModerationLegacyActionBoundary>
+        <AdminRequestReReviewPage />
+      </AdminModerationLegacyActionBoundary>
+    ),
   },
   {
     path: portalRoutePaths.admin.volunteers,
