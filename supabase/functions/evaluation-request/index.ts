@@ -6,6 +6,10 @@ const allowedOrigins = new Set([
   "http://127.0.0.1:5173",
 ]);
 
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const aiToHumanConsentCopyVersion = "ai-to-human-v1";
+
 function corsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "";
   return {
@@ -46,6 +50,32 @@ Deno.serve(async (req: Request) => {
     payload = await req.json();
   } catch {
     return respond(req, 400, { error: "invalid_json" });
+  }
+
+  const action = typeof payload.action === "string" ? payload.action.trim() : "create";
+
+  if (action === "consent_ai_to_human") {
+    const requestId = typeof payload.request_id === "string" ? payload.request_id.trim() : "";
+    if (!uuidPattern.test(requestId)) {
+      return respond(req, 400, { error: "invalid_request_id" });
+    }
+
+    const { data, error } = await service.rpc("svc_end_user_consent_ai_to_human", {
+      p_actor_user_id: actor.id,
+      p_request_id: requestId,
+      p_consent_copy_version: aiToHumanConsentCopyVersion,
+    });
+
+    if (error) {
+      const message = error.message ?? "mode_redirection_rejected";
+      return respond(req, 409, { error: "mode_redirection_rejected", message });
+    }
+
+    return respond(req, 200, data);
+  }
+
+  if (action !== "create") {
+    return respond(req, 400, { error: "invalid_action" });
   }
 
   const trackId = typeof payload.track_id === "string" ? payload.track_id.trim() : "";
