@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../application/auth_repository_provider.dart';
 import '../../application/mock_password_recovery_state.dart';
+import '../../data/auth_repository.dart';
 import '../widgets/authentication_widgets.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -27,6 +29,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _reserveEmailErrorSpace = false;
+  bool _sending = false;
 
   @override
   void dispose() {
@@ -47,7 +50,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return null;
   }
 
-  void _sendResetLink() {
+  Future<void> _sendResetLink() async {
     final needsErrorSpace = _validateEmail(_emailController.text) != null;
     final isValid = _formKey.currentState?.validate() ?? false;
 
@@ -57,14 +60,35 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       });
     }
 
-    if (!isValid) {
+    if (!isValid || _sending) {
       return;
     }
 
-    ref
-        .read(mockPasswordRecoveryProvider.notifier)
-        .captureEmail(_emailController.text);
-    context.go(AppRoutePaths.resetLinkSent);
+    final email = _emailController.text.trim();
+    final repository = ref.read(authRepositoryProvider);
+
+    if (!repository.isConfigured) {
+      ref.read(mockPasswordRecoveryProvider.notifier).captureEmail(email);
+      context.go(AppRoutePaths.resetLinkSent);
+      return;
+    }
+
+    setState(() => _sending = true);
+    try {
+      await repository.requestPasswordReset(email: email);
+      ref.read(mockPasswordRecoveryProvider.notifier).captureEmail(email);
+
+      if (!mounted) return;
+      context.go(AppRoutePaths.resetLinkSent);
+    } on AuratioAuthenticationException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) {
+        setState(() => _sending = false);
+      }
+    }
   }
 
   @override
@@ -167,7 +191,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     key: ForgotPasswordScreen.sendResetLinkActionKey,
                     label: 'Send Reset Link',
                     expand: true,
-                    onPressed: _sendResetLink,
+                    onPressed: _sending ? null : _sendResetLink,
                   ),
                 ),
                 Positioned(

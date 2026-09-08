@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../application/auth_repository_provider.dart';
+import '../../data/auth_repository.dart';
 import '../widgets/authentication_widgets.dart';
 
-class ResetPasswordScreen extends StatefulWidget {
+class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
 
   static const screenKey = Key('authentication-reset-password');
@@ -19,15 +22,17 @@ class ResetPasswordScreen extends StatefulWidget {
   static const submitActionKey = Key('reset-password-submit');
 
   @override
-  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _reserveNewPasswordErrorSpace = false;
   bool _reserveConfirmationErrorSpace = false;
+  bool _updating = false;
 
   @override
   void dispose() {
@@ -65,7 +70,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return null;
   }
 
-  void _updatePassword() {
+  Future<void> _updatePassword() async {
     final needsNewPasswordErrorSpace =
         _validateNewPassword(_newPasswordController.text) != null;
     final needsConfirmationErrorSpace =
@@ -80,11 +85,30 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       });
     }
 
-    if (!isValid) {
+    if (!isValid || _updating) {
       return;
     }
 
-    context.go(AppRoutePaths.passwordResetComplete);
+    final repository = ref.read(authRepositoryProvider);
+    if (!repository.isConfigured) {
+      context.go(AppRoutePaths.passwordResetComplete);
+      return;
+    }
+
+    setState(() => _updating = true);
+    try {
+      await repository.updatePassword(newPassword: _newPasswordController.text);
+      if (!mounted) return;
+      context.go(AppRoutePaths.passwordResetComplete);
+    } on AuratioAuthenticationException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) {
+        setState(() => _updating = false);
+      }
+    }
   }
 
   void _goBack() {
@@ -231,7 +255,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     key: ResetPasswordScreen.submitActionKey,
                     label: 'Update Password',
                     expand: true,
-                    onPressed: _updatePassword,
+                    onPressed: _updating ? null : _updatePassword,
                   ),
                 ),
               ],

@@ -8,7 +8,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../application/auth_repository_provider.dart';
 import '../../application/mock_password_recovery_state.dart';
+import '../../data/auth_repository.dart';
 import '../widgets/authentication_widgets.dart';
 
 class ResetLinkSentScreen extends ConsumerStatefulWidget {
@@ -29,21 +31,56 @@ class ResetLinkSentScreen extends ConsumerStatefulWidget {
 
 class _ResetLinkSentScreenState extends ConsumerState<ResetLinkSentScreen> {
   Timer? _resetLinkTimer;
+  late final bool _configured;
+  bool _resending = false;
 
   @override
   void initState() {
     super.initState();
-    _resetLinkTimer = Timer(ResetLinkSentScreen.transitionDelay, () {
-      if (mounted) {
-        context.push(AppRoutePaths.resetPassword);
-      }
-    });
+    _configured = ref.read(authRepositoryProvider).isConfigured;
+    if (!_configured) {
+      _resetLinkTimer = Timer(ResetLinkSentScreen.transitionDelay, () {
+        if (mounted) {
+          context.push(AppRoutePaths.resetPassword);
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     _resetLinkTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _resendResetEmail() async {
+    if (_resending) return;
+
+    final repository = ref.read(authRepositoryProvider);
+    if (!repository.isConfigured) {
+      ref.read(mockPasswordRecoveryProvider.notifier).resendResetEmail();
+      return;
+    }
+
+    final email = ref.read(mockPasswordRecoveryProvider).email;
+    setState(() => _resending = true);
+    try {
+      await repository.requestPasswordReset(email: email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reset email sent. Use the newest email.'),
+        ),
+      );
+    } on AuratioAuthenticationException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) {
+        setState(() => _resending = false);
+      }
+    }
   }
 
   @override
@@ -119,9 +156,7 @@ class _ResetLinkSentScreenState extends ConsumerState<ResetLinkSentScreen> {
                 label: 'Resend Reset Email',
                 variant: AuratioButtonVariant.secondary,
                 expand: true,
-                onPressed: () => ref
-                    .read(mockPasswordRecoveryProvider.notifier)
-                    .resendResetEmail(),
+                onPressed: _resending ? null : _resendResetEmail,
               ),
             ),
             Positioned(
