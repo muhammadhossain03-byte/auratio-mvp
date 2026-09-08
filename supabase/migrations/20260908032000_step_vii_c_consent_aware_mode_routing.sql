@@ -52,13 +52,13 @@ on public.evaluation_mode_redirect_consents
 for select
 to authenticated
 using (
-  public.is_admin_or_super()
+  private.is_admin_or_super()
   or exists (
     select 1
     from public.evaluation_requests er
     where er.id = evaluation_mode_redirect_consents.request_id
       and er.user_id = (select auth.uid())
-      and public.is_active_user()
+      and private.is_active_user()
   )
 );
 
