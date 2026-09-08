@@ -27,7 +27,12 @@ requireText(provider, "buildGenerateContentRequest", "Generate Content adapter m
 requireText(provider, 'media_processing: "AGENTIC"', "Agentic Video must remain locked");
 requireText(provider, 'thinkingLevel: "medium"', "Medium Thinking must remain locked");
 requireText(provider, "includeThoughts: false", "thought summaries must remain disabled");
-requireText(provider, 'mimeType: "application/json"', "structured JSON output must remain locked");
+requireText(provider, 'mimeType: "APPLICATION_JSON"', "raw REST structured JSON enum must remain locked");
+forbidText(
+  provider,
+  'mimeType: "application/json"',
+  "raw Generate Content REST must not use the rejected MIME string",
+);
 requireText(contract, "Generate Content API", "provider contract must pin Generate Content");
 requireText(contract, "MUST NOT automatically issue a second model evaluation call", "no-retry rule must remain");
 forbidText(contract, "MUST use an external pre-signed HTTPS URL", "superseded signed-URL mandate must be removed");

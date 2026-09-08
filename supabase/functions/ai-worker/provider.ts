@@ -273,7 +273,9 @@ export function buildGenerateContentRequest(
       maxOutputTokens: 32768,
       responseFormat: {
         text: {
-          mimeType: "application/json",
+          // Raw Generate Content REST currently expects the TextResponseFormat
+          // enum literal, not the MIME string accepted by some SDK examples.
+          mimeType: "APPLICATION_JSON",
           schema: buildTransportSchema(context),
         },
       },

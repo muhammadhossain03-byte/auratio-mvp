@@ -92,7 +92,7 @@ The request must use:
 - `generationConfig.thinkingConfig.thinkingLevel: "medium"`;
 - `generationConfig.thinkingConfig.includeThoughts: false`;
 - `generationConfig.maxOutputTokens: 32768`;
-- `generationConfig.responseFormat.text.mimeType: "application/json"`;
+- `generationConfig.responseFormat.text.mimeType: "APPLICATION_JSON"` for raw REST; this enum value represents JSON output. Live provider verification on 2026-09-09 showed that raw `generateContent` rejects the literal `"application/json"` at this field with `INVALID_ARGUMENT`, while `"APPLICATION_JSON"` succeeds with the same schema, model, Thinking configuration and Agentic Video input;
 - the provider-compatible transport schema under `generationConfig.responseFormat.text.schema`.
 
 No tools for external search, URL context, browsing or fact checking are enabled.
