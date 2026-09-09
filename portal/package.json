@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "npm run check:rubric-anchors && node scripts/verify_step_iv_hardening.mjs && node scripts/verify_interactions.mjs && node scripts/verify_step_vii_a1_foundation.mjs && node scripts/verify_step_vii_a2_auth_routing.mjs",
+    "test": "npm run check:rubric-anchors && node scripts/verify_step_iv_hardening.mjs && node scripts/verify_interactions.mjs && node scripts/verify_step_vii_a1_foundation.mjs && node scripts/verify_step_vii_a2_auth_routing.mjs && node scripts/verify_step_vii_e2f1_portal_session_refresh.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "capture": "node scripts/capture.mjs",

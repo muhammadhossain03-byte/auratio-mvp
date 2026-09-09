@@ -22,6 +22,20 @@ export interface PortalAuthenticatedSession {
   profile: PortalProfile
 }
 
+export function isTransientPortalAuthenticationError(error: unknown): boolean {
+  return (
+    error instanceof PortalAuthenticationError &&
+    (error.code === 'profile_load_failed' || error.code === 'session_load_failed')
+  )
+}
+
+export function isTerminalPortalAuthenticationError(error: unknown): boolean {
+  return (
+    error instanceof PortalAuthenticationError &&
+    (error.code === 'profile_missing' || error.code === 'portal_access_denied')
+  )
+}
+
 export async function loadPortalProfile(userId: string): Promise<PortalProfile> {
   const client = getPortalSupabaseClient()
   const { data, error } = await client
@@ -81,7 +95,9 @@ export async function currentPortalSession(): Promise<PortalAuthenticatedSession
     const profile = await loadPortalProfile(session.user.id)
     return { session, profile }
   } catch (error) {
-    await client.auth.signOut()
+    if (isTerminalPortalAuthenticationError(error)) {
+      await client.auth.signOut()
+    }
     throw error
   }
 }
