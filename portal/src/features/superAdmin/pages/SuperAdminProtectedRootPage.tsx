@@ -1,8 +1,10 @@
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
+import { ConfiguredSuperAdminProtectedRootPage } from './PersistedSuperAdminAccountPages'
 
-export function SuperAdminProtectedRootPage() {
+function PrototypeSuperAdminProtectedRootPage() {
   const navigate = useNavigate()
 
   function handleBack() {
@@ -379,4 +381,13 @@ export function SuperAdminProtectedRootPage() {
       </div>
     </SuperAdminLayout>
   )
+}
+
+export function SuperAdminProtectedRootPage() {
+  const runtimeMode = portalSupabaseRuntimeMode()
+  if (runtimeMode === 'configured') {
+    return <ConfiguredSuperAdminProtectedRootPage />
+  }
+  if (runtimeMode === 'prototype') return <PrototypeSuperAdminProtectedRootPage />
+  return <Navigate to={portalRoutePaths.authentication.accessUnavailable} replace />
 }

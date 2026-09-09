@@ -1,9 +1,11 @@
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
+import { ConfiguredSuperAdminAccountsPage } from './PersistedSuperAdminAccountPages'
 import { getAdminAccountsList } from '../data/mockSuperAdminData'
 
-export function SuperAdminAccountsPage() {
+function PrototypeSuperAdminAccountsPage() {
   const navigate = useNavigate()
   const accounts = getAdminAccountsList()
 
@@ -218,4 +220,11 @@ export function SuperAdminAccountsPage() {
       </div>
     </SuperAdminLayout>
   )
+}
+
+export function SuperAdminAccountsPage() {
+  const runtimeMode = portalSupabaseRuntimeMode()
+  if (runtimeMode === 'configured') return <ConfiguredSuperAdminAccountsPage />
+  if (runtimeMode === 'prototype') return <PrototypeSuperAdminAccountsPage />
+  return <Navigate to={portalRoutePaths.authentication.accessUnavailable} replace />
 }

@@ -40,6 +40,21 @@ function validTrackIds(value: unknown): value is string[] {
     );
 }
 
+async function isActiveSuperAdmin(
+  service: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<boolean> {
+  const { data, error } = await service
+    .from("profiles")
+    .select("role,account_status")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return !error &&
+    data?.role === "super_admin" &&
+    data?.account_status === "active";
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(req) });
   if (req.method !== "POST") return respond(req, 405, { error: "method_not_allowed" });
@@ -70,6 +85,257 @@ Deno.serve(async (req: Request) => {
   if (typeof action !== "string") return respond(req, 400, { error: "action_required" });
 
   try {
+    if (
+      action === "list_admin_accounts" ||
+      action === "get_admin_account" ||
+      action === "update_admin_display_name"
+    ) {
+      if (!(await isActiveSuperAdmin(service, actor.id))) {
+        return respond(req, 403, { error: "super_admin_required" });
+      }
+    }
+
+    if (action === "list_admin_accounts") {
+      const { data: profileRows, error: profileError } = await service
+        .from("profiles")
+        .select("user_id,display_name,role,account_status,is_root_super_admin,created_at")
+        .in("role", ["admin", "super_admin"]);
+
+      if (profileError) {
+        return respond(req, 500, { error: "staff_profile_list_failed" });
+      }
+
+      const { data: authPage, error: authListError } =
+        await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
+
+      if (authListError) {
+        return respond(req, 500, { error: "staff_auth_list_failed" });
+      }
+
+      const emailByUserId = new Map(
+        authPage.users.map((user) => [user.id, user.email ?? ""]),
+      );
+
+      const profileAccounts = (profileRows ?? [])
+        .filter((row) => row.role === "admin" || row.is_root_super_admin === true)
+        .map((row) => ({
+          id: row.user_id,
+          kind: "profile",
+          display_name: row.display_name,
+          email: emailByUserId.get(row.user_id) ?? "",
+          account_type: row.is_root_super_admin ? "Super Admin" : "Admin",
+          status: row.account_status === "active" ? "Active" : "Deactivated",
+          is_root: row.is_root_super_admin === true,
+          created_at: row.created_at,
+        }))
+        .filter((row) => row.email !== "");
+
+      const { data: invitations, error: invitationError } = await service
+        .from("staff_invitations")
+        .select("id,email,display_name,status,expires_at,created_at")
+        .eq("target_role", "admin")
+        .eq("status", "pending")
+        .gt("expires_at", new Date().toISOString());
+
+      if (invitationError) {
+        return respond(req, 500, { error: "staff_invitation_list_failed" });
+      }
+
+      const pendingAccounts = (invitations ?? []).map((row) => ({
+        id: `invite_${row.id}`,
+        kind: "invitation",
+        display_name: row.display_name ?? row.email,
+        email: row.email,
+        account_type: "Admin",
+        status: "Invited",
+        is_root: false,
+        created_at: row.created_at,
+      }));
+
+      return respond(req, 200, {
+        ok: true,
+        accounts: [...profileAccounts, ...pendingAccounts],
+      });
+    }
+
+    if (action === "get_admin_account") {
+      const accountId =
+        typeof payload.account_id === "string" ? payload.account_id.trim() : "";
+
+      if (!accountId) {
+        return respond(req, 400, { error: "account_id_required" });
+      }
+
+      if (accountId === "root") {
+        const { data: rootProfile, error: rootError } = await service
+          .from("profiles")
+          .select("user_id,display_name,role,account_status,is_root_super_admin,created_at")
+          .eq("is_root_super_admin", true)
+          .maybeSingle();
+
+        if (rootError) {
+          return respond(req, 500, { error: "root_profile_lookup_failed" });
+        }
+        if (!rootProfile) {
+          return respond(req, 200, { ok: false, error: "account_not_found" });
+        }
+
+        const { data: rootAuth, error: rootAuthError } =
+          await service.auth.admin.getUserById(rootProfile.user_id);
+
+        if (rootAuthError || !rootAuth.user?.email) {
+          return respond(req, 500, { error: "root_auth_lookup_failed" });
+        }
+
+        return respond(req, 200, {
+          ok: true,
+          account: {
+            id: rootProfile.user_id,
+            kind: "profile",
+            display_name: rootProfile.display_name,
+            email: rootAuth.user.email,
+            account_type: "Super Admin",
+            status:
+              rootProfile.account_status === "active" ? "Active" : "Deactivated",
+            is_root: true,
+            created_at: rootProfile.created_at,
+          },
+        });
+      }
+
+      if (accountId.startsWith("invite_")) {
+        const invitationId = accountId.replace(/^invite_/, "");
+        if (!isUuid(invitationId)) {
+          return respond(req, 400, { error: "valid_invitation_id_required" });
+        }
+
+        const { data: invitation, error: invitationError } = await service
+          .from("staff_invitations")
+          .select("id,email,display_name,status,expires_at,created_at")
+          .eq("id", invitationId)
+          .eq("target_role", "admin")
+          .maybeSingle();
+
+        if (invitationError) {
+          return respond(req, 500, { error: "staff_invitation_lookup_failed" });
+        }
+        if (
+          !invitation ||
+          invitation.status !== "pending" ||
+          new Date(invitation.expires_at).getTime() <= Date.now()
+        ) {
+          return respond(req, 200, { ok: false, error: "account_not_found" });
+        }
+
+        return respond(req, 200, {
+          ok: true,
+          account: {
+            id: `invite_${invitation.id}`,
+            kind: "invitation",
+            display_name: invitation.display_name ?? invitation.email,
+            email: invitation.email,
+            account_type: "Admin",
+            status: "Invited",
+            is_root: false,
+            created_at: invitation.created_at,
+          },
+        });
+      }
+
+      if (!isUuid(accountId)) {
+        return respond(req, 400, { error: "valid_account_id_required" });
+      }
+
+      const { data: profile, error: profileError } = await service
+        .from("profiles")
+        .select("user_id,display_name,role,account_status,is_root_super_admin,created_at")
+        .eq("user_id", accountId)
+        .maybeSingle();
+
+      if (profileError) {
+        return respond(req, 500, { error: "staff_profile_lookup_failed" });
+      }
+      if (
+        !profile ||
+        (profile.role !== "admin" && profile.is_root_super_admin !== true)
+      ) {
+        return respond(req, 200, { ok: false, error: "account_not_found" });
+      }
+
+      const { data: authUser, error: authUserError } =
+        await service.auth.admin.getUserById(profile.user_id);
+
+      if (authUserError || !authUser.user?.email) {
+        return respond(req, 500, { error: "staff_auth_lookup_failed" });
+      }
+
+      return respond(req, 200, {
+        ok: true,
+        account: {
+          id: profile.user_id,
+          kind: "profile",
+          display_name: profile.display_name,
+          email: authUser.user.email,
+          account_type: profile.is_root_super_admin ? "Super Admin" : "Admin",
+          status: profile.account_status === "active" ? "Active" : "Deactivated",
+          is_root: profile.is_root_super_admin === true,
+          created_at: profile.created_at,
+        },
+      });
+    }
+
+    if (action === "update_admin_display_name") {
+      const accountId =
+        typeof payload.account_id === "string" ? payload.account_id.trim() : "";
+      const displayName =
+        typeof payload.display_name === "string"
+          ? payload.display_name.trim()
+          : "";
+
+      if (!isUuid(accountId)) {
+        return respond(req, 400, { error: "valid_account_id_required" });
+      }
+      if (displayName.length < 2 || displayName.length > 80) {
+        return respond(req, 400, { error: "valid_display_name_required" });
+      }
+
+      const { data: target, error: targetError } = await service
+        .from("profiles")
+        .select("user_id,role,is_root_super_admin")
+        .eq("user_id", accountId)
+        .maybeSingle();
+
+      if (targetError) {
+        return respond(req, 500, { error: "staff_profile_lookup_failed" });
+      }
+      if (!target || target.role !== "admin" || target.is_root_super_admin === true) {
+        return respond(req, 403, { error: "ordinary_admin_required" });
+      }
+
+      const { error: updateError } = await service
+        .from("profiles")
+        .update({ display_name: displayName })
+        .eq("user_id", accountId);
+
+      if (updateError) {
+        return respond(req, 500, { error: "staff_profile_update_failed" });
+      }
+
+      const { error: auditError } = await service.from("audit_log").insert({
+        actor_user_id: actor.id,
+        action: "staff.admin.display_name.updated",
+        entity_type: "profile",
+        entity_id: accountId,
+        metadata: { display_name: displayName },
+      });
+
+      if (auditError) {
+        return respond(req, 500, { error: "staff_profile_audit_failed" });
+      }
+
+      return respond(req, 200, { ok: true });
+    }
+
     if (action === "create_invitation") {
       const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
       const displayName = typeof payload.display_name === "string" ? payload.display_name.trim() : "";

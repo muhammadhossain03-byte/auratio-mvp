@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { SuperAdminLayout } from '../components/SuperAdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
+import { ConfiguredSuperAdminAccountPage } from './PersistedSuperAdminAccountPages'
 import { getAdminAccountById, updateAdminAccount } from '../data/mockSuperAdminData'
 
-export function SuperAdminAccountPage() {
+function PrototypeSuperAdminAccountPage() {
   const navigate = useNavigate()
   const { adminId } = useParams<{ adminId?: string }>()
   const resolvedId = adminId || 'nadia'
@@ -452,4 +454,11 @@ export function SuperAdminAccountPage() {
       </div>
     </SuperAdminLayout>
   )
+}
+
+export function SuperAdminAccountPage() {
+  const runtimeMode = portalSupabaseRuntimeMode()
+  if (runtimeMode === 'configured') return <ConfiguredSuperAdminAccountPage />
+  if (runtimeMode === 'prototype') return <PrototypeSuperAdminAccountPage />
+  return <Navigate to={portalRoutePaths.authentication.accessUnavailable} replace />
 }
