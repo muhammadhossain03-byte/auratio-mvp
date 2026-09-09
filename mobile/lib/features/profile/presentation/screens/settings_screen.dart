@@ -8,11 +8,15 @@ import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     this.email = 'alex@example.com',
+    this.displayName = 'Alex Morgan',
+    this.onUpdateDisplayName,
     this.onSignOut,
     super.key,
   });
 
   final String email;
+  final String displayName;
+  final Future<void> Function(String displayName)? onUpdateDisplayName;
   final Future<void> Function()? onSignOut;
 
   static const screenKey = ValueKey('settings-screen');
@@ -22,6 +26,7 @@ class SettingsScreen extends StatefulWidget {
   );
   static const managePathsLinkKey = ValueKey('settings-manage-paths-link');
   static const privacyCardKey = ValueKey('settings-privacy-card');
+  static const editDisplayNameKey = ValueKey('settings-edit-display-name');
   static const signOutVisualKey = ValueKey('settings-sign-out-visual');
   static const backToProfileButtonKey = ValueKey(
     'settings-back-to-profile-button',
@@ -32,7 +37,81 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  bool _savingDisplayName = false;
   bool _signingOut = false;
+
+  Future<void> _editDisplayName() async {
+    final onUpdateDisplayName = widget.onUpdateDisplayName;
+    if (onUpdateDisplayName == null || _savingDisplayName) return;
+
+    final controller = TextEditingController(text: widget.displayName);
+    final formKey = GlobalKey<FormState>();
+
+    final nextName = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit display name'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            maxLength: 80,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(labelText: 'Display name'),
+            validator: (value) {
+              final normalized = value?.trim() ?? '';
+              if (normalized.length < 2 || normalized.length > 80) {
+                return 'Use between 2 and 80 characters.';
+              }
+              return null;
+            },
+            onFieldSubmitted: (_) {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.of(dialogContext).pop(controller.text.trim());
+              }
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.of(dialogContext).pop(controller.text.trim());
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    if (nextName == null || nextName == widget.displayName.trim()) return;
+
+    setState(() => _savingDisplayName = true);
+    try {
+      await onUpdateDisplayName(nextName);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Display name updated.')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to update display name. Try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _savingDisplayName = false);
+      }
+    }
+  }
 
   Future<void> _handleSignOut() async {
     if (_signingOut) return;
@@ -113,14 +192,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Account',
-                                style: AuratioTypography.bodyMedium.copyWith(
-                                  color: const Color(0xFF111827),
-                                  fontSize: 14,
-                                  height: 20 / 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Account',
+                                    style: AuratioTypography.bodyMedium
+                                        .copyWith(
+                                          color: const Color(0xFF111827),
+                                          fontSize: 14,
+                                          height: 20 / 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                  if (widget.onUpdateDisplayName != null)
+                                    GestureDetector(
+                                      key: SettingsScreen.editDisplayNameKey,
+                                      onTap: _savingDisplayName
+                                          ? null
+                                          : _editDisplayName,
+                                      child: Text(
+                                        _savingDisplayName
+                                            ? 'Saving…'
+                                            : 'Edit name',
+                                        style: AuratioTypography.caption
+                                            .copyWith(
+                                              color:
+                                                  AuratioColors.backgroundBrand,
+                                              fontSize: 11,
+                                              height: 16 / 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                ],
                               ),
                               const SizedBox(height: 8),
                               Text(

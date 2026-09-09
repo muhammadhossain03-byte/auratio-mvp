@@ -40,6 +40,13 @@ class PersistedSettingsRouteScreen extends ConsumerWidget {
     return profile.when(
       data: (value) => SettingsScreen(
         email: value.email,
+        displayName: value.displayName,
+        onUpdateDisplayName: (displayName) async {
+          await ref
+              .read(auratioProfileRepositoryProvider)
+              .updateDisplayName(displayName);
+          ref.invalidate(persistedEndUserProfileProvider);
+        },
         onSignOut: () async {
           await ref.read(authRepositoryProvider).signOut();
           ref.invalidate(persistedEndUserProfileProvider);
