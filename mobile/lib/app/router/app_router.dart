@@ -429,8 +429,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.profileSettings,
-        pageBuilder: (context, state) =>
-            _dissolvePage(key: state.pageKey, child: const SettingsScreen()),
+        pageBuilder: (context, state) => _dissolvePage(
+          key: state.pageKey,
+          child: profileConfigured
+              ? const PersistedSettingsRouteScreen()
+              : const SettingsScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutePaths.managePaths,

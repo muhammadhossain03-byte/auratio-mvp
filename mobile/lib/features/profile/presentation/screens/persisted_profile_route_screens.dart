@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../foundation/design_system/auratio_design_system.dart';
+import '../../../authentication/application/auth_repository_provider.dart';
 import '../../../onboarding/presentation/screens/choose_paths_screen.dart';
 import '../../application/profile_repository_provider.dart';
 import '../../application/profile_state_providers.dart';
 import 'manage_paths_screen.dart';
 import 'profile_screen.dart';
+import 'settings_screen.dart';
 
 class PersistedProfileRouteScreen extends ConsumerWidget {
   const PersistedProfileRouteScreen({super.key});
@@ -23,6 +25,30 @@ class PersistedProfileRouteScreen extends ConsumerWidget {
       loading: () => const _ProfileIntegrationLoading(),
       error: (error, stackTrace) => _ProfileIntegrationError(
         message: _errorMessage(error, 'Unable to load your Auratio profile.'),
+        onRetry: () => ref.invalidate(persistedEndUserProfileProvider),
+      ),
+    );
+  }
+}
+
+class PersistedSettingsRouteScreen extends ConsumerWidget {
+  const PersistedSettingsRouteScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(persistedEndUserProfileProvider);
+    return profile.when(
+      data: (value) => SettingsScreen(
+        email: value.email,
+        onSignOut: () async {
+          await ref.read(authRepositoryProvider).signOut();
+          ref.invalidate(persistedEndUserProfileProvider);
+          ref.invalidate(persistedSelectedPathsProvider);
+        },
+      ),
+      loading: () => const _ProfileIntegrationLoading(),
+      error: (error, stackTrace) => _ProfileIntegrationError(
+        message: _errorMessage(error, 'Unable to load your account settings.'),
         onRetry: () => ref.invalidate(persistedEndUserProfileProvider),
       ),
     );

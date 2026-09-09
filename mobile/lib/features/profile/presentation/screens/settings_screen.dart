@@ -5,8 +5,15 @@ import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
 
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({
+    this.email = 'alex@example.com',
+    this.onSignOut,
+    super.key,
+  });
+
+  final String email;
+  final Future<void> Function()? onSignOut;
 
   static const screenKey = ValueKey('settings-screen');
   static const accountCardKey = ValueKey('settings-account-card');
@@ -21,9 +28,42 @@ class SettingsScreen extends StatelessWidget {
   );
 
   @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _signingOut = false;
+
+  Future<void> _handleSignOut() async {
+    if (_signingOut) return;
+
+    final onSignOut = widget.onSignOut;
+    if (onSignOut == null) {
+      context.go(AppRoutePaths.signIn);
+      return;
+    }
+
+    setState(() => _signingOut = true);
+    try {
+      await onSignOut();
+      if (!mounted) return;
+      context.go(AppRoutePaths.signIn);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to sign out. Try again.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _signingOut = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: screenKey,
+      key: SettingsScreen.screenKey,
       backgroundColor: AuratioColors.backgroundApp,
       body: SafeArea(
         top: false,
@@ -58,7 +98,7 @@ class SettingsScreen extends StatelessWidget {
 
                       // Account Card (y=174, w=350, h=100)
                       SizedBox(
-                        key: accountCardKey,
+                        key: SettingsScreen.accountCardKey,
                         width: double.infinity,
                         height: 100,
                         child: Container(
@@ -84,7 +124,7 @@ class SettingsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Email: alex@example.com',
+                                'Email: ${widget.email}',
                                 style: AuratioTypography.bodySmall.copyWith(
                                   color: const Color(0xFF4E5968),
                                   fontSize: 12,
@@ -111,7 +151,7 @@ class SettingsScreen extends StatelessWidget {
 
                       // Event Discovery Preferences Card (y=292, w=350, h=164)
                       SizedBox(
-                        key: eventPreferencesCardKey,
+                        key: SettingsScreen.eventPreferencesCardKey,
                         width: double.infinity,
                         height: 164,
                         child: Container(
@@ -167,7 +207,7 @@ class SettingsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 3),
                               GestureDetector(
-                                key: managePathsLinkKey,
+                                key: SettingsScreen.managePathsLinkKey,
                                 onTap: () =>
                                     context.push(AppRoutePaths.managePaths),
                                 child: Text(
@@ -189,7 +229,7 @@ class SettingsScreen extends StatelessWidget {
 
                       // Submission Privacy & Retention Card (y=474, w=350, h=154)
                       SizedBox(
-                        key: privacyCardKey,
+                        key: SettingsScreen.privacyCardKey,
                         width: double.infinity,
                         height: 154,
                         child: Container(
@@ -242,7 +282,7 @@ class SettingsScreen extends StatelessWidget {
 
                       // Sign Out Button (y=670, w=350, h=48)
                       SizedBox(
-                        key: signOutVisualKey,
+                        key: SettingsScreen.signOutVisualKey,
                         width: double.infinity,
                         height: 48,
                         child: AuratioButton(
@@ -250,7 +290,7 @@ class SettingsScreen extends StatelessWidget {
                           variant: AuratioButtonVariant.secondary,
                           size: AuratioButtonSize.medium,
                           expand: true,
-                          onPressed: () => context.go(AppRoutePaths.signIn),
+                          onPressed: _signingOut ? null : _handleSignOut,
                         ),
                       ),
 
@@ -258,7 +298,7 @@ class SettingsScreen extends StatelessWidget {
 
                       // Back to Profile CTA (y=730, w=350, h=48)
                       SizedBox(
-                        key: backToProfileButtonKey,
+                        key: SettingsScreen.backToProfileButtonKey,
                         width: double.infinity,
                         height: 48,
                         child: AuratioButton(
