@@ -1,6 +1,7 @@
 export { PortalSignInPage } from './pages/PortalSignInPage'
 export { PortalRoleAuthorizationPage } from './pages/PortalRoleAuthorizationPage'
 export { PortalEmailVerificationPage } from './pages/PortalEmailVerificationPage'
+export { PortalStaffInvitationPage } from './pages/PortalStaffInvitationPage'
 export { PortalAccessUnavailablePage } from './pages/PortalAccessUnavailablePage'
 export { PortalForgotPasswordPage } from './pages/PortalForgotPasswordPage'
 export { PortalResetLinkSentPage } from './pages/PortalResetLinkSentPage'

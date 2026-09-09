@@ -2,27 +2,36 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
+import { createStaffInvitation } from '../../../foundation/integration/auth/staffInvitationService'
+import { portalSupabaseRuntimeMode } from '../../../foundation/integration/supabaseConfig'
 import { getInviteVolunteerTrackDraft, addAdminVolunteer, resetInviteVolunteerTrackDraft } from '../data/mockAdminData'
 import {
   PUBLIC_SPEAKING_TRACKS,
   PROFESSIONAL_PRESENTING_TRACKS,
   CONTENT_CREATION_TRACKS,
+  getTrackSlug,
 } from '../../volunteer/data/canonicalTrackRegistry'
 
 export function AdminInviteVolunteerPage() {
   const navigate = useNavigate()
+  const runtimeMode = portalSupabaseRuntimeMode()
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [nameError, setNameError] = useState('')
   const [emailError, setEmailError] = useState('')
   const [trackError, setTrackError] = useState('')
+  const [submitError, setSubmitError] = useState('')
+  const [sendingInvite, setSendingInvite] = useState(false)
   const inviteTracks = getInviteVolunteerTrackDraft()
 
-  function handleSendInvite() {
+  async function handleSendInvite() {
     let hasError = false
     const trimmedName = displayName.trim()
     if (!trimmedName) {
       setNameError('Display name is required.')
+      hasError = true
+    } else if (trimmedName.length < 2 || trimmedName.length > 80) {
+      setNameError('Display name must be between 2 and 80 characters.')
       hasError = true
     } else {
       setNameError('')
@@ -46,16 +55,42 @@ export function AdminInviteVolunteerPage() {
       setTrackError('')
     }
 
-    if (hasError) return
+    const resolvedTrackIds = inviteTracks.map((track) => getTrackSlug(track))
+    if (resolvedTrackIds.some((trackId) => !trackId)) {
+      setTrackError('One or more selected Tracks are not canonical Auratio Tracks.')
+      hasError = true
+    }
 
-    addAdminVolunteer({
-      name: trimmedName,
-      email: trimmedEmail,
-      selectedTracks: [...inviteTracks],
-    })
+    if (hasError || sendingInvite) return
 
-    resetInviteVolunteerTrackDraft()
-    navigate(portalRoutePaths.admin.volunteers)
+    setSubmitError('')
+    setSendingInvite(true)
+    try {
+      if (runtimeMode === 'configured') {
+        await createStaffInvitation({
+          email: trimmedEmail,
+          displayName: trimmedName,
+          targetRole: 'volunteer',
+          trackIds: resolvedTrackIds as string[],
+        })
+      } else if (runtimeMode === 'prototype') {
+        addAdminVolunteer({
+          name: trimmedName,
+          email: trimmedEmail,
+          selectedTracks: [...inviteTracks],
+        })
+      } else {
+        setSubmitError('Portal integration is unavailable for this build.')
+        return
+      }
+
+      resetInviteVolunteerTrackDraft()
+      navigate(portalRoutePaths.admin.volunteers)
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Unable to send the Volunteer invitation.')
+    } finally {
+      setSendingInvite(false)
+    }
   }
 
   function handleCancel() {
@@ -339,12 +374,18 @@ export function AdminInviteVolunteerPage() {
       >
         <button
           type="button"
-          onClick={handleSendInvite}
+          onClick={() => void handleSendInvite()}
+          disabled={sendingInvite}
           className="auratio-admin-btn auratio-admin-btn--primary"
           style={{ width: '220px', height: '44px', fontSize: '14px', fontWeight: 600 }}
         >
-          Send Volunteer Invite
+          {sendingInvite ? 'Sending Invite…' : 'Send Volunteer Invite'}
         </button>
+        {submitError && (
+          <div role="alert" style={{ marginLeft: '16px', color: '#B42318', fontSize: '12px', maxWidth: '280px' }}>
+            {submitError}
+          </div>
+        )}
         <button
           type="button"
           onClick={handleCancel}

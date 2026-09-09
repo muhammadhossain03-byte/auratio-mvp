@@ -24,7 +24,20 @@ function respond(req: Request, status: number, body: unknown): Response {
 }
 
 function isUuid(value: unknown): value is string {
-  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  return typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function callbackOrigin(req: Request): string {
+  const origin = req.headers.get("origin") ?? "";
+  return allowedOrigins.has(origin) ? origin : "https://auratio.cloud";
+}
+
+function validTrackIds(value: unknown): value is string[] {
+  return Array.isArray(value) &&
+    value.every((entry) =>
+      typeof entry === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry)
+    );
 }
 
 Deno.serve(async (req: Request) => {
@@ -42,7 +55,6 @@ Deno.serve(async (req: Request) => {
   const service = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-
   const { data: authData, error: authError } = await service.auth.getUser(accessToken);
   const actor = authData.user;
   if (authError || !actor) return respond(req, 401, { error: "invalid_session" });
@@ -60,22 +72,64 @@ Deno.serve(async (req: Request) => {
   try {
     if (action === "create_invitation") {
       const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
+      const displayName = typeof payload.display_name === "string" ? payload.display_name.trim() : "";
       const targetRole = payload.target_role;
-      if (!email || !email.includes("@")) return respond(req, 400, { error: "valid_email_required" });
-      if (targetRole !== "admin" && targetRole !== "volunteer") return respond(req, 400, { error: "invalid_target_role" });
+      const trackIds = payload.track_ids ?? [];
 
-      const { data, error } = await service.rpc("svc_staff_create_invitation", {
+      if (!email || !email.includes("@")) return respond(req, 400, { error: "valid_email_required" });
+      if (displayName.length < 2 || displayName.length > 80) return respond(req, 400, { error: "valid_display_name_required" });
+      if (targetRole !== "admin" && targetRole !== "volunteer") return respond(req, 400, { error: "invalid_target_role" });
+      if (!validTrackIds(trackIds)) return respond(req, 400, { error: "invalid_track_ids" });
+      if (targetRole === "volunteer" && trackIds.length < 1) return respond(req, 400, { error: "volunteer_tracks_required" });
+      if (targetRole === "admin" && trackIds.length !== 0) return respond(req, 400, { error: "admin_tracks_not_allowed" });
+
+      const { data, error } = await service.rpc("svc_staff_create_invitation_v2", {
         p_actor_user_id: actor.id,
         p_email: email,
         p_target_role: targetRole,
+        p_display_name: displayName,
+        p_track_ids: trackIds,
       });
       if (error) return respond(req, 403, { error: "staff_operation_rejected", message: error.message });
+
       const row = Array.isArray(data) ? data[0] : data;
+      const invitationId = row?.invitation_id;
+      const invitationToken = row?.invitation_token;
+      const expiresAt = row?.invitation_expires_at;
+      if (
+        typeof invitationId !== "string" ||
+        typeof invitationToken !== "string" ||
+        !/^[0-9a-f]{64}$/.test(invitationToken)
+      ) return respond(req, 500, { error: "invalid_invitation_result" });
+
+      const redirect = new URL("/auth/staff-invitation", callbackOrigin(req));
+      redirect.searchParams.set("token", invitationToken);
+
+      const { error: emailError } = await service.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: redirect.toString(),
+          data: { display_name: displayName },
+        },
+      });
+
+      if (emailError) {
+        await service.rpc("svc_staff_revoke_invitation", {
+          p_actor_user_id: actor.id,
+          p_invitation_id: invitationId,
+        });
+        return respond(req, 502, {
+          error: "invitation_email_failed",
+          message: "The invitation could not be emailed.",
+        });
+      }
+
       return respond(req, 200, {
         ok: true,
-        invitation_id: row?.invitation_id,
-        invitation_token: row?.invitation_token,
-        expires_at: row?.invitation_expires_at,
+        invitation_id: invitationId,
+        expires_at: expiresAt,
+        email_sent: true,
       });
     }
 

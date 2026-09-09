@@ -262,6 +262,7 @@ export async function loadPersistedAdminHumanRequest(
   const [
     { data: versionData, error: versionError },
     { data: volunteerData, error: volunteerError },
+    { data: eligibilityData, error: eligibilityError },
   ] = await Promise.all([
     client
       .from('evaluation_versions')
@@ -276,14 +277,24 @@ export async function loadPersistedAdminHumanRequest(
       .eq('role', 'volunteer')
       .eq('account_status', 'active')
       .order('display_name', { ascending: true }),
+    client
+      .from('volunteer_track_eligibility')
+      .select('volunteer_user_id')
+      .eq('track_id', request.trackId),
   ])
 
   if (versionError || !versionData) {
     throw new PersistedAdminHumanLifecycleError('Latest Human evaluator version is unavailable.')
   }
-  if (volunteerError) {
-    throw new PersistedAdminHumanLifecycleError('Active Volunteer list is unavailable.')
+  if (volunteerError || eligibilityError) {
+    throw new PersistedAdminHumanLifecycleError('Eligible active Volunteer list is unavailable.')
   }
+
+  const eligibleVolunteerIds = new Set(
+    (Array.isArray(eligibilityData) ? eligibilityData : []).map((raw) =>
+      requireString(raw as unknown as RecordLike, 'volunteer_user_id'),
+    ),
+  )
 
   const version = versionData as unknown as RecordLike
   const versionId = requireString(version, 'id')
@@ -303,8 +314,10 @@ export async function loadPersistedAdminHumanRequest(
   const volunteers: PersistedAdminVolunteerOption[] = []
   for (const raw of Array.isArray(volunteerData) ? volunteerData : []) {
     const row = raw as unknown as RecordLike
+    const userId = requireString(row, 'user_id')
+    if (!eligibleVolunteerIds.has(userId)) continue
     volunteers.push({
-      userId: requireString(row, 'user_id'),
+      userId,
       displayName: requireString(row, 'display_name'),
     })
   }

@@ -5,6 +5,7 @@ export const portalRoutePaths = {
     signIn: '/auth/sign-in',
     roleAuthorization: '/auth/role-authorization',
     emailVerification: '/auth/email-verification',
+    staffInvitation: '/auth/staff-invitation',
     accessUnavailable: '/auth/access-unavailable',
     forgotPassword: '/auth/forgot-password',
     resetLinkSent: '/auth/reset-link-sent',

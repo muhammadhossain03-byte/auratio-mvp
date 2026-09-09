@@ -9,6 +9,7 @@ import {
   PortalResetLinkSentPage,
   PortalResetPasswordPage,
   PortalRoleAuthorizationPage,
+  PortalStaffInvitationPage,
   PortalSignInPage,
 } from '../../features/auth'
 import {
@@ -109,6 +110,10 @@ export const router = createBrowserRouter([
   {
     path: portalRoutePaths.authentication.emailVerification,
     element: <PortalEmailVerificationPage />,
+  },
+  {
+    path: portalRoutePaths.authentication.staffInvitation,
+    element: <PortalStaffInvitationPage />,
   },
   {
     path: portalRoutePaths.authentication.accessUnavailable,
