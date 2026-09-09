@@ -70,6 +70,15 @@ Deno.serve(async (req: Request) => {
   if (typeof action !== "string") return respond(req, 400, { error: "action_required" });
 
   try {
+    if (action === "list_volunteer_accounts") {
+      const { data, error } = await service.rpc(
+        "svc_staff_list_volunteer_accounts",
+        { p_actor_user_id: actor.id },
+      );
+      if (error) return respond(req, 403, { error: "staff_operation_rejected", message: error.message });
+      return respond(req, 200, data);
+    }
+
     if (action === "list_admin_accounts") {
       const { data, error } = await service.rpc(
         "svc_staff_list_admin_accounts",
