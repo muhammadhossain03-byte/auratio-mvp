@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/authentication/application/auth_navigation_events.dart';
+import '../features/authentication/application/mobile_session_guard.dart';
 import '../foundation/design_system/auratio_theme.dart';
 import 'router/app_route_paths.dart';
 import 'router/app_router.dart';
@@ -18,6 +19,15 @@ class AuratioApp extends ConsumerWidget {
         switch (event) {
           case AuratioAuthNavigationEvent.passwordRecovery:
             router.go(AppRoutePaths.resetPassword);
+        }
+      });
+    });
+
+    ref.listen(mobileSessionGuardProvider, (previous, next) {
+      next.whenData((event) {
+        switch (event) {
+          case MobileSessionGuardEvent.accessRevoked:
+            router.go(AppRoutePaths.signIn);
         }
       });
     });
