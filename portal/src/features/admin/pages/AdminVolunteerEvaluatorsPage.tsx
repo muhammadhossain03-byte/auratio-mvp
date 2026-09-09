@@ -13,7 +13,7 @@ type Row = {
   id: string;
   name: string;
   eligibility: string;
-  effectiveAvailability: string;
+  availability: string;
   activeAssignments: string;
   lifecycle: string;
   destinationPath: string | null;
@@ -23,7 +23,7 @@ const persisted = (v: PersistedVolunteerDirectoryRow): Row => ({
   id: v.id,
   name: v.displayName,
   eligibility: `${v.trackCount} ${v.trackCount === 1 ? "track" : "tracks"}`,
-  effectiveAvailability: v.effectiveAvailability ?? "—",
+  availability: v.availability ?? "—",
   activeAssignments: v.kind === "profile" ? String(v.activeAssignments) : "—",
   lifecycle: v.lifecycle,
   destinationPath: v.kind === "profile" ? `/admin/volunteers/${v.id}` : null,
@@ -39,7 +39,7 @@ const prototype = (): Row[] =>
     id: `prototype-${i}-${v.name}`,
     name: v.name,
     eligibility: v.tracks,
-    effectiveAvailability: v.effectiveAvailability,
+    availability: v.effectiveAvailability,
     activeAssignments: v.activeAssignments,
     lifecycle: v.lifecycle,
     destinationPath: v.destinationPath,
@@ -157,7 +157,7 @@ export function AdminVolunteerEvaluatorsPage() {
         >
           <div style={{ width: "212px" }}>Name</div>
           <div style={{ width: "250px" }}>Eligibility</div>
-          <div style={{ width: "220px" }}>Effective availability</div>
+          <div style={{ width: "220px" }}>Availability</div>
           <div style={{ width: "170px" }}>Active assignments</div>
           <div style={{ width: "120px" }}>Lifecycle</div>
           <div style={{ width: "68px" }}>Action</div>
@@ -201,7 +201,7 @@ export function AdminVolunteerEvaluatorsPage() {
             >
               <div style={{ width: "212px" }}>{v.name}</div>
               <div style={{ width: "250px" }}>{v.eligibility}</div>
-              <div style={{ width: "220px" }}>{v.effectiveAvailability}</div>
+              <div style={{ width: "220px" }}>{v.availability}</div>
               <div style={{ width: "170px", fontWeight: 600 }}>
                 {v.activeAssignments}
               </div>
@@ -245,9 +245,9 @@ export function AdminVolunteerEvaluatorsPage() {
           Workload boundary
         </div>
         <div style={{ marginTop: "14px", color: "#4E5968" }}>
-          Configured runtime shows persisted accounts, Track eligibility, and
-          assignment counts. Availability is “—” until a persisted availability
-          state exists.
+          Configured runtime shows persisted accounts, Track eligibility,
+          assignment counts, and Volunteer-declared availability. Admins can
+          view availability but cannot change it.
         </div>
       </div>
     </AdminLayout>

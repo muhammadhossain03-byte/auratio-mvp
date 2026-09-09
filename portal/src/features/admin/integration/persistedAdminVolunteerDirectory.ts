@@ -6,7 +6,7 @@ export type PersistedVolunteerDirectoryRow = {
   displayName: string;
   email: string;
   trackCount: number;
-  effectiveAvailability: string | null;
+  availability: string | null;
   activeAssignments: number;
   lifecycle: "Active" | "Deactivated" | "Invited";
 };
@@ -34,10 +34,7 @@ function parseRow(raw: unknown): PersistedVolunteerDirectoryRow {
     displayName: r.display_name,
     email: r.email,
     trackCount: r.track_count,
-    effectiveAvailability:
-      typeof r.effective_availability === "string"
-        ? r.effective_availability
-        : null,
+    availability: typeof r.availability === "string" ? r.availability : null,
     activeAssignments: r.active_assignments,
     lifecycle: r.lifecycle,
   };
@@ -65,6 +62,7 @@ export type PersistedVolunteerAccount = {
   lifecycle: "Active" | "Deactivated";
   tracks: { id: string; name: string }[];
   activeAssignments: number;
+  availability: string | null;
 };
 
 export async function getPersistedVolunteerAccount(
@@ -112,5 +110,6 @@ export async function getPersistedVolunteerAccount(
     lifecycle: r.lifecycle,
     tracks,
     activeAssignments: r.active_assignments,
+    availability: typeof r.availability === "string" ? r.availability : null,
   };
 }

@@ -150,13 +150,11 @@ export function PersistedAdminVolunteerAccountPage() {
           <strong>Active assignments:</strong> {volunteer.activeAssignments}
         </p>
         <p>
-          <strong>Volunteer-declared availability:</strong> —
-        </p>
-        <p>
-          <strong>Effective availability:</strong> —
+          <strong>Availability status:</strong> {volunteer.availability ?? "—"}
         </p>
         <p style={{ color: "#6B788A" }}>
-          Availability is not synthesized from prototype data.
+          Availability is set by the Volunteer. Admins and Super Admins can view
+          it only.
         </p>
       </div>
     </AdminLayout>
