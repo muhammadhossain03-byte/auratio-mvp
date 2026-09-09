@@ -219,136 +219,153 @@ export function PersistedVolunteerScoringPendingPage() {
       <PersistedVolunteerVideoPlayer submissionId={assignment.submissionId} />
 
       <div
-        className="auratio-volunteer-panel"
         style={{
+          position: 'absolute',
           left: '30px',
           top: '474px',
           width: '1076px',
-          minHeight: '720px',
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '22px',
+          paddingBottom: '24px',
           boxSizing: 'border-box',
         }}
       >
-        <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>
-          Criterion scoring
-        </h3>
-        <p style={{ color: 'var(--auratio-neutral-600)' }}>
-          {totals.criterionScoresCount} / 16 criteria saved • score {totals.submissionScore} / 100
-        </p>
+        <div
+          className="auratio-volunteer-panel"
+          style={{
+            position: 'relative',
+            width: '100%',
+            padding: '24px',
+            boxSizing: 'border-box',
+          }}
+        >
+          <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>
+            Criterion scoring
+          </h3>
+          <p style={{ color: 'var(--auratio-neutral-600)' }}>
+            {totals.criterionScoresCount} / 16 criteria saved • score {totals.submissionScore} / 100
+          </p>
 
-        <div style={{ marginTop: '22px' }}>
-          {draft.criteria.map((criterion) => (
-            <div
-              key={criterion.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 150px 110px 160px',
-                gap: '16px',
-                alignItems: 'center',
-                minHeight: '50px',
-                borderTop: '1px solid var(--auratio-neutral-200)',
-              }}
-            >
-              <span>{criterion.name}</span>
-              <span>{criterion.category}</span>
-              <span>
-                {criterion.feedback
-                  ? `${criterion.feedback.score} / ${criterion.maxPoints}`
-                  : `— / ${criterion.maxPoints}`}
-              </span>
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(
-                    `/volunteer/evaluation/${encodedSubmissionId}/criterion/${encodeURIComponent(criterion.id)}`,
-                  )
-                }
-                className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
-                style={{ width: '150px', height: '36px' }}
+          <div style={{ marginTop: '22px' }}>
+            {draft.criteria.map((criterion) => (
+              <div
+                key={criterion.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 150px 110px 160px',
+                  gap: '16px',
+                  alignItems: 'center',
+                  minHeight: '50px',
+                  borderTop: '1px solid var(--auratio-neutral-200)',
+                }}
               >
-                {criterion.feedback ? 'Edit Feedback' : 'Score Criterion'}
-              </button>
-            </div>
-          ))}
+                <span>{criterion.name}</span>
+                <span>{criterion.category}</span>
+                <span>
+                  {criterion.feedback
+                    ? `${criterion.feedback.score} / ${criterion.maxPoints}`
+                    : `— / ${criterion.maxPoints}`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/volunteer/evaluation/${encodedSubmissionId}/criterion/${encodeURIComponent(criterion.id)}`,
+                    )
+                  }
+                  className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
+                  style={{ width: '150px', height: '36px' }}
+                >
+                  {criterion.feedback ? 'Edit Feedback' : 'Score Criterion'}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div
-        className="auratio-volunteer-panel"
-        style={{
-          left: '30px',
-          top: '1218px',
-          width: '1076px',
-          height: '240px',
-          padding: '24px',
-          boxSizing: 'border-box',
-        }}
-      >
-        <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>
-          Overall Summary
-        </h3>
-        <textarea
-          value={summary}
-          disabled={busy}
-          onChange={(event) => setSummary(event.target.value)}
-          aria-label="Overall evaluation summary"
-          style={{ width: '100%', height: '90px', marginTop: '16px', boxSizing: 'border-box' }}
-        />
-        <button
-          type="button"
-          disabled={busy || !summary.trim()}
-          onClick={() => void saveSummary()}
-          className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
-          style={{ width: '180px', height: '40px', marginTop: '12px' }}
+        <div
+          className="auratio-volunteer-panel"
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '240px',
+            padding: '24px',
+            boxSizing: 'border-box',
+          }}
         >
-          Save Summary
-        </button>
-        {message && <span role="status" style={{ marginLeft: '16px' }}>{message}</span>}
-      </div>
+          <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>
+            Overall Summary
+          </h3>
+          <textarea
+            value={summary}
+            disabled={busy}
+            onChange={(event) => setSummary(event.target.value)}
+            aria-label="Overall evaluation summary"
+            style={{ width: '100%', height: '90px', marginTop: '16px', boxSizing: 'border-box' }}
+          />
+          <button
+            type="button"
+            disabled={busy || !summary.trim()}
+            onClick={() => void saveSummary()}
+            className="auratio-volunteer-btn auratio-volunteer-btn--secondary"
+            style={{ width: '180px', height: '40px', marginTop: '12px' }}
+          >
+            Save Summary
+          </button>
+          {message && <span role="status" style={{ marginLeft: '16px' }}>{message}</span>}
+        </div>
 
-      <div
-        className="auratio-volunteer-panel"
-        style={{
-          left: '30px',
-          top: '1480px',
-          width: '1076px',
-          height: '170px',
-          padding: '24px',
-          boxSizing: 'border-box',
-        }}
-      >
-        <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>
-          Review readiness
-        </h3>
-        <p>
-          Universal {totals.universalDelivery}/40 • Structural {totals.structuralFlow}/20 • Track {totals.trackSpecialisation}/40
-        </p>
-        <button
-          type="button"
-          disabled={!totals.isReady}
-          onClick={() => navigate(`/volunteer/evaluation/${encodedSubmissionId}/review`)}
-          className="auratio-volunteer-btn auratio-volunteer-btn--primary"
-          style={{ width: '190px', height: '44px', opacity: totals.isReady ? 1 : 0.45 }}
+        <div
+          className="auratio-volunteer-panel"
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '170px',
+            padding: '24px',
+            boxSizing: 'border-box',
+          }}
         >
-          Review & Submit
-        </button>
-      </div>
-      <div
-        className="auratio-volunteer-panel"
-        style={{ left: '30px', top: '1672px', width: '1076px', height: '190px', padding: '24px', boxSizing: 'border-box' }}
-      >
-        <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>Return Assignment</h3>
-        <textarea
-          value={returnReason}
-          disabled={busy}
-          onChange={(event) => setReturnReason(event.target.value)}
-          placeholder="Returning discards the editable draft; reason required"
-          aria-label="Return in-progress assignment reason"
-          style={{ width: '720px', height: '58px', marginTop: '10px', boxSizing: 'border-box' }}
-        />
-        <button type="button" disabled={busy || !returnReason.trim()} onClick={() => void returnAssignment()} className="auratio-volunteer-btn auratio-volunteer-btn--secondary" style={{ width: '170px', height: '40px', marginLeft: '14px' }}>
-          Return Assignment
-        </button>
+          <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>
+            Review readiness
+          </h3>
+          <p>
+            Universal {totals.universalDelivery}/40 • Structural {totals.structuralFlow}/20 • Track {totals.trackSpecialisation}/40
+          </p>
+          <button
+            type="button"
+            disabled={!totals.isReady}
+            onClick={() => navigate(`/volunteer/evaluation/${encodedSubmissionId}/review`)}
+            className="auratio-volunteer-btn auratio-volunteer-btn--primary"
+            style={{ width: '190px', height: '44px', opacity: totals.isReady ? 1 : 0.45 }}
+          >
+            Review & Submit
+          </button>
+        </div>
+
+        <div
+          className="auratio-volunteer-panel"
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '190px',
+            padding: '24px',
+            boxSizing: 'border-box',
+          }}
+        >
+          <h3 className="auratio-volunteer-panel-title" style={{ position: 'static' }}>Return Assignment</h3>
+          <textarea
+            value={returnReason}
+            disabled={busy}
+            onChange={(event) => setReturnReason(event.target.value)}
+            placeholder="Returning discards the editable draft; reason required"
+            aria-label="Return in-progress assignment reason"
+            style={{ width: '720px', height: '58px', marginTop: '10px', boxSizing: 'border-box' }}
+          />
+          <button type="button" disabled={busy || !returnReason.trim()} onClick={() => void returnAssignment()} className="auratio-volunteer-btn auratio-volunteer-btn--secondary" style={{ width: '170px', height: '40px', marginLeft: '14px' }}>
+            Return Assignment
+          </button>
+        </div>
       </div>
     </VolunteerLayout>
   )
