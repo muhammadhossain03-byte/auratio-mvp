@@ -726,39 +726,46 @@ async function processJob(
   }
 }
 
+function readSupabaseBackendSecretKey(): string | null {
+  const rawSecretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
+
+  if (rawSecretKeys) {
+    try {
+      const parsed = JSON.parse(rawSecretKeys) as Record<string, unknown>;
+      const defaultKey = parsed.default;
+      if (typeof defaultKey === "string" && defaultKey.trim()) {
+        return defaultKey.trim();
+      }
+    } catch {
+      // Fall through to the compatibility environment variable.
+    }
+  }
+
+  const fallback = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
+  return fallback || null;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return jsonResponse(405, { error: "method_not_allowed" });
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceKey = readSupabaseBackendSecretKey();
   const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 
-  if (!supabaseUrl || !serviceRoleKey || !geminiApiKey) {
+  if (!supabaseUrl || !serviceKey || !geminiApiKey) {
     return jsonResponse(500, { error: "server_configuration_error" });
   }
 
-  // The Supabase platform `verify_jwt` gate cryptographically validates the
-  // legacy JWT before this handler runs. The worker then authorizes only a
-  // validated JWT whose Postgres role claim is exactly `service_role`.
-  const authorization = req.headers.get("Authorization") ?? "";
-  const token = authorization.replace(/^Bearer\s+/i, "");
-  let callerRole = "";
+  // This worker is service-to-service. Hosted deployment must use
+  // verify_jwt=false because modern Supabase sb_secret_ API keys are not JWTs.
+  // The backend caller authenticates with the secret key in the apikey header.
+  const callerApiKey = (req.headers.get("apikey") ?? "").trim();
 
-  try {
-    const payloadPart = token.split(".")[1] ?? "";
-    const normalized = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-    const payload = JSON.parse(atob(padded)) as Record<string, unknown>;
-    callerRole = typeof payload.role === "string" ? payload.role : "";
-  } catch {
-    callerRole = "";
+  if (!callerApiKey || callerApiKey !== serviceKey) {
+    return jsonResponse(403, { error: "secret_api_key_required" });
   }
 
-  if (callerRole !== "service_role") {
-    return jsonResponse(403, { error: "service_role_jwt_required" });
-  }
-
-  const service = createClient(supabaseUrl, serviceRoleKey, {
+  const service = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
