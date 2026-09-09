@@ -79,6 +79,16 @@ Deno.serve(async (req: Request) => {
       return respond(req, 200, data);
     }
 
+    if (action === "get_volunteer_account") {
+      if (!isUuid(payload.user_id)) return respond(req, 400, { error: "valid_user_id_required" });
+      const { data, error } = await service.rpc(
+        "svc_staff_get_volunteer_account",
+        { p_actor_user_id: actor.id, p_volunteer_user_id: payload.user_id },
+      );
+      if (error) return respond(req, 403, { error: "staff_operation_rejected", message: error.message });
+      return respond(req, 200, data);
+    }
+
     if (action === "list_admin_accounts") {
       const { data, error } = await service.rpc(
         "svc_staff_list_admin_accounts",
