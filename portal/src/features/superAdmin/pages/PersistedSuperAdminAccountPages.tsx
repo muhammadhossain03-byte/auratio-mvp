@@ -6,6 +6,7 @@ import { SuperAdminLayout } from "../components/SuperAdminLayout";
 import {
   deactivatePersistedAdminAccount,
   getPersistedAdminAccount,
+  reactivatePersistedAdminAccount,
   listPersistedAdminAccounts,
   updatePersistedAdminDisplayName,
   type PersistedSuperAdminAccount,
@@ -241,6 +242,7 @@ export function ConfiguredSuperAdminAccountPage() {
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -314,6 +316,33 @@ export function ConfiguredSuperAdminAccountPage() {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleReactivate() {
+    const currentAccount = account;
+    if (
+      !currentAccount ||
+      currentAccount.kind !== "profile" ||
+      currentAccount.status !== "Deactivated" ||
+      reactivating
+    ) {
+      return;
+    }
+
+    setError("");
+    setReactivating(true);
+    try {
+      await reactivatePersistedAdminAccount(currentAccount);
+      navigate(portalRoutePaths.superAdmin.adminAccounts);
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Unable to reactivate Admin account.",
+      );
+    } finally {
+      setReactivating(false);
     }
   }
 
@@ -449,7 +478,18 @@ export function ConfiguredSuperAdminAccountPage() {
               ? "Account deactivated"
               : "Account active"}
         </div>
-        {account.status !== "Deactivated" && (
+        {account.status === "Deactivated" ? (
+          <button
+            type="button"
+            data-testid="persisted-admin-reactivate"
+            className="auratio-admin-btn auratio-admin-btn--primary"
+            disabled={reactivating}
+            onClick={() => void handleReactivate()}
+            style={{ marginTop: "28px", width: "190px", height: "44px" }}
+          >
+            {reactivating ? "Reactivating…" : "Reactivate"}
+          </button>
+        ) : (
           <button
             type="button"
             className="auratio-admin-btn auratio-admin-btn--secondary"

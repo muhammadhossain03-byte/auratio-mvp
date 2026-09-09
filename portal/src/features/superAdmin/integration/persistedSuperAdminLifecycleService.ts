@@ -167,3 +167,29 @@ export async function deactivatePersistedAdminAccount(
     )
   }
 }
+export async function reactivatePersistedAdminAccount(
+  account: PersistedSuperAdminAccount,
+): Promise<void> {
+  if (account.isRoot) {
+    throw new PersistedSuperAdminLifecycleError(
+      'The protected root account lifecycle cannot be changed.',
+    )
+  }
+  if (account.kind !== 'profile') {
+    throw new PersistedSuperAdminLifecycleError(
+      'Only an existing Admin account can be reactivated.',
+    )
+  }
+
+  const data = await invokeStaffAdmin({
+    action: 'set_account_status',
+    user_id: account.id,
+    status: 'active',
+  })
+
+  if (data.ok !== true) {
+    throw new PersistedSuperAdminLifecycleError(
+      'Unable to reactivate the Admin account.',
+    )
+  }
+}
