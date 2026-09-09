@@ -1,0 +1,10 @@
+{
+  "name": "Auratio",
+  "short_name": "Auratio",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0B1F33",
+  "description": "Auratio — Where Greats Orate.",
+  "orientation": "portrait-primary"
+}
