@@ -1,3 +1,108 @@
+## CURRENT RESUME OVERRIDE — 2026-09-10
+
+This section supersedes stale checkpoint/step wording later in this file.
+
+### Current repository checkpoint
+- Repository: `muhammadhossain03-byte/auratio-mvp`
+- Branch: `step-vii/api-client-ai-integration`
+- Accepted implementation checkpoint immediately before this documentation update:
+  `4566bf6a9d703660ef3f344699ffe642e98060f7`
+  — `fix(step-vii): persist Volunteer availability`
+- Step VII remains **IN PROGRESS**.
+
+### Current development backend
+Development/runtime QA uses the persistent Supabase TEST project:
+
+- Name: `Auratio VII-C Test`
+- Project ref: `dboyrlgzifpffnsznvde`
+
+Docker/local Supabase is NOT the current development QA architecture.
+
+Antigravity has NO Supabase access. Antigravity must never claim to deploy, query, reset, migrate, configure, or inspect Supabase.
+
+ChatGPT handles TEST-project:
+- migrations;
+- Edge Function deployment;
+- SQL/database inspection;
+- Auth/backend configuration;
+- Security Advisor/RLS checks;
+- runtime backend QA.
+
+Production Supabase is not the default development QA target.
+
+### Current development method
+Auratio is currently undergoing **live configured integration QA + targeted hardening**.
+
+The user is testing the real localhost portal against persisted TEST-backend data.
+
+Loop:
+1. User exercises one real UI flow.
+2. ChatGPT classifies the result/defect.
+3. ChatGPT authors the exact implementation package.
+4. Antigravity applies/tests/commits/pushes repository changes.
+5. ChatGPT independently audits GitHub.
+6. ChatGPT deploys/queries TEST Supabase where required.
+7. User retests the affected UI flow.
+
+### Latest accepted configured behavior
+Admin / Super Admin:
+- persisted Auth and role routing work;
+- Super Admin identity remains Super Admin on operational routes;
+- ordinary Admin invitation/activation works;
+- Admin display-name update works;
+- Admin deactivation works;
+- Admin reactivation works;
+- deactivated Admin is denied portal access.
+
+Volunteer:
+- real Volunteer invitation works;
+- at least one Track is mandatory;
+- TEST Volunteer accepted the invitation;
+- TEST Volunteer is authorized for Extempore only;
+- persisted Volunteer directory replaces prototype fixtures;
+- lifecycle transitions Invited -> Active correctly;
+- Admin and Super Admin can open the same persisted Volunteer UUID/detail;
+- persisted active-assignment count is visible;
+- Volunteer-declared availability is persisted.
+
+### Locked Volunteer availability rule
+Availability is Volunteer-controlled.
+
+Admin and Super Admin:
+- may VIEW the Volunteer's availability;
+- may NOT change or override it.
+
+Configured runtime must not expose the old prototype staff-override behavior.
+
+Latest accepted implementation:
+`4566bf6a9d703660ef3f344699ffe642e98060f7`
+
+### Gemini warning
+Gemini/provider integration has had runtime/provider/video-transport issues.
+
+A signed-HTTPS-URL video-transport correction exists in the repository, but repository implementation does NOT prove live Gemini evaluation works end-to-end.
+
+A fresh chat must inspect current Gemini provider code and TEST runtime evidence before claiming AI evaluation works.
+
+Preserve:
+- one Gemini attempt only;
+- no automatic retry;
+- no Admin rerun;
+- no automatic AI-failure -> Human fallback;
+- explicit End-User consent is the only AI-requested -> Human redirect;
+- server-side Auratio validation remains authoritative.
+
+### Fresh-chat read order
+Read first:
+1. `AGENTS.md`
+2. `docs/CURRENT.md`
+3. `docs/Project-Status-2026-09-10-v18.md`
+
+Then verify the current remote branch HEAD before doing anything else.
+
+Do not restart VII-C or repeat accepted E2H3-E2H7 work unless performing regression QA.
+
+
 # AGENTS.md — Auratio
 
 ## Authority

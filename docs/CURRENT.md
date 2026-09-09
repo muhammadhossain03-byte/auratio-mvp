@@ -1,3 +1,47 @@
+## CURRENT RESUME CHECKPOINT — 2026-09-10
+
+**Current phase:** Step VII configured integration live QA + targeted hardening.
+
+**Branch:** `step-vii/api-client-ai-integration`
+
+**Accepted implementation checkpoint immediately before this documentation update:**
+
+`4566bf6a9d703660ef3f344699ffe642e98060f7`
+— `fix(step-vii): persist Volunteer availability`
+
+The newer status file for fresh-chat continuation is:
+
+`Project-Status-2026-09-10-v18.md`
+
+Read it before relying on older Step-VII status/handoff wording below.
+
+### Runtime QA environment
+Use persistent Supabase TEST project:
+
+`Auratio VII-C Test` (`dboyrlgzifpffnsznvde`)
+
+Do NOT require Docker/local Supabase.
+
+Antigravity has no Supabase access. ChatGPT owns TEST Supabase deployment/query/runtime verification.
+
+### Current QA model
+We are performing real localhost portal QA against persisted TEST-backend state.
+
+User tests one flow -> ChatGPT diagnoses/authors exact change -> Antigravity mechanically applies/tests/commits/pushes -> ChatGPT audits GitHub and TEST Supabase -> user retests.
+
+### Latest live-QA closure
+Configured Volunteer availability is now persisted.
+
+Volunteer controls availability.
+
+Admin/Super Admin may view it only; they cannot change or override it.
+
+### Gemini
+Do not mark live Gemini AI evaluation complete.
+
+Provider/video-transport issues occurred. Signed-URL provider work exists, but real end-to-end Gemini evaluation remains an explicit proof requirement.
+
+
 # Auratio Current Documentation Index
 
 **Date:** 2026-09-08
