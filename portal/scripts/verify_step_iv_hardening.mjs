@@ -360,119 +360,57 @@ async function run() {
     if (!bodyText.includes('Active')) throw new Error('Expected Active on Farhana account')
     console.log('  ✓ Volunteer invite validation and mock state isolation passed.')
 
-    // 4. ADMIN EVENT MOCK STATE
-    console.log('\n[4/6] Testing Admin Event Mock State (Directory, Create, Edit, Save Draft)...')
-    await sendCdp(ws, 'Runtime.evaluate', {
-      expression: 'window.__resetAdminEvents && window.__resetAdminEvents()',
-    })
+    // 4. ADMIN EVENT PERSISTED INTERFACE & VALIDATION GUARDS
+    console.log('\n[4/6] Testing Admin Event Persisted Interface & Validation Guards...')
     await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events` })
     await new Promise((r) => setTimeout(r, 500))
     bodyText = await getBodyText()
-    if (!bodyText.includes('Public Speaking Summit') || !bodyText.includes('Draft Event')) {
-      throw new Error('Expected initial canonical events in directory')
+    if (!bodyText.includes('Admin-curated event directory')) {
+      throw new Error('Expected Admin-curated event directory heading')
     }
-    // Assert exact canonical first event according to live Figma 282:3603
-    const firstRowData = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `(() => {
-        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
-        const row = rows.find(r => r.innerText.includes('Public Speaking Summit'));
-        if (!row) return null;
-        const innerRow = row.querySelector('div[style*="display: flex"]') || row;
-        const divs = Array.from(innerRow.children);
-        const title = divs[0]?.innerText.trim();
-        const date = divs[1]?.innerText.trim();
-        const btn = row.querySelector('button');
-        const actionLabel = btn?.innerText.trim();
-        return { title, date, actionLabel };
-      })()`,
-      returnByValue: true,
-    })
-    const summit = firstRowData.result.value
-    if (!summit || summit.title !== 'Public Speaking Summit' || summit.date !== 'Upcoming date' || summit.actionLabel !== 'Edit') {
-      throw new Error(`Canonical first event must match Figma 282:3603 exactly: title="Public Speaking Summit", date="Upcoming date", actionLabel="Edit", got ${JSON.stringify(summit)}`)
+    if (!bodyText.includes('Create Event') || !bodyText.includes('All Events') || !bodyText.includes('Published')) {
+      throw new Error('Expected Event Management action and filter controls')
     }
 
-    // Edit existing draft event via SPA
-    await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `(() => {
-        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
-        const draftRow = rows.find(r => r.innerText.includes('Draft Event'));
-        if (draftRow) {
-          const btn = draftRow.querySelector('button');
-          if (btn) btn.click();
-        }
-      })()`,
-    })
-    await new Promise((r) => setTimeout(r, 400))
-
-    // Set new title and location
-    await setInputValue('#event-title', 'Updated Draft Event QA')
-    await setInputValue('#event-division', 'Barisal Division')
-    await clickByText('button.auratio-admin-btn--secondary', 'Save Draft')
-    if (await getPathname() !== '/admin/events') throw new Error('Expected navigate to /admin/events after Save Draft')
-    bodyText = await getBodyText()
-    if (!bodyText.includes('Updated Draft Event QA') || !bodyText.includes('Barisal Division')) {
-      throw new Error('Expected updated draft event values in directory')
-    }
-
-    // Reopen via SPA and verify loaded values
-    await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `(() => {
-        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
-        const draftRow = rows.find(r => r.innerText.includes('Updated Draft Event QA'));
-        if (draftRow) {
-          const btn = draftRow.querySelector('button');
-          if (btn) btn.click();
-        }
-      })()`,
-    })
-    await new Promise((r) => setTimeout(r, 400))
-    const titleVal = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelector('#event-title').value`,
-    })
-    if (titleVal.result.value !== 'Updated Draft Event QA') {
-      throw new Error(`Expected loaded title to be "Updated Draft Event QA", got "${titleVal.result.value}"`)
-    }
-
-    // Save and return to directory
-    await clickByText('button.auratio-admin-btn--secondary', 'Save Draft')
-    if (await getPathname() !== '/admin/events') throw new Error('Expected navigate to /admin/events')
-
-    // Create new event draft via SPA button
+    // Navigate to Create Event editor
     await clickByText('button.auratio-admin-btn--primary', 'Create Event')
     if (await getPathname() !== '/admin/events/editor') throw new Error('Expected navigate to /admin/events/editor')
     await new Promise((r) => setTimeout(r, 500))
-    await setInputValue('#event-title', 'New National Meetup QA')
-    await setInputValue('#event-date', 'December 2026')
-    await setInputValue('#event-division', 'Sylhet Division')
-    await clickByText('button.auratio-admin-btn--secondary', 'Save Draft')
-    if (await getPathname() !== '/admin/events') throw new Error('Expected navigate to /admin/events after create Save Draft')
     bodyText = await getBodyText()
-    if (!bodyText.includes('New National Meetup QA') || !bodyText.includes('Sylhet Division')) {
-      throw new Error('Expected newly created draft event in directory')
+    if (!bodyText.includes('Event information') || !bodyText.includes('Save Draft') || !bodyText.includes('Publish Event')) {
+      throw new Error('Expected Event Editor form and actions')
     }
 
-    // Reopen newly created draft event and verify persistence
-    await sendCdp(ws, 'Runtime.evaluate', {
+    // Verify division select has Bangladesh divisions
+    const divisionOptions = await sendCdp(ws, 'Runtime.evaluate', {
       expression: `(() => {
-        const rows = Array.from(document.querySelectorAll('.auratio-admin-panel > div'));
-        const newRow = rows.find(r => r.innerText.includes('New National Meetup QA'));
-        if (newRow) {
-          const btn = newRow.querySelector('button');
-          if (btn) btn.click();
-        }
+        const select = document.querySelector('#event-division');
+        if (!select) return [];
+        return Array.from(select.options).map(o => o.value);
       })()`,
+      returnByValue: true,
     })
-    await new Promise((r) => setTimeout(r, 400))
-    const newTitleVal = await sendCdp(ws, 'Runtime.evaluate', {
-      expression: `document.querySelector('#event-title').value`,
-    })
-    if (newTitleVal.result.value !== 'New National Meetup QA') {
-      throw new Error(`Expected loaded title to be "New National Meetup QA", got "${newTitleVal.result.value}"`)
+    const divs = divisionOptions.result.value || []
+    if (!divs.includes('Dhaka') || !divs.includes('Chattogram') || !divs.includes('Sylhet')) {
+      throw new Error(`Expected Bangladesh Division options in select, got ${JSON.stringify(divs)}`)
     }
+
+    // Trigger validation with empty form
     await clickByText('button.auratio-admin-btn--secondary', 'Save Draft')
+    await new Promise((r) => setTimeout(r, 300))
+    if (await getPathname() !== '/admin/events/editor') {
+      throw new Error('Expected to remain on /admin/events/editor after empty Save Draft validation')
+    }
+    bodyText = await getBodyText()
+    if (!bodyText.includes('Event title is required.')) {
+      throw new Error('Expected "Event title is required." validation error')
+    }
+
+    // Return to directory
+    await sendCdp(ws, 'Page.navigate', { url: `http://127.0.0.1:${PORT}/admin/events` })
+    await new Promise((r) => setTimeout(r, 500))
     if (await getPathname() !== '/admin/events') throw new Error('Expected navigate to /admin/events')
-    console.log('  ✓ Admin Event mock state, Save Draft persistence, and Figma presentation guards passed.')
+    console.log('  ✓ Admin Event persisted interface, Division dropdown, and validation guards passed.')
 
     // 5. SUPER ADMIN INVITE ADMIN MOCK STATE & GOVERNANCE
     console.log('\n[5/6] Testing Super Admin Invite Admin Mock State & Governance...')

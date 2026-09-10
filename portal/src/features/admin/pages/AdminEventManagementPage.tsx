@@ -1,14 +1,40 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminLayout } from '../components/AdminLayout'
 import { portalRoutePaths } from '../../../app/routes/routePaths'
-import { getAdminEventsList } from '../data/mockAdminData'
+import {
+  formatDisplayDate,
+  formatEventStatus,
+  listPersistedAdminEvents,
+  type PersistedAdminEvent,
+} from '../integration/persistedAdminEvents'
 
 export function AdminEventManagementPage() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState<'all' | 'published'>('all')
-  const allEvents = getAdminEventsList()
-  const events = filter === 'published' ? allEvents.filter((ev) => ev.status === 'Published') : allEvents
+  const [events, setEvents] = useState<PersistedAdminEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const loadEvents = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const data = await listPersistedAdminEvents()
+      setEvents(data)
+    } catch {
+      setError('Unable to load events.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadEvents()
+  }, [loadEvents])
+
+  const filteredEvents =
+    filter === 'published' ? events.filter((ev) => ev.status === 'published') : events
 
   return (
     <AdminLayout
@@ -109,8 +135,46 @@ export function AdminEventManagementPage() {
           <div style={{ width: '40px', textAlign: 'right' }}>ACTIONS</div>
         </div>
 
-        {/* Rows */}
-        {events.length === 0 ? (
+        {/* Rows or State */}
+        {loading ? (
+          <div
+            data-testid="admin-events-loading"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '180px',
+              fontSize: '12px',
+              color: '#6B788A',
+            }}
+          >
+            Loading events…
+          </div>
+        ) : error ? (
+          <div
+            data-testid="admin-events-error"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '180px',
+              fontSize: '12px',
+              color: '#B42318',
+              gap: '10px',
+            }}
+          >
+            <span>Unable to load events.</span>
+            <button
+              type="button"
+              onClick={loadEvents}
+              className="auratio-admin-btn auratio-admin-btn--secondary"
+              style={{ height: '32px', fontSize: '11px', padding: '0 16px' }}
+            >
+              Retry
+            </button>
+          </div>
+        ) : filteredEvents.length === 0 ? (
           <div
             data-testid="admin-events-empty"
             style={{
@@ -125,72 +189,80 @@ export function AdminEventManagementPage() {
             No events found for this filter.
           </div>
         ) : (
-          events.map((ev, idx) => (
-          <div key={ev.id} data-event-id={ev.id} data-testid={`admin-event-row-${ev.id}`}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                height: '46px',
-                marginTop: idx === 0 ? '14px' : '18px',
-              }}
-            >
-              <div style={{ width: '280px', fontSize: '11px', fontWeight: 600, color: '#111827' }}>
-                {ev.title}
-              </div>
-              <div style={{ width: '160px', fontSize: '11px', fontWeight: 400, color: '#111827' }}>
-                {ev.date}
-              </div>
-              <div style={{ width: '190px', fontSize: '11px', fontWeight: 400, color: '#111827' }}>
-                {ev.location}
-              </div>
-              <div style={{ width: '250px', fontSize: '11px', fontWeight: 400, color: '#111827' }}>
-                {ev.relevantPaths}
-              </div>
-              <div style={{ width: '100px' }}>
+          filteredEvents.map((ev, idx) => {
+            const statusLabel = formatEventStatus(ev.status)
+            const locationDisplay = ev.division.includes('Division')
+              ? ev.division
+              : `${ev.division} Division`
+
+            return (
+              <div key={ev.id} data-event-id={ev.id} data-testid={`admin-event-row-${ev.id}`}>
                 <div
-                  className={`auratio-admin-status-pill ${
-                    ev.status === 'Published'
-                      ? 'auratio-admin-status-pill--published'
-                      : 'auratio-admin-status-pill--draft'
-                  }`}
-                  style={{ width: '88px', height: '28px' }}
-                >
-                  {ev.status}
-                </div>
-              </div>
-              <div style={{ width: '40px', textAlign: 'right' }}>
-                <button
-                  type="button"
-                  onClick={() => navigate(ev.destinationPath)}
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: '#041B3B',
-                    fontFamily: 'inherit',
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '46px',
+                    marginTop: idx === 0 ? '14px' : '18px',
                   }}
                 >
-                  {ev.actionLabel}
-                </button>
-              </div>
-            </div>
+                  <div style={{ width: '280px', fontSize: '11px', fontWeight: 600, color: '#111827' }}>
+                    {ev.title}
+                  </div>
+                  <div style={{ width: '160px', fontSize: '11px', fontWeight: 400, color: '#111827' }}>
+                    {formatDisplayDate(ev.startsAt)}
+                  </div>
+                  <div style={{ width: '190px', fontSize: '11px', fontWeight: 400, color: '#111827' }}>
+                    {locationDisplay}
+                  </div>
+                  <div style={{ width: '250px', fontSize: '11px', fontWeight: 400, color: '#111827' }}>
+                    {ev.relevantPaths}
+                  </div>
+                  <div style={{ width: '100px' }}>
+                    <div
+                      className={`auratio-admin-status-pill ${
+                        ev.status === 'published'
+                          ? 'auratio-admin-status-pill--published'
+                          : 'auratio-admin-status-pill--draft'
+                      }`}
+                      style={{ width: '88px', height: '28px' }}
+                    >
+                      {statusLabel}
+                    </div>
+                  </div>
+                  <div style={{ width: '40px', textAlign: 'right' }}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`${portalRoutePaths.admin.eventEditor}?id=${ev.id}`)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: '#041B3B',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
 
-            {idx < events.length - 1 && (
-              <div
-                style={{
-                  width: '1020px',
-                  height: '1px',
-                  backgroundColor: '#DCE3ED',
-                  marginTop: '10px',
-                }}
-              />
-            )}
-          </div>
-        )))}
+                {idx < filteredEvents.length - 1 && (
+                  <div
+                    style={{
+                      width: '1020px',
+                      height: '1px',
+                      backgroundColor: '#DCE3ED',
+                      marginTop: '10px',
+                    }}
+                  />
+                )}
+              </div>
+            )
+          })
+        )}
       </div>
 
       {/* Locked Bangladesh relevance card */}
