@@ -96,41 +96,101 @@ function labelParagraph(label: string, value: string, positive = false): Paragra
   });
 }
 
-function criterionBlock(item: Record<string, unknown>): (Paragraph | Table)[] {
+function criterionBlock(item: Record<string, unknown>): Table {
   const score = Number(item.score);
   const max = Number(item.max_points);
   const timestamp = formatDuration(item.primary_timestamp_seconds);
   const heading = `${asText(item.criterion_name)}  —  ${score}/${max}`;
 
-  return [
-    new Paragraph({
-      heading: HeadingLevel.HEADING_3,
-      keepNext: true,
-      spacing: { before: 160, after: 90 },
-      children: [new TextRun({ text: heading, bold: true, font: "Inter", color: BRAND_DARK, size: 23 })],
-    }),
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: {
-        top: { style: BorderStyle.SINGLE, size: 2, color: BRAND_ACCENT },
-        bottom: { style: BorderStyle.SINGLE, size: 2, color: BRAND_ACCENT },
-        left: { style: BorderStyle.SINGLE, size: 2, color: BRAND_ACCENT },
-        right: { style: BorderStyle.SINGLE, size: 2, color: BRAND_ACCENT },
-        insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "D9E4EF" },
-        insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "D9E4EF" },
+  const headingParagraph = new Paragraph({
+    heading: HeadingLevel.HEADING_3,
+    keepNext: true,
+    spacing: { before: 160, after: 90 },
+    children: [
+      new TextRun({
+        text: heading,
+        bold: true,
+        font: "Inter",
+        color: BRAND_DARK,
+        size: 23,
+      }),
+    ],
+  });
+
+  const anchorTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 2, color: BRAND_ACCENT },
+      bottom: { style: BorderStyle.SINGLE, size: 2, color: BRAND_ACCENT },
+      left: { style: BorderStyle.SINGLE, size: 2, color: BRAND_ACCENT },
+      right: { style: BorderStyle.SINGLE, size: 2, color: BRAND_ACCENT },
+      insideHorizontal: {
+        style: BorderStyle.SINGLE,
+        size: 1,
+        color: "D9E4EF",
       },
-      rows: [
-        new TableRow({
-          cantSplit: true,
-          children: [cell("Anchor", true, LIGHT), cell(asText(item.anchor)), cell("Primary timestamp", true, LIGHT), cell(timestamp)],
-        }),
-      ],
-    }),
-    labelParagraph("Evidence / Observation", asText(item.evidence)),
-    labelParagraph("Strength", asText(item.strength), true),
-    labelParagraph("Weakness", asText(item.weakness)),
-    labelParagraph("Actionable Improvement", asText(item.actionable_improvement)),
-  ];
+      insideVertical: {
+        style: BorderStyle.SINGLE,
+        size: 1,
+        color: "D9E4EF",
+      },
+    },
+    rows: [
+      new TableRow({
+        cantSplit: true,
+        children: [
+          cell("Anchor", true, LIGHT),
+          cell(asText(item.anchor)),
+          cell("Primary timestamp", true, LIGHT),
+          cell(timestamp),
+        ],
+      }),
+    ],
+  });
+
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: {
+      top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      insideHorizontal: {
+        style: BorderStyle.NONE,
+        size: 0,
+        color: "FFFFFF",
+      },
+      insideVertical: {
+        style: BorderStyle.NONE,
+        size: 0,
+        color: "FFFFFF",
+      },
+    },
+    rows: [
+      new TableRow({
+        cantSplit: true,
+        children: [
+          new TableCell({
+            margins: { top: 0, bottom: 0, left: 0, right: 0 },
+            children: [
+              headingParagraph,
+              anchorTable,
+              labelParagraph(
+                "Evidence / Observation",
+                asText(item.evidence),
+              ),
+              labelParagraph("Strength", asText(item.strength), true),
+              labelParagraph("Weakness", asText(item.weakness)),
+              labelParagraph(
+                "Actionable Improvement",
+                asText(item.actionable_improvement),
+              ),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
 }
 
 async function renderReport(payload: Record<string, unknown>): Promise<Uint8Array> {
@@ -232,10 +292,13 @@ async function renderReport(payload: Record<string, unknown>): Promise<Uint8Arra
   for (const category of ["universal_delivery", "structural_flow", "track_specialisation"]) {
     children.push(new Paragraph({
       heading: HeadingLevel.HEADING_1,
+      keepNext: true,
       spacing: { before: 360, after: 100 },
       children: [new TextRun({ text: sectionTitles[category], bold: true, font: "Inter", size: 28, color: BRAND_DARK })],
     }));
-    for (const item of grouped.get(category) ?? []) children.push(...criterionBlock(item));
+    for (const item of grouped.get(category) ?? []) {
+      children.push(criterionBlock(item));
+    }
   }
 
   children.push(new Paragraph({
