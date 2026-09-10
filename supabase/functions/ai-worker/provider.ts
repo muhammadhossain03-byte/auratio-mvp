@@ -1,6 +1,6 @@
 export const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 export const GEMINI_API_REVISION = "2026-05-20";
-export const GEMINI_MODEL = "gemini-3.8-flash";
+export const GEMINI_MODEL = "gemini-3.6-flash";
 
 export const SYSTEM_PROMPT = `# Auratio AI Evaluator — System Prompt v1.0
 
