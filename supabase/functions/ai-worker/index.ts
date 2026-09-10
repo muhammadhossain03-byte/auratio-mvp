@@ -20,6 +20,68 @@ type SupabaseService = ReturnType<typeof createClient>;
 const FILE_POLL_SECONDS = 5;
 const INTERACTION_POLL_SECONDS = 15;
 
+async function scheduleNextWorkerWake(
+  service: SupabaseService,
+  supabaseUrl: string,
+  serviceKey: string,
+): Promise<void> {
+  const { data, error } = await service.rpc(
+    "svc_ai_provider_next_wake_seconds",
+  );
+
+  if (error) {
+    console.error("ai_worker_next_wake_read_failed", {
+      message: error.message,
+    });
+    return;
+  }
+
+  if (data == null) return;
+
+  const parsedDelay = Number(data);
+  if (!Number.isFinite(parsedDelay)) {
+    console.error("ai_worker_next_wake_invalid");
+    return;
+  }
+
+  const delaySeconds = Math.min(
+    Math.max(Math.ceil(parsedDelay), 1),
+    60,
+  );
+
+  EdgeRuntime.waitUntil((async () => {
+    await new Promise((resolve) =>
+      setTimeout(resolve, delaySeconds * 1000)
+    );
+
+    try {
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/ai-worker`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": serviceKey,
+          },
+          body: JSON.stringify({ limit: 3 }),
+        },
+      );
+
+      if (!response.ok) {
+        console.error("ai_worker_self_wake_failed", {
+          status: response.status,
+        });
+      }
+    } catch (error) {
+      console.error("ai_worker_self_wake_failed", {
+        message: error instanceof Error
+          ? error.message
+          : "unknown_worker_self_wake_error",
+      });
+    }
+  })());
+}
+
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -813,6 +875,12 @@ Deno.serve(async (req: Request) => {
       results.push({ request_id: job.request_id, state: job.state, outcome: "worker_error" });
     }
   }
+
+  await scheduleNextWorkerWake(
+    service,
+    supabaseUrl,
+    serviceKey,
+  );
 
   return jsonResponse(200, {
     claimed: claimed.length,

@@ -10,6 +10,58 @@ const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const aiToHumanConsentCopyVersion = "ai-to-human-v1";
 
+function readSupabaseBackendSecretKey(): string | null {
+  const rawSecretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
+
+  if (rawSecretKeys) {
+    try {
+      const parsed = JSON.parse(rawSecretKeys) as Record<string, unknown>;
+      const defaultKey = parsed.default;
+      if (typeof defaultKey === "string" && defaultKey.trim()) {
+        return defaultKey.trim();
+      }
+    } catch {
+      // Fall through to the compatibility environment variable.
+    }
+  }
+
+  const fallback = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
+  return fallback || null;
+}
+
+function kickAiWorker(
+  supabaseUrl: string,
+  serviceKey: string,
+): void {
+  EdgeRuntime.waitUntil((async () => {
+    try {
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/ai-worker`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": serviceKey,
+          },
+          body: JSON.stringify({ limit: 3 }),
+        },
+      );
+
+      if (!response.ok) {
+        console.error("ai_worker_kickoff_failed", {
+          status: response.status,
+        });
+      }
+    } catch (error) {
+      console.error("ai_worker_kickoff_failed", {
+        message: error instanceof Error
+          ? error.message
+          : "unknown_worker_kickoff_error",
+      });
+    }
+  })());
+}
+
 function corsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "";
   return {
@@ -32,13 +84,15 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return respond(req, 405, { error: "method_not_allowed" });
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) return respond(req, 500, { error: "server_configuration_error" });
+  const serviceKey = readSupabaseBackendSecretKey();
+  if (!supabaseUrl || !serviceKey) {
+    return respond(req, 500, { error: "server_configuration_error" });
+  }
 
   const accessToken = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (!accessToken) return respond(req, 401, { error: "authentication_required" });
 
-  const service = createClient(supabaseUrl, serviceRoleKey, {
+  const service = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data: authData, error: authError } = await service.auth.getUser(accessToken);
@@ -105,6 +159,10 @@ Deno.serve(async (req: Request) => {
     const message = error.message ?? "request_rejected";
     const status = message.includes("active evaluation request") ? 409 : 422;
     return respond(req, status, { error: "evaluation_request_rejected", message });
+  }
+
+  if (mode === "ai") {
+    kickAiWorker(supabaseUrl, serviceKey);
   }
 
   return respond(req, 200, data);
