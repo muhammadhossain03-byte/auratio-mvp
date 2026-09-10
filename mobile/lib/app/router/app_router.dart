@@ -33,6 +33,7 @@ import '../../features/events/presentation/screens/persisted_event_details_scree
 import '../../features/events/presentation/screens/persisted_events_discovery_screen.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/home/presentation/screens/persisted_home_screen.dart';
 import '../../features/leaderboard/application/leaderboard_repository_provider.dart';
 import '../../features/leaderboard/presentation/screens/leaderboard_ai_all_time_screen.dart';
 import '../../features/leaderboard/presentation/screens/leaderboard_human_all_time_screen.dart';
@@ -152,7 +153,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutePaths.home,
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) =>
+            (profileConfigured && progressConfigured && evaluationConfigured)
+            ? const PersistedHomeScreen()
+            : const HomeScreen(),
       ),
       GoRoute(
         path: AppRoutePaths.tracks,
