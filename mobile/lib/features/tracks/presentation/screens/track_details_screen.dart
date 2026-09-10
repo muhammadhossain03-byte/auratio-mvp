@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../../submissions/application/recording_submission_controller.dart';
 import '../../application/selected_track_provider.dart';
 import '../../domain/track_catalog.dart';
 
@@ -229,6 +230,9 @@ class TrackDetailsScreen extends ConsumerWidget {
                           variant: AuratioButtonVariant.primary,
                           expand: true,
                           onPressed: () {
+                            ref
+                                .read(recordingSubmissionProvider.notifier)
+                                .reset();
                             ref
                                 .read(selectedTrackProvider.notifier)
                                 .select(track);
