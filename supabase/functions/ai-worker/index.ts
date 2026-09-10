@@ -820,16 +820,36 @@ Deno.serve(async (req: Request) => {
 
   // This worker is service-to-service. Hosted deployment must use
   // verify_jwt=false because modern Supabase sb_secret_ API keys are not JWTs.
-  // The backend caller authenticates with the secret key in the apikey header.
-  const callerApiKey = (req.headers.get("apikey") ?? "").trim();
-
-  if (!callerApiKey || callerApiKey !== serviceKey) {
-    return jsonResponse(403, { error: "secret_api_key_required" });
-  }
-
+  // The backend caller authenticates with the secret key in the apikey header
+  // or via the database watchdog's internal cron token.
   const service = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  const callerApiKey = (req.headers.get("apikey") ?? "").trim();
+  const apiKeyAuthorized = callerApiKey.length > 0 && callerApiKey === serviceKey;
+
+  let cronAuthorized = false;
+  if (!apiKeyAuthorized) {
+    const cronToken = (req.headers.get("x-auratio-ai-cron-token") ?? "").trim();
+    if (cronToken) {
+      const { data, error } = await service.rpc(
+        "svc_ai_worker_cron_token_valid",
+        { p_token: cronToken },
+      );
+      if (error) {
+        console.error("ai_worker_cron_auth_failed", {
+          message: error.message,
+        });
+      } else if (data === true) {
+        cronAuthorized = true;
+      }
+    }
+  }
+
+  if (!apiKeyAuthorized && !cronAuthorized) {
+    return jsonResponse(403, { error: "secret_api_key_required" });
+  }
 
   let body: Record<string, unknown> = {};
   try {
