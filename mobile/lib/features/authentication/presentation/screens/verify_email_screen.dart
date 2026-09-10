@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
 import '../../../shared/presentation/widgets/auratio_screen_header.dart';
+import '../../application/auth_redirects.dart';
 import '../../application/auth_repository_provider.dart';
 import '../../application/mock_registration_state.dart';
 import '../../data/auth_repository.dart';
@@ -61,7 +62,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     if (email.trim().isEmpty) return;
 
     try {
-      await repository.resendSignUpVerification(email: email);
+      await repository.resendSignUpVerification(
+        email: email,
+        emailRedirectTo: AuratioAuthRedirects.signUpConfirmation,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_route_paths.dart';
 import '../../../../foundation/design_system/auratio_design_system.dart';
+import '../../application/auth_redirects.dart';
 import '../../application/auth_repository_provider.dart';
 import '../../application/mock_registration_state.dart';
 import '../../data/auth_repository.dart';
@@ -126,6 +127,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
         displayName: _fullNameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        emailRedirectTo: AuratioAuthRedirects.signUpConfirmation,
       );
       if (!mounted) return;
 

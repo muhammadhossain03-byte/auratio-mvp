@@ -48,9 +48,13 @@ abstract interface class AuratioAuthRepository {
     required String displayName,
     required String email,
     required String password,
+    String? emailRedirectTo,
   });
 
-  Future<void> resendSignUpVerification({required String email});
+  Future<void> resendSignUpVerification({
+    required String email,
+    String? emailRedirectTo,
+  });
 
   Future<void> requestPasswordReset({
     required String email,
@@ -114,11 +118,13 @@ class SupabaseAuratioAuthRepository implements AuratioAuthRepository {
     required String displayName,
     required String email,
     required String password,
+    String? emailRedirectTo,
   }) async {
     try {
       final response = await _client.auth.signUp(
         email: email.trim(),
         password: password,
+        emailRedirectTo: emailRedirectTo,
         data: {'display_name': displayName.trim()},
       );
       return AuratioSignUpResult(
@@ -132,9 +138,16 @@ class SupabaseAuratioAuthRepository implements AuratioAuthRepository {
   }
 
   @override
-  Future<void> resendSignUpVerification({required String email}) async {
+  Future<void> resendSignUpVerification({
+    required String email,
+    String? emailRedirectTo,
+  }) async {
     try {
-      await _client.auth.resend(type: OtpType.signup, email: email.trim());
+      await _client.auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+        emailRedirectTo: emailRedirectTo,
+      );
     } on AuthException catch (error) {
       throw AuratioAuthenticationException(
         'verification_resend_failed',
@@ -294,7 +307,10 @@ class UnconfiguredAuratioAuthRepository implements AuratioAuthRepository {
   Future<void> signOut() async {}
 
   @override
-  Future<void> resendSignUpVerification({required String email}) async {
+  Future<void> resendSignUpVerification({
+    required String email,
+    String? emailRedirectTo,
+  }) async {
     throw _error;
   }
 
@@ -311,6 +327,7 @@ class UnconfiguredAuratioAuthRepository implements AuratioAuthRepository {
     required String displayName,
     required String email,
     required String password,
+    String? emailRedirectTo,
   }) async {
     throw _error;
   }

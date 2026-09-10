@@ -35,12 +35,16 @@ class _FakeAuthRepository implements AuratioAuthRepository {
     required String displayName,
     required String email,
     required String password,
+    String? emailRedirectTo,
   }) {
     throw UnimplementedError();
   }
 
   @override
-  Future<void> resendSignUpVerification({required String email}) {
+  Future<void> resendSignUpVerification({
+    required String email,
+    String? emailRedirectTo,
+  }) {
     throw UnimplementedError();
   }
 
